@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>СТАНЦИЯ "СИГНАЛ-9"</title>
+	<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+<button id="test-error-btn">TEST SIGNAL LOSS</button>
+<canvas id="starfield"></canvas>
+
+<div id="scanner-line"></div>
+
+<div id="audio-status">НАЖМИТЕ, ЧТОБЫ ИНИЦИАЛИЗИРОВАТЬ АУДИОДАТЧИКИ</div>
+
+<div id="display">
+    <div class="glyph-row" id="currentPhrase"></div>
+</div>
+
+<div class="const-box" style="position: absolute; bottom: 25px; right: 25px; text-align: center; display: flex; flex-direction: column; align-items: center;">
+    <svg width="35" height="35" viewBox="0 0 100 100" style="stroke: var(--neon); fill: none; margin-bottom: 5px;">
+        <path d="M10 10 L30 10 M10 10 L10 30 M90 90 L70 90 M90 90 L90 70 M50 10 L50 90 M10 50 L90 50" stroke-width="4"></path>
+    </svg>
+    <div id="timer" style="font-size: 10px; font-weight: bold; color: var(--neon); font-family: monospace; letter-spacing: 1px;">SYNC: 128s</div>
+</div>
+
+
+
+
+<svg style="width:0; height:0; position:absolute;">
+    <defs>
+        <filter id="neonGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <!-- Основное размытие для ореола -->
+            <feGaussianBlur stdDeviation="2.5" result="blur"></feGaussianBlur>
+            <!-- Сильное размытие для глубокого свечения -->
+            <feGaussianBlur stdDeviation="5" result="largeBlur"></feGaussianBlur>
+            
+            <feComposite in="blur" in2="largeBlur" operator="over" result="combinedBlur"></feComposite>
+            
+            <feMerge>
+                <feMergeNode in="combinedBlur"></feMergeNode>
+                <feMergeNode in="SourceGraphic"></feMergeNode>
+            </feMerge>
+        </filter>
+    </defs>
+</svg>
+
+<script src="phrases.js"></script>
+<script src="script.js"></script>
+
+<div id="overlay-noise"></div> <!-- Для эффекта помех -->
+
+<div id="connection-status">
+    <div id="status-meta" class="status-meta">УРОВЕНЬ СИГНАЛА: 98% | ПРИЁМ: АКТИВНЫЙ</div>
+    <div class="status-main">
+        <span id="status-icon">●</span>
+        <span id="status-text">ИНИЦИАЛИЗАЦИЯ</span><span id="status-dots"></span>
+    </div>
+    <div class="status-progress-container">
+        <div id="status-progress-bar"></div>
+    </div>
+	<div id="status-footer" class="status-footer">DECODING PACKET: 0x4F2A / SECURE CHANNEL 07</div>
+</div>
+
+</body>
+</html>

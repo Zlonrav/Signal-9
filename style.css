@@ -1,0 +1,237 @@
+@import url('https://googleapis.com');
+:root { 
+    --neon: #00f2ff; 
+    --bg: #020508; 
+}
+
+body { 
+    background: var(--bg); 
+    background-image: radial-gradient(circle at center, #0a1a20 0%, var(--bg) 70%);
+    color: var(--neon); 
+    font-family: 'JetBrains Mono', monospace; 
+    margin: 0; 
+    overflow: hidden; 
+    height: 100vh; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+}
+
+/* 1. ГЛАВНЫЙ КОНТЕЙНЕР */
+.glyph-row { 
+    display: flex; 
+    flex-direction: row;
+    gap: 30px; 
+    transition: opacity 0.8s ease;
+}
+
+.glyph-unit { 
+    width: 140px; 
+    height: 140px; 
+    position: relative; 
+    background: rgba(0, 242, 255, 0.03);
+    border: 1px solid rgba(0, 242, 255, 0.1);
+    border-radius: 12px;
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glyph-unit:hover {
+    background: rgba(0, 242, 255, 0.08);
+    border-color: var(--neon);
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 242, 255, 0.2);
+}
+
+path { 
+    fill: none; 
+    stroke: var(--neon); 
+    stroke-width: 1.5; 
+    stroke-linecap: round; 
+    stroke-linejoin: round;
+    /* Это безопасный способ свечения для локальных файлов */
+    filter: drop-shadow(0 0 5px var(--neon)) drop-shadow(0 0 2px #fff);
+    transition: stroke 0.3s, stroke-width 0.3s; 
+}
+
+/* 2. ТЕКСТ ПОД ГЛИФАМИ */
+.glyph-label {
+    position: absolute;
+    bottom: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    min-width: 160px;
+    text-align: center;
+	font-family: 'Michroma', sans-serif;
+    font-size: 10px !important; /* Чуть крупнее для читаемости */
+}
+
+.char-fixed { color: #fff; text-shadow: 0 0 10px var(--neon); opacity: 1; }
+.char-noise { opacity: 0.25; color: var(--neon); }
+
+/* 3. НИЖНИЙ СТАТУС-БАР (С СИММЕТРИЧНЫМИ ОТСТУПАМИ) */
+#connection-status {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    font-family: 'Courier New', monospace;
+    color: var(--neon);
+    opacity: 0.6;
+    pointer-events: none;
+    text-transform: uppercase;
+}
+
+.status-meta { 
+    font-size: 8px; 
+    letter-spacing: 2px; 
+    opacity: 0.5; 
+    line-height: 1;
+}
+
+.status-main { 
+    font-size: 14px; 
+    letter-spacing: 4px; 
+    margin: 10px 0; /* РОВНЫЙ ОТСТУП 10px СВЕРХУ И СНИЗУ */
+    font-weight: bold; 
+    line-height: 1;
+    transition: opacity 0.25s ease-in-out;
+}
+
+.status-progress-container {
+    width: 200px; 
+    height: 2px; 
+    background: rgba(0, 242, 255, 0.1); 
+    margin: 0 auto; 
+    margin-bottom: 10px; /* ДОБАВЛЕН ОТСТУП 10px ДО ТЕКСТА СНИЗУ */
+}
+
+.status-footer {
+    font-size: 8px;
+    letter-spacing: 2px;
+    opacity: 0.5;
+    line-height: 1;
+    margin-top: 0; 
+}
+
+#status-text {
+    white-space: pre; /* Сохраняет все пробелы как они есть */
+    display: inline-flex; /* Помогает выровнять символы в ряд */
+}
+
+#status-progress-bar { 
+    width: 0%; 
+    height: 100%; 
+    background: var(--neon); 
+    transition: width 0.3s linear; 
+}
+
+/* 4. ЭФФЕКТЫ СМЕНЫ */
+.fade-out { opacity: 0; filter: blur(10px); }
+
+@keyframes wave-effect {
+    0% { transform: scale(1); filter: brightness(1) blur(0); }
+    50% { transform: scale(1.05); filter: brightness(2) blur(4px); }
+    100% { transform: scale(1); filter: brightness(1) blur(0); }
+}
+
+.wave-transition {
+    animation: wave-effect 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes glitch-subtle {
+    0% { transform: translate(0); }
+    20% { transform: translate(-2px, 1px); }
+    40% { transform: translate(2px, -1px); }
+    100% { transform: translate(0); }
+}
+
+.signal-glitch {
+    animation: glitch-subtle 0.1s infinite;
+}
+
+/* 5. СКАНЕР И ДОПЫ */
+#audio-status { position: absolute; top: 40px; font-size: 9px; letter-spacing: 3px; opacity: 0.4; }
+#timer, #const-timer { font-family: monospace; }
+
+#scanner-line {
+    position: fixed; top: 0; left: 0; width: 100%; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--neon), transparent);
+    opacity: 0.15;
+    animation: scanMove 8s linear infinite;
+}
+@keyframes scanMove { 0% { top: 0; } 100% { top: 100%; } }
+
+.pulse-trigger { animation: singlePulse 0.6s ease-out; }
+@keyframes singlePulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); filter: brightness(1.5); }
+    100% { transform: scale(1); }
+}
+.status-char {
+    transition: opacity 0.1s ease, filter 0.2s ease;
+    display: inline-block;
+}
+
+#status-text {
+    text-shadow: 0 0 10px var(--neon);
+}
+
+/* Состояние ERROR */
+.mode-error {
+    --neon: #ff3333 !important;
+}
+
+.mode-error .glyph-unit {
+    border-color: rgba(255, 51, 51, 0.4) !important;
+    box-shadow: inset 0 0 15px rgba(255, 51, 51, 0.1);
+}
+
+.error-text {
+    font-size: 24px;
+    font-weight: bold;
+    color: #ff3333;
+    text-shadow: 0 0 10px #ff3333;
+    animation: blinker 0.2s infinite alternate;
+}
+
+@keyframes blinker {
+    from { opacity: 1; }
+    to { opacity: 0.3; }
+}
+
+.status-warning {
+    color: #ff3333;
+    font-weight: bold;
+    text-shadow: 0 0 5px #ff3333;
+}
+
+/* Кнопка для теста (потом удалим) */
+#test-error-btn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    padding: 10px;
+    background: #333;
+    color: #fff;
+    border: 1px solid #555;
+    cursor: pointer;
+    z-index: 100000;
+}
+#starfield {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1; /* Фон всегда сзади */
+    background: radial-gradient(circle at center, #050b10 0%, #000 100%);
+}
