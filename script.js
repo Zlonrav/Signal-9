@@ -181,7 +181,7 @@ function update() {
     if (timePassed === 0 && isSignalLoss && !testBtn.dataset.manual) triggerSignalLoss(false);
 
     // Таймеры работают всегда
-    if (document.getElementById('timer')) document.getElementById('timer').innerText = `ПОИСК СИГНАЛА: ${timeLeft} сек`;
+    if (document.getElementById('timer')) document.getElementById('timer').innerText = `ПРИЁМ СИГНАЛА: ${timeLeft} сек`;
     if (document.getElementById('const-timer')) document.getElementById('const-timer').innerText = `REFRESH: ${timeLeft}s`;
     const constGlyphElem = document.getElementById('const-glyph');
     if (constGlyphElem && !constGlyphElem.innerHTML) constGlyphElem.innerHTML = createSVG(getPath("Расшифровка"));
