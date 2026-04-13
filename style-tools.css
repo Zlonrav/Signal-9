@@ -1,0 +1,168 @@
+        @import url('https://googleapis.com');
+        :root { --neon: #00f2ff; --bg: #020508; --error: #ff3333; }
+        
+        body { 
+            background: var(--bg); color: var(--neon); 
+            font-family: 'JetBrains Mono', monospace; 
+            margin: 0; height: 100vh; overflow: hidden;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+
+        #starfield { position: fixed; top: 0; left: 0; z-index: -1; width: 100%; height: 100%; }
+
+        .switch-container { margin-bottom: 40px; width: 44px; height: 22px; opacity: 0.4; transition: 0.3s; }
+        .switch-container:hover { opacity: 0.8; }
+        .switch-input { display: none; }
+        .switch-label {
+            display: block; width: 100%; height: 100%;
+            background: rgba(0, 242, 255, 0.05); border: 1px solid rgba(0, 242, 255, 0.3);
+            border-radius: 11px; cursor: pointer; position: relative;
+        }
+        .switch-label::after {
+            content: ""; position: absolute; top: 3px; left: 3px;
+            width: 14px; height: 14px; background: var(--neon); border-radius: 50%; transition: 0.3s;
+        }
+        .switch-input:checked + .switch-label::after { left: 25px; }
+
+        .main-frame {
+            position: relative; width: 250px; height: 250px;
+            background: rgba(0, 242, 255, 0.03);
+            border: 1px solid rgba(0, 242, 255, 0.1); border-radius: 12px;
+            backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center;
+        }
+
+        svg { width: 100%; height: 100%; pointer-events: none; position: absolute; }
+        path { 
+            fill: none; stroke: var(--neon); stroke-width: 1.5; 
+            filter: drop-shadow(0 0 5px var(--neon)) drop-shadow(0 0 2px #fff);
+            stroke-linecap: round; stroke-linejoin: round;
+        }
+
+        .dots-grid {
+            position: absolute; width: 100%; height: 100%;
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            padding: 40px; box-sizing: border-box; z-index: 10;
+        }
+        .dot {
+            width: 8px; height: 8px; background: rgba(0, 242, 255, 0.2);
+            border-radius: 50%; justify-self: center; align-self: center;
+            cursor: pointer; transition: 0.2s;
+        }
+        .dot:hover { background: var(--neon); box-shadow: 0 0 8px var(--neon); }
+        .dot.active { background: #fff; box-shadow: 0 0 12px var(--neon); transform: scale(1.2); }
+
+		.ui-footer { 
+			margin-top: 20px; 
+			width: 250px; 
+			height: 40px; 
+			position: relative; 
+		}
+
+		input, .status-label {
+			background: none; 
+			border: none; 
+			border-bottom: 1px solid rgba(0, 242, 255, 0.15);
+			color: var(--neon); 
+			/*text-shadow: 0 0 8px var(--neon); Яркое неоновое свечение */
+			font-family: 'Michroma', sans-serif; 
+			font-size: 10px;
+			text-align: center; 
+			outline: none; 
+			width: 100%; 
+			letter-spacing: 2px;
+			text-transform: uppercase; 
+			padding: 12px 0; 
+			display: block; 
+			box-sizing: border-box;
+			position: absolute; /* Фиксация для предотвращения прыжков */
+			top: 0;
+			left: 0;
+		}
+		/* Дизайн активного/неактивного состояния для текста */
+		.status-label { 
+			cursor: default;
+		}
+        .external-controls { margin-top: 15px; display: flex; gap: 20px; justify-content: center; }
+        .icon-btn {
+            background: none; border: 1px solid rgba(0, 242, 255, 0.2);
+            color: var(--neon); width: 36px; height: 36px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 6px; transition: 0.3s; opacity: 0.5;
+        }
+        .icon-btn:hover { opacity: 1; border-color: var(--neon); background: rgba(0, 242, 255, 0.05); }
+
+        @keyframes wave-effect {
+            0% { transform: scale(1); filter: brightness(1) blur(0); }
+            50% { transform: scale(1.05); filter: brightness(2) blur(4px); }
+            100% { transform: scale(1); filter: brightness(1) blur(0); }
+        }
+        .wave-transition { animation: wave-effect 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+        
+        /* АНИМАЦИЯ ОТРИСОВКИ: замедлена в 2 раза */
+        .draw-anim { 
+            stroke-dasharray: 2000; 
+            stroke-dashoffset: 2000; 
+            animation: drawPath 25.0s linear forwards; 
+        }
+        @keyframes drawPath { to { stroke-dashoffset: 0; } }
+
+        .hidden { display: none !important; }
+		.error-state { 
+			color: var(--error) !important; 
+			border-color: var(--error) !important; 
+			text-shadow: 0 0 8px var(--error) !important; 
+		}
+	/* SWITCH С ПОДПИСЯМИ */
+    .mode-wrapper { 
+        display: flex; 
+        align-items: center; 
+        gap: 15px; 
+        margin-bottom: 40px; 
+        opacity: 0.4; 
+        transition: 0.3s; 
+    }
+    .mode-wrapper:hover { opacity: 0.8; }
+    
+    .mode-label { 
+        font-family: 'Michroma', sans-serif; 
+        font-size: 10px; 
+        color: var(--neon);
+        text-shadow: 0 0 8px var(--neon);
+        text-transform: uppercase; 
+        letter-spacing: 2px;
+    }
+
+    .switch-container { margin-bottom: 0; width: 44px; height: 22px; }
+	.audio-control-fixed {
+    position: fixed;
+    bottom: 25px;
+    left: 25px;
+    z-index: 1000;
+    font-family: monospace;
+    font-size: 10px;
+    color: var(--neon); /* Убедитесь, что переменная --neon определена (#00f2ff) */
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    border: 1px solid rgba(0, 242, 255, 0.2);
+    padding: 8px 12px;
+    background: rgba(0, 20, 30, 0.5);
+    transition: all 0.3s ease;
+    user-select: none;
+}
+
+.audio-control-fixed:hover {
+    background: rgba(0, 242, 255, 0.1);
+    border-color: rgba(0, 242, 255, 0.5);
+    box-shadow: 0 0 10px rgba(0, 242, 255, 0.2);
+}
+
+.audio-control-fixed.active {
+    color: #fff;
+    border-color: var(--neon);
+    text-shadow: 0 0 5px var(--neon);
+}
+
+#audio-status-icon {
+    margin-right: 8px;
+}

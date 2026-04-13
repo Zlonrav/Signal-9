@@ -1,1 +1,84 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+	<script src="js/authGuard.js"></script> 
+	<link rel="icon" href="favicon.ico" type="image/x-icon">
+    <title>СТАНЦИЯ "СИГНАЛ-9"</title>
+	<link rel="stylesheet" type="text/css" href="style.css">
+	<link rel="stylesheet" type="text/css" href="style-chat-terminal.css">
+</head>
+<body>
+    <!-- ТЕЛЕМЕТРИЯ СТАНЦИИ (ВНЕ ВСЕХ КОНТЕЙНЕРОВ) -->
+    <div class="telemetry-panel">
+        <div class="telemetry-row">
+            <svg width="25" height="25" viewBox="0 0 100 100" style="stroke: var(--neon); fill: none; margin-right: 10px;">
+                <path d="M10 10 L30 10 M10 10 L10 30 M90 90 L70 90 M90 90 L90 70 M50 10 L50 90 M10 50 L90 50" stroke-width="4"></path>
+            </svg>
+            <span id="timer">ПОИСК СИГНАЛА: 128s</span>
+        </div>
+        <div class="telemetry-row">
+            ВЕКТОР: <span id="station-coords">149.6000.00</span>
+        </div>
+        <div class="telemetry-row" id="orbit-status">СТАТУС: ГЕОСТАЦИОНАР</div>
+    </div>
 
+	<div class="chat-system">
+		<div id="quest-field" class="question" onclick="handleChatClick()"></div>
+		<div id="answer-field" class="answer-field"></div>
+	</div>
+	<!-- СИСТЕМНЫЙ ТЕРМИНАЛ -->
+	<!-- 2. Данные для этой конкретной страницы -->
+	<script>
+		window.roomChat = [
+			{ q: "> ТЕКУЩИЙ СТАТУС СТАНЦИИ", a: "ПРИЕМ СИГНАЛА СТАБИЛЕН. ИДЕТ ДЕШИФРОВКА ПОТОКА ГЛИФОВ." },
+			{ q: "> ПОЧЕМУ ТЕКСТ МЕНЯЕТСЯ?", a: "КАЖДЫЕ 128 СЕКУНД ПРОИСХОДИТ ПЕРЕЗАГРУЗКА КАНАЛА СВЯЗИ." }
+		];
+	</script>
+	<!-- СИСТЕМНЫЙ ТЕРМИНАЛ -->
+	
+	<button id="test-error-btn">TEST SIGNAL LOSS</button>
+	
+	<canvas id="starfield"></canvas>
+	<div id="scanner-line"></div>
+
+	<div class="audio-control-fixed" id="audio-toggle">
+		<span id="audio-status-icon">○</span>
+		<span id="audio-status">АУДИОДАТЧИКИ: ВЫКЛ</span>
+	</div>
+	
+	<!-- КНОПКА ТЕРМИНАЛА (ПРАВО) -->
+    <a href="tools.html" class="terminal-link-fixed">
+        <span>□</span> ИНЖЕНЕРНЫЙ ТЕРМИНАЛ
+    </a>
+
+	<div id="display">
+		<div class="glyph-row" id="currentPhrase"></div>
+	</div>
+
+
+
+
+	<!-- Подключаем общие ресурсы из папки js соблюдая порядок -->
+    <script src="js/loader.js"></script>
+	
+	<!-- только для этого файла, index.html -->
+	<script src="js/core.js"></script>
+	
+
+	<!-- ЧТО ЭТО? --><div id="overlay-noise"></div><!-- Для эффекта помех -->
+
+	<div id="connection-status">
+		<div id="status-meta" class="status-meta">УРОВЕНЬ СИГНАЛА: 98% | ПРИЁМ: АКТИВНЫЙ</div>
+		<div class="status-main">
+			<span id="status-icon">●</span>
+			<span id="status-text">ИНИЦИАЛИЗАЦИЯ</span><span id="status-dots"></span>
+		</div>
+		<div class="status-progress-container">
+			<div id="status-progress-bar"></div>
+		</div>
+		<div id="status-footer" class="status-footer">DECODING PACKET: 0x4F2A / SECURE CHANNEL 07</div>
+	</div>
+
+</body>
+</html>

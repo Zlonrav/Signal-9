@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+	<script src="js/authGuard.js"></script> 
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <title>СИГНАЛ-9 // АРХИВ</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="style-tools.css">
+    <link rel="stylesheet" type="text/css" href="style-chat-terminal.css">
+    <style>
+/* --- СИСТЕМА АРХИВА: ВИЗУАЛИЗАЦИЯ ГЛИФОВ --- */
+
+/* Настройка страницы и скролла */
+body.tools-page {
+    overflow-y: auto !important;
+    height: auto !important;
+    min-height: 100vh;
+}
+
+#display {
+    display: block !important;
+    height: auto;
+    padding: 100px 0;
+}
+
+/* Сетка карточек */
+.archive-grid {
+    display: grid;
+    /* Устанавливаем фиксированный размер колонок как на главной */
+    grid-template-columns: repeat(auto-fill, 141.6px);
+    justify-content: center;
+    gap: 35px;
+    width: 95%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    overflow: visible;
+}
+
+/* Карточка ячейки (141.6 x 141.6) */
+.archive-cell {
+    width: 141.6px;
+    height: 141.6px;
+    border: 1px solid rgba(0, 242, 255, 0.15); /* Цвет рамки как на главной */
+    border-radius: 12px; /* Скругленные края */
+    background: radial-gradient(circle at center, rgba(0, 242, 255, 0.04) 0%, transparent 80%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.4s cubic-bezier(0.2, 1, 0.3, 1);
+    position: relative;
+    box-sizing: border-box;
+    animation: cellAppear 0.5s ease backwards;
+}
+
+/* Анимация появления */
+.archive-cell:nth-child(n) { 
+    animation-delay: calc(var(--i, 0) * 0.04s); 
+}
+
+@keyframes cellAppear {
+    from { opacity: 0; transform: scale(0.9) translateY(15px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Состояния карточки */
+.archive-cell.unlocked {
+    border-color: rgba(0, 242, 255, 0.25);
+}
+
+.archive-cell.unlocked:hover {
+    background: rgba(0, 242, 255, 0.08);
+    border-color: var(--neon);
+    transform: translateY(-5px);
+    box-shadow: 0 5px 20px rgba(0, 242, 255, 0.1);
+}
+
+.archive-cell.locked {
+    opacity: 0.15;
+    filter: grayscale(1);
+    border-style: dashed;
+}
+
+/* Контейнер глифа */
+.glyph-container {
+    width: 95px;
+    height: 95px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: -20px; /* Еще немного вверх */
+}
+
+.glyph-container svg {
+    width: 100%;
+    height: 100%;
+    stroke: var(--neon);
+    stroke-width: 1.8;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 0 50px var(--neon)) 
+            drop-shadow(0 0 12px rgba(0, 242, 255, 0.2));
+}
+
+/* Надпись под глифом */
+.cell-label {
+    position: absolute;
+    bottom: 8px; /* Опустили ближе к нижнему краю */
+    width: 100%;
+    text-align: center;
+    font-size: 10px; /* Увеличили на 2px (было 8px) */
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--neon);
+    font-family: 'JetBrains Mono', monospace;
+    opacity: 0.6;
+    transition: all 0.3s ease;
+}
+
+/* Эффект при наведении на ячейку */
+.archive-cell.unlocked:hover .cell-label {
+    opacity: 1;
+    letter-spacing: 3px; /* Слегка расширяем текст при наведении */
+    transform: translateY(-2px);
+}
+
+/* Красивый скроллбар */
+::-webkit-scrollbar {
+    width: 4px;
+}
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--neon);
+    box-shadow: 0 0 10px var(--neon);
+    border-radius: 2px;
+}
+
+    </style>
+</head>
+<body class="tools-page">
+
+	<script src="js/archiveEngine.js"></script>
+
+    <div class="chat-system">
+        <div id="quest-field" class="question" onclick="handleChatClick()"></div>
+        <div id="answer-field" class="answer-field"></div>
+    </div>
+
+    <script>
+        window.roomChat = [
+            { q: "> СТАТУС БАНКА ДАННЫХ", a: "ПОДКЛЮЧЕНИЕ К ЦЕНТРАЛЬНОМУ АРХИВУ УСТАНОВЛЕНО." },
+            { q: "> СИСТЕМА ЛОГИРОВАНИЯ", a: "ВСЕ РАСПОЗНАННЫЕ ГЛИФЫ АВТОМАТИЧЕСКИ ФИКСИРУЮТСЯ В ЯЧЕЙКАХ." }
+        ];
+    </script> 
+
+    <canvas id="starfield"></canvas>
+    <div id="scanner-line"></div>
+    <div id="overlay-noise"></div>
+
+    <div id="display">
+        <div class="archive-grid" id="archiveGrid">
+            <!-- Сюда archiveEngine.js вставит ячейки -->
+        </div>
+    </div>
+
+    <div class="audio-control-fixed" id="audio-toggle">
+        <span id="audio-status-icon">○</span>
+        <span id="audio-status">АУДИОДАТЧИКИ: ВЫКЛ</span>
+    </div>
+
+    <a href="tools.html" class="terminal-link-fixed">
+        <span>□</span> ИНЖЕНЕРНЫЙ ТЕРМИНАЛ
+    </a>
+
+    <script src="js/loader.js"></script>
+    <!-- Подключаем новый движок -->
+    <script src="js/archiveEngine.js"></script>
+</body>
+</html>

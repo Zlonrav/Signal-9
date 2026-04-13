@@ -2,147 +2,93 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+	<script src="js/authGuard.js"></script> 
+	<link rel="icon" href="favicon.ico" type="image/x-icon">
     <title>СИГНАЛ-9 // ТЕРМИНАЛ</title>
-    <style>
-        @import url('https://googleapis.com');
-        :root { --neon: #00f2ff; --bg: #020508; --error: #ff3333; }
-        
-        body { 
-            background: var(--bg); color: var(--neon); 
-            font-family: 'JetBrains Mono', monospace; 
-            margin: 0; height: 100vh; overflow: hidden;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-        }
+	<link rel="stylesheet" type="text/css" href="style.css">
+	<link rel="stylesheet" type="text/css" href="style-tools.css">
+	<link rel="stylesheet" type="text/css" href="style-chat-terminal.css">
+	<style>
+/* Базовый стиль номера (возвращен неон) */
+.dot-order {
+    position: absolute;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: bold;
+    color: #ffcc00; /* Контрастный желтый */
+    text-shadow: 0 0 5px rgba(255, 204, 0, 0.8);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    white-space: nowrap;
+    z-index: 100;
+}
 
-        #starfield { position: fixed; top: 0; left: 0; z-index: -1; width: 100%; height: 100%; }
+/* Показываем номер только в режиме текста */
+.dot.show-order .dot-order {
+    opacity: 0.9;
+}
 
-        .switch-container { margin-bottom: 40px; width: 44px; height: 22px; opacity: 0.4; transition: 0.3s; }
-        .switch-container:hover { opacity: 0.8; }
-        .switch-input { display: none; }
-        .switch-label {
-            display: block; width: 100%; height: 100%;
-            background: rgba(0, 242, 255, 0.05); border: 1px solid rgba(0, 242, 255, 0.3);
-            border-radius: 11px; cursor: pointer; position: relative;
-        }
-        .switch-label::after {
-            content: ""; position: absolute; top: 3px; left: 3px;
-            width: 14px; height: 14px; background: var(--neon); border-radius: 50%; transition: 0.3s;
-        }
-        .switch-input:checked + .switch-label::after { left: 25px; }
+/* --- РАСШИРЕННОЕ ПОЗИЦИОНИРОВАНИЕ --- */
 
-        .main-frame {
-            position: relative; width: 250px; height: 250px;
-            background: rgba(0, 242, 255, 0.03);
-            border: 1px solid rgba(0, 242, 255, 0.1); border-radius: 12px;
-            backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center;
-        }
+/* 1: Сильно влево и вверх */
+.dot:nth-child(1) .dot-order { top: -25px; left: -25px; }
 
-        svg { width: 100%; height: 100%; pointer-events: none; position: absolute; }
-        path { 
-            fill: none; stroke: var(--neon); stroke-width: 1.5; 
-            filter: drop-shadow(0 0 5px var(--neon)) drop-shadow(0 0 2px #fff);
-            stroke-linecap: round; stroke-linejoin: round;
-        }
+/* 2: Сильно вверх */
+.dot:nth-child(2) .dot-order { top: -30px; left: 50%; transform: translateX(-50%); }
 
-        .dots-grid {
-            position: absolute; width: 100%; height: 100%;
-            display: grid; grid-template-columns: repeat(3, 1fr);
-            padding: 40px; box-sizing: border-box; z-index: 10;
-        }
-        .dot {
-            width: 8px; height: 8px; background: rgba(0, 242, 255, 0.2);
-            border-radius: 50%; justify-self: center; align-self: center;
-            cursor: pointer; transition: 0.2s;
-        }
-        .dot:hover { background: var(--neon); box-shadow: 0 0 8px var(--neon); }
-        .dot.active { background: #fff; box-shadow: 0 0 12px var(--neon); transform: scale(1.2); }
+/* 3: Сильно вправо и вверх */
+.dot:nth-child(3) .dot-order { top: -25px; right: -25px; }
 
-		.ui-footer { 
-			margin-top: 20px; 
-			width: 250px; 
-			height: 40px; 
-			position: relative; 
-		}
+/* 4: Сильно влево */
+.dot:nth-child(4) .dot-order { top: 50%; left: -30px; transform: translateY(-50%); }
 
-		input, .status-label {
-			background: none; 
-			border: none; 
-			border-bottom: 1px solid rgba(0, 242, 255, 0.15);
-			color: var(--neon); 
-			/*text-shadow: 0 0 8px var(--neon); Яркое неоновое свечение */
-			font-family: 'Michroma', sans-serif; 
-			font-size: 10px;
-			text-align: center; 
-			outline: none; 
-			width: 100%; 
-			letter-spacing: 2px;
-			text-transform: uppercase; 
-			padding: 12px 0; 
-			display: block; 
-			box-sizing: border-box;
-			position: absolute; /* Фиксация для предотвращения прыжков */
-			top: 0;
-			left: 0;
-		}
-		/* Дизайн активного/неактивного состояния для текста */
-		.status-label { 
-			cursor: default;
-		}
-        .external-controls { margin-top: 15px; display: flex; gap: 20px; justify-content: center; }
-        .icon-btn {
-            background: none; border: 1px solid rgba(0, 242, 255, 0.2);
-            color: var(--neon); width: 36px; height: 36px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            border-radius: 6px; transition: 0.3s; opacity: 0.5;
-        }
-        .icon-btn:hover { opacity: 1; border-color: var(--neon); background: rgba(0, 242, 255, 0.05); }
+/* 5: Центр — оставляем под точкой, как было */
+.dot:nth-child(5) .dot-order { bottom: -18px; left: 50%; transform: translateX(-50%); }
 
-        @keyframes wave-effect {
-            0% { transform: scale(1); filter: brightness(1) blur(0); }
-            50% { transform: scale(1.05); filter: brightness(2) blur(4px); }
-            100% { transform: scale(1); filter: brightness(1) blur(0); }
-        }
-        .wave-transition { animation: wave-effect 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
-        
-        /* АНИМАЦИЯ ОТРИСОВКИ: замедлена в 2 раза */
-        .draw-anim { 
-            stroke-dasharray: 2000; 
-            stroke-dashoffset: 2000; 
-            animation: drawPath 25.0s linear forwards; 
-        }
-        @keyframes drawPath { to { stroke-dashoffset: 0; } }
+/* 6: Сильно вправо */
+.dot:nth-child(6) .dot-order { top: 50%; right: -30px; transform: translateY(-50%); }
 
-        .hidden { display: none !important; }
-		.error-state { 
-			color: var(--error) !important; 
-			border-color: var(--error) !important; 
-			text-shadow: 0 0 8px var(--error) !important; 
-		}
-	/* SWITCH С ПОДПИСЯМИ */
-    .mode-wrapper { 
-        display: flex; 
-        align-items: center; 
-        gap: 15px; 
-        margin-bottom: 40px; 
-        opacity: 0.4; 
-        transition: 0.3s; 
-    }
-    .mode-wrapper:hover { opacity: 0.8; }
-    
-    .mode-label { 
-        font-family: 'Michroma', sans-serif; 
-        font-size: 10px; 
-        color: var(--neon);
-        text-shadow: 0 0 8px var(--neon);
-        text-transform: uppercase; 
-        letter-spacing: 2px;
-    }
+/* 7: Сильно влево и вниз */
+.dot:nth-child(7) .dot-order { bottom: -25px; left: -25px; }
 
-    .switch-container { margin-bottom: 0; width: 44px; height: 22px; }
-    </style>
+/* 8: Сильно вниз */
+.dot:nth-child(8) .dot-order { bottom: -30px; left: 50%; transform: translateX(-50%); }
+
+/* 9: Сильно вправо и вниз */
+.dot:nth-child(9) .dot-order { bottom: -25px; right: -25px; }
+nth-child(9) .dot-order { bottom: -15px; right: -15px; }
+
+
+
+
+
+
+</style>
 </head>
 <body>
-    <canvas id="starfield"></canvas>
+	
+	<div class="chat-system">
+		<div id="quest-field" class="question" onclick="handleChatClick()"></div>
+		<div id="answer-field" class="answer-field"></div>
+	</div>
+	<!-- СИСТЕМНЫЙ ТЕРМИНАЛ -->
+	<!-- 2. Данные для этой конкретной страницы -->
+	<script>
+		window.roomChat = [
+			{ q: "> ТЕКУЩИЙ СТАТУС СТАНЦИИ", a: "ПРИЕМ СИГНАЛА СТАБИЛЕН. ИДЕТ ДЕШИФРОВКА ПОТОКА ГЛИФОВ." },
+			{ q: "> ПОЧЕМУ ТЕКСТ МЕНЯЕТСЯ?", a: "КАЖДЫЕ 128 СЕКУНД ПРОИСХОДИТ ПЕРЕЗАГРУЗКА КАНАЛА СВЯЗИ." }
+		];
+	</script>
+	<!-- СИСТЕМНЫЙ ТЕРМИНАЛ -->
+
+	<canvas id="starfield"></canvas>
+	<div id="scanner-line"></div>
+	
+	<div class="audio-control-fixed" id="audio-toggle">
+		<span id="audio-status-icon">○</span>
+		<span id="audio-status">АУДИОДАТЧИКИ: ВЫКЛ</span>
+	</div>
 
 	<div class="mode-wrapper">
 		<span class="mode-label">текст</span>
@@ -153,15 +99,21 @@
 		<span class="mode-label">трассит</span>
 	</div>
 
-    <div class="main-frame" id="mainFrame">
-        <div id="gen-view" style="width:100%; height:100%; position:relative;">
-            <svg viewBox="0 0 80 80"><path id="genPath" d=""></path></svg>
-        </div>
-        <div id="read-view" class="hidden" style="width:100%; height:100%; position:relative;">
-            <div id="grid-layer" class="dots-grid"></div>
-            <svg viewBox="0 0 80 80"><path id="readPath" d=""></path></svg>
-        </div>
-    </div>
+	<div class="main-frame" id="mainFrame">
+		<!-- Сетка общая для всех режимов -->
+		<div id="grid-layer" class="dots-grid"></div>
+		
+		<div id="gen-view" style="width:100%; height:100%; position:relative;">
+			<svg viewBox="0 0 80 80"><path id="genPath" d=""></path></svg>
+		</div>
+		<div id="read-view" class="hidden" style="width:100%; height:100%; position:relative;">
+			<svg viewBox="0 0 80 80"><path id="readPath" d=""></path></svg>
+		</div>
+
+		<!-- ДОБАВИТЬ ЭТОТ БЛОК: Сюда JS будет рисовать цифры -->
+		<div id="number-labels"></div>
+	</div>
+
 
 	<div class="ui-footer">
 		<div id="gen-ui">
@@ -177,188 +129,277 @@
         <button class="icon-btn" id="playBtn">▶</button>
     </div>
 
-    <script src="phrases.js"></script>
-    <script>
-        const POINTS = [{x:15,y:15},{x:40,y:15},{x:65,y:15},{x:15,y:40},{x:40,y:40},{x:65,y:40},{x:15,y:65},{x:40,y:65},{x:65,y:65}];
-        let audioCtx, glyphGainNode;
-        let genIndices = [], readIndices = [];
-        let dictionary = {};
+	<!-- Подключаем общие ресурсы из папки js соблюдая порядок -->
+    <script src="js/loader.js"></script>
 
-		function initDict() {
-			if(typeof PHRASES === 'undefined') return;
-			
-			// 1. Обработка фраз (как раньше)
-			PHRASES.forEach(p => p.split(' ').forEach(w => {
-				const clean = w.toUpperCase().replace(/[^А-ЯЁA-Z]/g, '');
-				if(clean) dictionary[getPathIndices(clean).join('-')] = clean;
-			}));
+<script>
+// --- КОНФИГУРАЦИЯ И СОСТОЯНИЕ ---
+let genIndices = [];    // Память для текстового ввода
+let readIndices = [];   // Память для ручного рисования
+let dictionary = {};    // База слов для распознавания
+const allDots = [];     // Ссылки на DOM-элементы точек
 
-			// 2. Добавление слов из отдельного словаря (если он создан)
-			if(typeof VOCABULARY !== 'undefined') {
-				VOCABULARY.forEach(w => {
-					const clean = w.toUpperCase().replace(/[^А-ЯЁA-Z]/g, '');
-					if(clean) dictionary[getPathIndices(clean).join('-')] = clean;
-				});
+// Вспомогательная функция для получения строки пути 'd'
+function getPathData(indices) {
+    if (!indices || !indices.length) return '';
+    const svgString = createSVG(indices);
+    const match = svgString.match(/d="([^"]*)"/);
+    return match ? match[1] : '';
+}
+
+// 1. ИНИЦИАЛИЗАЦИЯ СЕТКИ И МЕТОК
+const grid = document.getElementById('grid-layer');
+
+if (typeof POINTS !== 'undefined' && grid) {
+    POINTS.forEach((_, i) => {
+        const d = document.createElement('div');
+        d.className = 'dot';
+        
+        // Создаем лаконичную метку порядкового номера внутри точки
+        const orderLabel = document.createElement('span');
+        orderLabel.className = 'dot-order';
+        d.appendChild(orderLabel);
+
+        d.onclick = () => {
+            const isReadMode = document.getElementById('mode-switch').checked;
+            if (isReadMode && !readIndices.includes(i)) {
+                readIndices.push(i);
+                // В режиме рисования анимируем только последний сегмент
+                renderPath('readPath', readIndices, true);
+                updatePointsUI();
+                if (typeof playGlyphSound === 'function') playGlyphSound([i, i]);
+            }
+        };
+        
+        grid.appendChild(d);
+        allDots.push(d);
+    });
+}
+
+// 2. УНИВЕРСАЛЬНАЯ ПЛАВНАЯ ОТРИСОВКА
+function renderPath(pathId, indices, isContinuing = false) {
+    const pathElem = document.getElementById(pathId);
+    if (!pathElem) return;
+
+    const dData = getPathData(indices);
+    
+    if (indices.length <= 1) {
+        pathElem.setAttribute('d', dData);
+        pathElem.style.strokeDasharray = 'none';
+        return;
+    }
+
+    // Измеряем полную длину пути
+    pathElem.setAttribute('d', dData);
+    const totalLength = pathElem.getTotalLength();
+    pathElem.style.transition = 'none';
+
+    if (isContinuing) {
+        // Логика "Роста": показываем всё, кроме последнего отрезка
+        const prevIndices = indices.slice(0, -1);
+        const prevDData = getPathData(prevIndices);
+        pathElem.setAttribute('d', prevDData);
+        const prevLength = pathElem.getTotalLength();
+
+        // Возвращаем полный путь, скрываем только новый кусок
+        pathElem.setAttribute('d', dData);
+        pathElem.style.strokeDasharray = totalLength;
+        pathElem.style.strokeDashoffset = totalLength - prevLength;
+        
+        // Время анимации зависит от длины нового куска
+        const duration = (totalLength - prevLength) / DRAW_SPEED;
+        
+        requestAnimationFrame(() => {
+            pathElem.style.transition = `stroke-dashoffset ${duration}s linear`;
+            pathElem.style.strokeDashoffset = '0';
+        });
+    } else {
+        // Логика полной отрисовки (для текстового поля)
+        pathElem.style.strokeDasharray = totalLength;
+        pathElem.style.strokeDashoffset = totalLength;
+        const duration = totalLength / DRAW_SPEED;
+        
+        requestAnimationFrame(() => {
+            pathElem.style.transition = `stroke-dashoffset ${duration}s linear`;
+            pathElem.style.strokeDashoffset = '0';
+        });
+    }
+}
+
+// 3. ОБНОВЛЕНИЕ ВИЗУАЛА ТОЧЕК И НОМЕРОВ
+function updatePointsUI() {
+    const isReadMode = document.getElementById('mode-switch').checked;
+    const currentIndices = isReadMode ? readIndices : genIndices;
+
+    allDots.forEach(d => {
+        d.classList.remove('active', 'show-order');
+        const lbl = d.querySelector('.dot-order');
+        if (lbl) lbl.innerText = '';
+    });
+
+    currentIndices.forEach((pointIdx, order) => {
+        const dot = allDots[pointIdx];
+        if (!dot) return;
+        dot.classList.add('active');
+        if (!isReadMode) {
+            dot.classList.add('show-order');
+            const lbl = dot.querySelector('.dot-order');
+            if (lbl) lbl.innerText = order + 1;
+        }
+    });
+
+    const statusLabel = document.getElementById('statusLabel');
+    if (isReadMode && statusLabel) {
+        const key = readIndices.join('-');
+        if (dictionary[key]) {
+            const foundWord = dictionary[key]; // <--- Сохраняем слово в переменную
+            statusLabel.innerText = foundWord;
+            statusLabel.classList.remove('error-state');
+            
+            // --- ПЕРЕДАЧА В АРХИВ ---
+            localStorage.setItem('s9_glyph_' + foundWord, 'true'); 
+
+        } else if (readIndices.length >= 5) {
+            statusLabel.innerText = "НЕ РАСПОЗНАННО";
+            statusLabel.classList.add('error-state');
+        } else {
+            statusLabel.innerText = "СОЕДИНИТЕ ТОЧКИ";
+            statusLabel.classList.remove('error-state');
+        }
+    }
+}
+
+
+// 4. СЛОВАРЬ (Сбор всех слов из движка)
+function initDictionary() {
+    const allWords = [
+        ...(typeof PHRASES !== 'undefined' ? PHRASES.flatMap(p => p.split(' ')) : []), 
+        ...(typeof VOCABULARY !== 'undefined' ? VOCABULARY : [])
+    ];
+    allWords.forEach(w => {
+        const clean = w.toUpperCase().replace(/[^А-ЯЁA-Z]/g, '');
+        if(clean && typeof getPath === 'function') {
+            const p = getPath(clean);
+            if (p.length) dictionary[p.join('-')] = clean;
+        }
+    });
+}
+
+// 5. ОБРАБОТЧИКИ СОБЫТИЙ
+document.getElementById('mode-switch').onchange = (e) => {
+    const isRead = e.target.checked;
+    document.getElementById('gen-view').classList.toggle('hidden', isRead);
+    document.getElementById('gen-ui').classList.toggle('hidden', isRead);
+    document.getElementById('read-view').classList.toggle('hidden', !isRead);
+    document.getElementById('read-ui').classList.toggle('hidden', !isRead);
+    
+    // При переключении восстанавливаем графику нужного режима
+    if (isRead) {
+        renderPath('readPath', readIndices, false);
+    } else {
+        renderPath('genPath', genIndices, false);
+    }
+    updatePointsUI();
+};
+
+document.getElementById('textInput').oninput = (e) => {
+    const rawVal = e.target.value.trim();
+    
+    // 1. ПРОВЕРКА КОДА СПАСЕНИЯ
+	if (rawVal === "142") { // Убедись, что код полный
+		console.log("ВЕКТОР ПРИНЯТ");
+
+		localStorage.removeItem('s9_emergency_flag');
+		document.body.classList.remove('emergency-mode');
+		document.body.classList.remove('mode-error');
+		document.documentElement.style.setProperty('--neon', '#00f2ff');
+
+		// --- ИСПРАВЛЕНИЕ ТУТ ---
+		// Мы НЕ вызываем resolveEmergency сразу, так как в ней сидит reload().
+		// Вместо этого мы вызываем её через 4 секунды (одновременно с исчезновением надписи)
+		setTimeout(() => {
+			if (typeof window.resolveEmergency === 'function') {
+				window.resolveEmergency(); 
 			}
-		}
+		}, 4000); 
 
-        function getPathIndices(word) {
-            let hash = 5381;
-            for (let i = 0; i < word.length; i++) hash = ((hash << 5) + hash) + word.charCodeAt(i);
-            let seed = Math.abs(hash), path = [], used = new Set();
-            const len = (seed % 3) + 5;
-            while(path.length < len && used.size < 9) {
-                seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-                let n = seed % 9; if(!used.has(n)) { path.push(n); used.add(n); }
-            }
-            return path;
-        }
+		// ВЫВОДИМ ЗЕЛЕНОЕ СООБЩЕНИЕ (твой код)
+		const label = document.getElementById('statusLabel');
+        if (label) {
+            const genUI = document.getElementById('gen-ui');
+            const readUI = document.getElementById('read-ui');
+            const isReadMode = document.getElementById('mode-switch').checked;
 
-        function createBezier(indices) {
-            if (!indices.length) return '';
-            let d = `M ${POINTS[indices[0]].x} ${POINTS[indices[0]].y}`;
-            for(let i=0; i<indices.length-1; i++){
-                const c = POINTS[indices[i]], n = POINTS[indices[i+1]];
-                d += ` C ${c.x+(n.x-c.x)*0.5} ${c.y}, ${c.x+(n.x-c.x)*0.5} ${n.y}, ${n.x} ${n.y}`;
-            }
-            return d;
-        }
-
-        const playOriginalSound = async (indices) => {
-            if (!indices.length || !window.AudioContext) return;
-            if (!audioCtx) audioCtx = new AudioContext();
-            if (glyphGainNode) {
-                const prevGain = glyphGainNode;
-                prevGain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.05);
-                setTimeout(() => prevGain.disconnect(), 60);
-            }
-            glyphGainNode = audioCtx.createGain();
-            glyphGainNode.connect(audioCtx.destination);
-            let currentTime = audioCtx.currentTime;
-            for (let i = 0; i < indices.length - 1; i++) {
-                const p1 = POINTS[indices[i]], p2 = POINTS[indices[i+1]];
-                const dx = Math.abs(p2.x - p1.x), dy = Math.abs(p2.y - p1.y);
-                const length = Math.sqrt(dx*dx + dy*dy) / 25;
-                let baseFreq = dx === 0 ? 260 : (dy !== 0 ? 220 : 180);
-                const step = (length * 0.14) / Math.floor(length * 15 || 1);
-                for (let g = 0; g < Math.floor(length * 15); g++) {
-                    const osc = audioCtx.createOscillator(), gNode = audioCtx.createGain(), filter = audioCtx.createBiquadFilter();
-                    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(baseFreq + (Math.random() * 10), currentTime);
-                    filter.type = 'bandpass'; filter.frequency.setValueAtTime(baseFreq * 2, currentTime); filter.Q.value = 10;
-                    gNode.gain.setValueAtTime(0, currentTime);
-                    gNode.gain.linearRampToValueAtTime(0.1, currentTime + 0.005);
-                    gNode.gain.exponentialRampToValueAtTime(0.0001, currentTime + step * 0.8);
-                    osc.connect(filter).connect(gNode).connect(glyphGainNode);
-                    osc.start(currentTime); osc.stop(currentTime + step);
-                    currentTime += step;
-                }
-            }
-        };
-
-        const modeSwitch = document.getElementById('mode-switch');
-        modeSwitch.addEventListener('change', () => {
-            document.getElementById('mainFrame').classList.add('wave-transition');
-            setTimeout(() => document.getElementById('mainFrame').classList.remove('wave-transition'), 800);
-            const isRead = modeSwitch.checked;
-            document.getElementById('gen-view').classList.toggle('hidden', isRead);
-            document.getElementById('gen-ui').classList.toggle('hidden', isRead);
-            document.getElementById('read-view').classList.toggle('hidden', !isRead);
-            document.getElementById('read-ui').classList.toggle('hidden', !isRead);
-        });
-
-        document.getElementById('textInput').addEventListener('input', (e) => {
-            const val = e.target.value.trim().toUpperCase().replace(/[^А-ЯЁA-Z]/g, '');
-            genIndices = val ? getPathIndices(val) : [];
-            const pathElem = document.getElementById('genPath');
+            // 1. Показываем статус, скрываем инпут
+            genUI.classList.add('hidden');
+            readUI.classList.remove('hidden');
             
-            // СБРОС И ПЕРЕЗАПУСК: Очищаем путь и убираем анимацию
-            pathElem.style.display = 'none';
-            pathElem.setAttribute('d', '');
-            pathElem.classList.remove('draw-anim');
+            label.innerText = "ВЕКТОР ПРИНЯТ: ОРБИТА СТАБИЛИЗИРОВАНА";
+            label.style.color = "#00ff44";
+            label.style.textShadow = "0 0 15px #00ff44";
             
-            // Используем requestAnimationFrame для гарантированного перезапуска
-            requestAnimationFrame(() => {
-                pathElem.setAttribute('d', createBezier(genIndices));
-                pathElem.style.display = 'block';
-                if (genIndices.length > 0) {
-                    pathElem.classList.add('draw-anim');
-                }
-            });
-        });
+            // 2. Через 4 секунды возвращаем всё как было до ввода кода
+            setTimeout(() => {
+                label.innerText = "соедините точки";
+                label.style.color = "";
+                label.style.textShadow = "";
 
-        const grid = document.getElementById('grid-layer');
-        POINTS.forEach((_, i) => {
-            const d = document.createElement('div'); d.className = 'dot';
-            d.onclick = () => {
-                if(modeSwitch.checked && !readIndices.includes(i)) {
-                    readIndices.push(i);
-                    d.classList.add('active');
-                    updateReadStatus();
+                // Если мы НЕ в режиме рисования (тумблер слева), 
+                // то возвращаем инпут и прячем статус обратно
+                if (!isReadMode) {
+                    genUI.classList.remove('hidden');
+                    readUI.classList.add('hidden');
                 }
-            };
-            grid.appendChild(d);
-        });
-
-        function updateReadStatus() {
-            document.getElementById('readPath').setAttribute('d', createBezier(readIndices));
-            const label = document.getElementById('statusLabel'), key = readIndices.join('-');
-            if(dictionary[key]) { 
-                label.innerText = dictionary[key]; 
-                label.classList.remove('error-state'); 
-            } else if(readIndices.length >= 5) { 
-                label.innerText = "НЕ РАСПОЗНАННО"; 
-                label.classList.add('error-state'); 
-            } else { 
-                label.innerText = "СОЕДИНИТЕ ТОЧКИ"; 
-                label.classList.remove('error-state'); 
-            }
+            }, 4000);
         }
 
-        document.getElementById('resetBtn').onclick = () => {
-            if (!modeSwitch.checked) {
-                genIndices = [];
-                document.getElementById('textInput').value = '';
-                document.getElementById('genPath').setAttribute('d', '');
-                document.getElementById('genPath').classList.remove('draw-anim');
-            } else {
-                readIndices = [];
-                document.querySelectorAll('.dot').forEach(d => d.classList.remove('active'));
-                document.getElementById('readPath').setAttribute('d', '');
-                updateReadStatus();
-            }
-        };
 
-        document.getElementById('playBtn').onclick = () => {
-            playOriginalSound(modeSwitch.checked ? readIndices : genIndices);
-        };
+        e.target.value = ""; // Очищаем поле ввода
+        
+        // Очищаем рисунок глифа, который мог успеть отрисоваться
+        renderPath('genPath', [], false);
+        updatePointsUI();
+        return; 
+    }
 
-        const canvas = document.getElementById('starfield'), ctx = canvas.getContext('2d');
-        let w, h, stars = [], particles = [];
-        const resize = () => { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; };
-        window.onresize = resize; resize();
-        for(let i=0; i<300; i++) stars.push({x: Math.random()*w, y: Math.random()*h, s: Math.random()*1.2, o: Math.random(), sp: 0.00005+Math.random()*0.0001});
-        const createP = () => ({x: -50, y: Math.random()*h, sp: 0.2+Math.random()*0.5, s: Math.random()*2, l: 1});
+    // 2. ОБЫЧНАЯ ЛОГИКА ГЛИФОВ (Твоя оригинальная)
+    const val = rawVal.toUpperCase().replace(/[^А-ЯЁA-Z]/g, '');
+    genIndices = (val && typeof getPath === 'function') ? getPath(val) : [];
+    renderPath('genPath', genIndices, false);
+    updatePointsUI();
+};
 
-        function draw() {
-            ctx.fillStyle = '#020508'; ctx.fillRect(0,0,w,h);
-            const p = Math.sin(Date.now()*0.0005)*0.02;
-            const g = ctx.createRadialGradient(0,h,0,0,h,w*0.8);
-            g.addColorStop(0, `rgba(0,242,255,${0.08+p})`); g.addColorStop(1, 'transparent');
-            ctx.fillStyle = g; ctx.fillRect(0,0,w,h);
-            ctx.fillStyle = '#fff';
-            stars.forEach(s => {
-                ctx.globalAlpha = Math.abs(Math.sin(Date.now()*0.001+s.o*10))*0.8;
-                ctx.beginPath(); ctx.arc(s.x,s.y,s.s,0,Math.PI*2); ctx.fill();
-                let dx = s.x, dy = s.y-h, a = Math.atan2(dy,dx)+s.sp, dist = Math.sqrt(dx*dx+dy*dy);
-                s.x = Math.cos(a)*dist; s.y = Math.sin(a)*dist+h;
-                if(s.x>w || s.y<0) { s.x=Math.random()*w; s.y=Math.random()*h; }
-            });
-            if(particles.length<20 && Math.random()>0.95) particles.push(createP());
-            ctx.fillStyle = 'rgba(0,242,255,0.4)';
-            particles.forEach((p,i) => { ctx.globalAlpha=p.l; ctx.beginPath(); ctx.arc(p.x,p.y,p.s,0,Math.PI*2); ctx.fill(); p.x+=p.sp; p.y-=p.sp*0.2; p.l-=0.002; if(p.l<=0) particles.splice(i,1); });
-            requestAnimationFrame(draw);
-        }
-        draw(); initDict();
-    </script>
+
+
+
+
+
+document.getElementById('resetBtn').onclick = () => {
+    const isRead = document.getElementById('mode-switch').checked;
+    if (isRead) {
+        readIndices = [];
+        renderPath('readPath', [], false);
+    } else {
+        genIndices = [];
+        document.getElementById('textInput').value = '';
+        renderPath('genPath', [], false);
+    }
+    updatePointsUI();
+};
+
+document.getElementById('playBtn').onclick = () => {
+    const isRead = document.getElementById('mode-switch').checked;
+    const currentSet = isRead ? readIndices : genIndices;
+    if (typeof playGlyphSound === 'function' && currentSet.length > 0) {
+        playGlyphSound(currentSet);
+    }
+};
+
+// Запуск
+initDictionary();
+updatePointsUI();
+
+</script>
+
 </body>
 </html>

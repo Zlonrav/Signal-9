@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <script src="js/authGuard.js"></script>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <title>СИГНАЛ-9 // РЕАКТОРНЫЙ ОТСЕК</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="style-tools.css">
+    <link rel="stylesheet" type="text/css" href="style-chat-terminal.css">
+    <style>
+        /* Стили реакторного зала */
+        #display {
+            display: flex !important;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        /* Центральное ядро */
+        .reactor-core {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 50, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 40px;
+            background: radial-gradient(circle, rgba(255, 30, 0, 0.1) 0%, transparent 70%);
+        }
+
+        /* Пульсация ядра при перегреве */
+        .core-pulse {
+            position: absolute;
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            border: 1px solid #ff3300;
+            animation: coreAlert 2s infinite ease-out;
+        }
+
+        @keyframes coreAlert {
+            0% { transform: scale(0.8); opacity: 0.8; }
+            100% { transform: scale(1.4); opacity: 0; }
+        }
+
+        /* Потоки битого кода */
+        .code-glitch-stream {
+            position: absolute;
+            top: 50%; width: 100%;
+            height: 400px;
+            transform: translateY(-50%);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: #ff3300;
+            opacity: 0.2;
+            overflow: hidden;
+            pointer-events: none;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 50px;
+        }
+
+        /* Поле для ввода патча */
+        .patch-interface {
+            z-index: 100;
+            text-align: center;
+            background: rgba(2, 5, 8, 0.9);
+            padding: 20px;
+            border: 1px solid #ff3300;
+            box-shadow: 0 0 30px rgba(255, 30, 0, 0.2);
+        }
+
+        #patchInput {
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid #ff3300;
+            color: #ff3300;
+            font-family: inherit;
+            font-size: 24px;
+            text-align: center;
+            outline: none;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            margin-top: 10px;
+        }
+
+        .status-header {
+            font-size: 10px;
+            letter-spacing: 3px;
+            color: #ff3300;
+            margin-bottom: 10px;
+        }
+		#patchInput {
+			background: transparent !important;
+			border: none !important;
+			border-bottom: 2px solid #ff3300 !important;
+			color: #ff3300 !important;
+			font-family: 'JetBrains Mono', monospace !important;
+			font-size: 28px !important;
+			text-align: center !important;
+			width: 250px !important;
+			outline: none !important;
+			text-transform: uppercase !important;
+			letter-spacing: 8px !important;
+			padding: 10px 0 !important;
+			transition: all 0.3s ease;
+		}
+
+		#patchInput:focus {
+			border-bottom-color: #ff6600 !important;
+			box-shadow: 0 5px 15px rgba(255, 50, 0, 0.2);
+		}
+
+		/* Фикс для display, чтобы контент не слипался */
+		#display {
+			display: flex !important;
+			flex-direction: column !important;
+			align-items: center !important;
+			justify-content: center !important;
+			gap: 20px;
+		}
+    </style>
+</head>
+<body class="tools-page">
+    <div id="solar-flare-bg"></div>
+    <canvas id="starfield"></canvas>
+    
+    <!-- Потоки битого кода на фоне -->
+    <div class="code-glitch-stream">
+        <div id="stream-left"></div>
+        <div id="stream-right"></div>
+    </div>
+
+	<div id="display">
+		<!-- Центральное ядро -->
+		<div class="reactor-core">
+			<div class="core-pulse"></div>
+			<div class="core-pulse" style="animation-delay: 1s"></div>
+			<!-- Сюда вставим глиф через JS -->
+			<div id="core-glyph" style="width: 150px; height: 150px; display: flex; align-items: center; justify-content: center;"></div>
+		</div>
+
+		<!-- Интерфейс ввода -->
+		<div class="patch-interface">
+			<div class="status-header" id="patchStatus">ОБНАРУЖЕНО ПОВРЕЖДЕНИЕ ЯДРА</div>
+			<div style="font-size: 8px; opacity: 0.5; letter-spacing: 1px;">ВНИМАНИЕ: ТРЕБУЕТСЯ ПЕРЕПРОШИВКА. КОД [ БЭКАП ]</div>
+			
+			<!-- Поле ввода (теперь оно точно будет видно) -->
+			<div style="margin-top: 20px;">
+				<input type="text" id="patchInput" autocomplete="off" spellcheck="false" placeholder="...">
+			</div>
+		</div>
+	</div>
+
+    <div class="chat-system">
+        <div id="quest-field" class="question" onclick="handleChatClick()"></div>
+        <div id="answer-field" class="answer-field"></div>
+    </div>
+
+    <script>
+        window.roomChat = [
+            { q: "> ТЕКУЩАЯ ТЕМПЕРАТУРА ЯДРА", a: "1450°C. КРИТИЧЕСКИЙ ПРЕДЕЛ. МАГНИТНЫЕ ЛОВУШКИ НЕСТАБИЛЬНЫ." },
+            { q: "> ПОЧЕМУ КОД ПОВРЕЖДЕН?", a: "ИОНИЗИРУЮЩЕЕ ИЗЛУЧЕНИЕ ВЫЗВАЛО МНОЖЕСТВЕННЫЕ ОШИБКИ В СЕКТОРАХ ПАМЯТИ." }
+        ];
+    </script>
+
+    <script src="js/loader.js"></script>
+    <script src="js/reactorEngine.js"></script>
+</body>
+</html>

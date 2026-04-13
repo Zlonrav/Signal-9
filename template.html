@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+	<script src="js/authGuard.js"></script> 
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <title>СИГНАЛ-9 // ШАБЛОН</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="style-tools.css">
+	<link rel="stylesheet" type="text/css" href="style-chat-terminal.css">
+</head>
+<body class="tools-page">
+
+	<div class="chat-system">
+		<div id="quest-field" class="question" onclick="handleChatClick()"></div>
+		<div id="answer-field" class="answer-field"></div>
+	</div>
+	<!-- СИСТЕМНЫЙ ТЕРМИНАЛ -->
+	<!-- 2. Данные для этой конкретной страницы -->
+	<script>
+		window.roomChat = [
+			{ q: "> ТЕКУЩИЙ СТАТУС СТАНЦИИ", a: "ПРИЕМ СИГНАЛА СТАБИЛЕН. ИДЕТ ДЕШИФРОВКА ПОТОКА ГЛИФОВ." },
+			{ q: "> ПОЧЕМУ ТЕКСТ МЕНЯЕТСЯ?", a: "КАЖДЫЕ 128 СЕКУНД ПРОИСХОДИТ ПЕРЕЗАГРУЗКА КАНАЛА СВЯЗИ." }
+		];
+	</script> 
+	<!-- СИСТЕМНЫЙ ТЕРМИНАЛ -->
+
+	<canvas id="starfield"></canvas>
+	<div id="scanner-line"></div>
+	
+    <div id="overlay-noise"></div>
+
+    <div id="display">
+        <div class="room-content" id="roomContent">
+            <div style="opacity: 0.2; letter-spacing: 10px; font-size: 18px; font-family: monospace; color: var(--neon);">
+                [ СИСТЕМА ГОТОВА К РАЗВЕРТЫВАНИЮ ]
+            </div>
+        </div>
+    </div>
+
+    <div class="audio-control-fixed" id="audio-toggle">
+        <span id="audio-status-icon">○</span>
+        <span id="audio-status">АУДИОДАТЧИКИ: ВЫКЛ</span>
+    </div>
+
+    <a href="tools.html" class="terminal-link-fixed">
+        <span>□</span> ИНЖЕНЕРНЫЙ ТЕРМИНАЛ
+    </a>
+
+	<!-- Подключаем общие ресурсы из папки js соблюдая порядок -->
+    <script src="js/loader.js"></script>
+</body>
+</html>

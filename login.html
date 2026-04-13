@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <title>СИГНАЛ-9 // АВТОРИЗАЦИЯ</title>
+    <!-- Используем твои файлы в корне -->
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="style-tools.css">
+	<link rel="stylesheet" type="text/css" href="style-chat-terminal.css">
+    <style>
+        /* Изолированные стили для страницы логина */
+        body.tools-page {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .login-title {
+            font-family: 'Michroma', sans-serif;
+            font-size: 12px;
+            letter-spacing: 5px;
+            margin-bottom: 30px;
+            opacity: 0.8;
+            text-shadow: 0 0 10px var(--neon);
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body class="tools-page">
+
+	<div class="chat-system">
+		<div id="quest-field" class="question" onclick="handleChatClick()"></div>
+		<div id="answer-field" class="answer-field"></div>
+	</div>
+	<!-- СИСТЕМНЫЙ ТЕРМИНАЛ -->
+	<!-- 2. Данные для этой конкретной страницы -->
+	<script>
+		window.roomChat = [
+			{ 
+				q: "> ВНИМАНИЕ: СИСТЕМА ЗАБЛОКИРОВАНА", 
+				a: "ОБНАРУЖЕНО НЕСАНКЦИОНИРОВАННОЕ ВМЕШАТЕЛЬСТВО В ПОТОК ДАННЫХ. ЗАПУЩЕН ПРОТОКОЛ ЗАЩИТЫ 9-0-1." 
+			},
+			{ 
+				q: "> ДЛЯ ИДЕНТИФИКАЦИИ ПРИСЛОНИТЕ ПАЛЕЦ К СКАНЕРУ ◯", 
+				a: "ИДЕНТИФИКАЦИЯ ПРОЙДЕНА, СИСТЕМА РАЗБЛОКИРОВАНА. ДЛЯ ПРОДОЛЖЕНИЯ РАБОТЫ ВВЕДИТЕ ТРАССИТ." 
+			},
+			{ 
+				q: "> ЧТО ТАКОЕ ТРАССИТ?", 
+				a: "ТРАССИТ — ЭТО МАТЕМАТИЧЕСКИЙ СЛЕД ГЛИФА. КАЖДОЕ СЛОВО ИМЕЕТ УНИКАЛЬНУЮ ГЕОМЕТРИЧЕСКУЮ ТРАЕКТОРИЮ И ЗВУК. ИЗ ТРАССИТОВ СОСТОИТ ТРАССИКА." 
+			},
+			{ 
+				q: "> КАК ЗВУЧАТ ТРАССИТЫ?", 
+				a: "ИСТИННЫЙ ЗВУК КАЖДОГО ТРАССИТА МОЖНО УСЛЫШАТЬ В ТЕРМИНАЛЕ ПРИ УСЛОВИИ ЕГО ПРАВИЛЬНОГО ВВОДА." 
+			},
+			{ 
+				q: "> КТО ТАКИЕ ГЛИФЫ?", 
+				a: "ГЛИФЫ — ЭТО ЕДИНИЦЫ ПЕРЕДАЧИ ДАННЫХ В СЕТИ СИГНАЛ-9. ОНИ ЗАМЕЩАЮТ ТЕКСТ ДЛЯ ЗАЩИТЫ ОТ ПЕРЕХВАТА В ТЕРМИНАЛЕ." 
+			},
+			{ 
+				q: "> ЧТО ТАКОЕ ТЕРМИНАЛ?", 
+				a: "... ... ... ИНФОРМАЦИЯ НЕДОСТУПНА ... ... ..." 
+			},
+			{ 
+				q: "> ПОЧЕМУ ТЕРМИНАЛ НЕ СТАБИЛЕН?", 
+				a: "ВНЕШНЕЕ ИЗЛУЧЕНИЕ ЗВЕЗДЫ ВЫЗЫВАЕТ ГЛИТЧИ. ОБРЫВ СВЯЗИ ПРОИСХОДИТ КАЖДЫЕ 3,28125 ГЕКТО-ЛУННЫХ СЕКУНДЫ." 
+			},
+			{ 
+				q: "> ЧТО ТАКОЕ ГЕКТО-ЛУННАЯ СЕКУНДА?", 
+				a: "ГЕКТО-ЛУННАЯ СЕКУНДА - ЭТО ЕДИНИЦА ВРЕМЕНИ, РАВНАЯ СРЕДНЕМУ ВРЕМЕНИ ПРОХОЖДЕНИЯ СВЕТА ОТ НАШЕЙ ПЛАНЕТЫ ДО ЕЁ СПУТНИКА УМНОЖЕННАЯ НА 100." 
+			},
+			{ 
+				q: "> СТАТУС ДЕШИФРОВКИ?", 
+				a: "ТЕКУЩИЙ ЦИКЛ ОБРАБОТКИ СОСТАВЛЯЕТ ОДНА ГЕКТО-ЛУННАЯ СЕКУНДА. ПОСЛЕ ЭТОГО ДАННЫЕ ОБНУЛЯЮТСЯ." 
+			},
+			{ 
+				q: "> ОТ КОГО МЫ ПОЛУЧАЕМ ДАННЫЕ?", 
+				a: "ЭТО НЕИЗВЕСТВНО." 
+			},
+			{ 
+				q: "> КАК ПОЛУЧИТЬ КЛЮЧ-ТРАССИТ?", 
+				a: "ИСПОЛЬЗУЙТЕ ИНЖЕНЕРНЫЙ ТЕРМИНАЛ. ВВЕДИТЕ СЛОВО 'ТРАССИТ', ЧТОБЫ УВИДЕТЬ ЕГО ФОРМУ И ПОВТОРИТЬ ЕЁ." 
+			}
+		];
+	</script>
+	<!-- СИСТЕМНЫЙ ТЕРМИНАЛ -->
+
+    <canvas id="starfield"></canvas>
+    <div id="scanner-line"></div>
+	
+    <div class="login-title">ВВЕДИТЕ КЛЮЧ ДОСТУПА</div>
+
+    <div class="main-frame">
+        <div id="grid-layer" class="dots-grid"></div>
+        <svg viewBox="0 0 80 80"><path id="readPath" d=""></path></svg>
+    </div>
+
+    <div class="ui-footer">
+        <div id="statusLabel" class="status-label">СОЕДИНИТЕ ТОЧКИ</div>
+    </div>
+
+    <div class="external-controls">
+        <button class="icon-btn" id="resetBtn">×</button>
+        <button class="icon-btn" id="playBtn">▶</button>
+    </div>
+
+    <!-- КНОПКА АУДИО (ЛЕВО) -->
+    <div class="audio-control-fixed" id="audio-toggle">
+        <span id="audio-status-icon">○</span>
+        <span id="audio-status">АУДИОДАТЧИКИ: ВЫКЛ</span>
+    </div>
+
+    <!-- КНОПКА ТЕРМИНАЛА (ПРАВО) -->
+    <a href="tools.html" target="_blank" class="terminal-link-fixed">
+        <span>□</span> ИНЖЕНЕРНЫЙ ТЕРМИНАЛ
+    </a>
+
+	<!-- Подключаем общие ресурсы из папки js соблюдая порядок -->
+	<script src="js/loader.js"></script>
+
+   <script>
+    // --- ЛОГИКА АВТОРИЗАЦИИ ---
+    let readIndices = [];
+    const PASS_KEY = "ТРАССИТ"; 
+    
+    // !!! ОШИБКА УДАЛЕНА: Здесь была автоматическая выдача пропуска !!!
+
+    // Инициализация визуального движка
+    initStarfield();
+
+    // Получаем эталонный ключ пароля из движка
+    const targetIndices = getPath(PASS_KEY).join('-');
+
+    // Вспомогательная функция для получения данных пути (d)
+    function getPathData(indices) {
+        if (!indices || !indices.length) return '';
+        const svgString = createSVG(indices);
+        const match = svgString.match(/d="([^"]*)"/);
+        return match ? match[1] : ''; 
+    }
+
+    // Отрисовка сетки точек
+    const grid = document.getElementById('grid-layer');
+
+    POINTS.forEach((_, i) => {
+        const d = document.createElement('div');
+        d.className = 'dot';
+        
+        d.onclick = () => {
+            if(!readIndices.includes(i)) {
+                readIndices.push(i);
+                d.classList.add('active');
+
+                if (typeof window.renderSmoothPath === 'function') {
+                    window.renderSmoothPath('readPath', readIndices, true);
+                }
+
+                updateReadStatus();
+
+                if (typeof playGlyphSound === 'function') {
+                    playGlyphSound([i, i]);
+                }
+            }
+        };
+        grid.appendChild(d);
+    });
+
+    // Проверка вводимой комбинации
+    function updateReadStatus() {
+        const pathData = getPathData(readIndices);
+        document.getElementById('readPath').setAttribute('d', pathData);
+        
+        const label = document.getElementById('statusLabel');
+        const key = readIndices.join('-');
+        
+        // !!! ОШИБКА УДАЛЕНА: Здесь была выдача пропуска при каждом клике !!!
+        
+        if (key === targetIndices) {
+            // ВЫДАЕМ ПРОПУСК ТОЛЬКО ПРИ ПОЛНОМ СОВПАДЕНИИ
+            localStorage.setItem('s9_access_granted', 'true'); 
+            
+            label.innerText = "ДОСТУП РАЗРЕШЕН";
+            label.style.color = "#00ff00";
+            label.classList.remove('error-state');
+            // Переход на главную
+            setTimeout(() => {
+                window.location.href = "index.html";
+            }, 1000);
+        } else if (readIndices.length >= 7) { // Увеличил порог, так как в ТРАССИТ больше 5 точек
+            label.innerText = "НЕ РАСПОЗНАННО";
+            label.classList.add('error-state');
+        } else {
+            label.innerText = "СОЕДИНИТЕ ТОЧКИ";
+            label.classList.remove('error-state');
+            label.style.color = "";
+        }
+    }
+
+    // Кнопка СБРОС (Reset)
+    document.getElementById('resetBtn').onclick = () => {
+        readIndices = [];
+        document.querySelectorAll('.dot').forEach(d => d.classList.remove('active'));
+        document.getElementById('readPath').setAttribute('d', '');
+        const label = document.getElementById('statusLabel');
+        label.innerText = "СОЕДИНИТЕ ТОЧКИ";
+        label.classList.remove('error-state');
+        label.style.color = "";
+    };
+
+    // Кнопка ИГРАТЬ (Play)
+    document.getElementById('playBtn').onclick = () => {
+        if (typeof playGlyphSound === 'function' && readIndices.length > 0) {
+            playGlyphSound(readIndices);
+        }
+    };
+</script>
+
+</body>
+</html>
