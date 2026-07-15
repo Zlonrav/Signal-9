@@ -78,24 +78,31 @@
             z-index: 10100;       /* Строго выше аварийной плашки */
             text-align: center;
             background: rgba(2, 5, 8, 0.95); /* Плотный космический фон */
-            padding: 25px 40px;   /* Хорошие внутренние отступы для текста */
+            padding: 30px 40px;   /* Увеличили вертикальное поле, чтобы контенту было просторно */
             border: 1px solid var(--neon, #ff3300);
             box-shadow: 0 0 30px var(--neon-glow, rgba(255, 30, 0, 0.2));
             transition: all 0.5s ease;
             
-            /* ЖЕСТКИЕ РАЗМЕРЫ ТАБЛИЧКИ, ЧТОБЫ ОНА НЕ СЖИМАЛАСЬ */
+            /* ЖЕСТКИЕ РАЗМЕРЫ ТАБЛИЧКИ, ЧТОБЫ КОНТЕНТ НЕ СЛИПАЛСЯ */
             width: 450px !important;         
             box-sizing: border-box !important; 
+
+            /* Заставляем все внутренние блоки строиться строго в столбик */
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 10px; /* Фиксированный зазор между строками текста и инпутом */
         }
 
         /* Заголовок внутри таблички ("ОБНАРУЖЕНО ПОВРЕЖДЕНИЕ ЯДРА") */
         .status-header {
+            display: block !important; /* Выталкивает инпут на новую строку */
             font-family: 'JetBrains Mono', monospace !important;
-            font-size: 14px !important;       /* Увеличенный читаемый шрифт */
+            font-size: 14px !important;       
             letter-spacing: 3px !important;
             color: var(--neon, #ff3300) !important;
-            margin-bottom: 15px !important;
-            transition: color 0.5s ease;
+            margin: 0 0 5px 0 !important; /* Уменьшили нижнее поле, так как теперь работает общая сетка gap */
             text-transform: uppercase;
         }
 
@@ -103,22 +110,22 @@
         #patchInput {
             background: transparent !important;
             border: none !important;
-            border-bottom: 2px solid var(--neon, #ff3300) !important; 
-            color: var(--neon, #ff3300) !important; 
+            border-bottom: 2px solid var(--neon, #ff3300) !important; /* Линия ввода */
+            color: var(--neon, #ff3300) !important;
             font-family: 'JetBrains Mono', monospace !important;
-            font-size: 28px !important;       /* Крупный инженерный шрифт */
+            font-size: 28px !important;       /* Крупные хакерские буквы */
             text-align: center !important;
             
-            /* ЖЕСТКАЯ ШИРИНА ИНПУТА, ЧТОБЫ ОН НЕ СХЛОПЫВАЛСЯ */
+            /* ЖЕСТКАЯ ШИРИНА ИНПУТА */
             width: 300px !important;      
             
             outline: none !important;
             text-transform: uppercase !important;
             letter-spacing: 8px !important;
-            padding: 10px 0 !important;
-            margin-top: 15px !important;
+            padding: 5px 0 !important;
+            margin-top: 15px !important; /* Гарантированный отступ сверху от текста */
             transition: all 0.3s ease;
-            display: inline-block !important; /* Защита структуры элемента */
+            display: block !important; /* Жестко переносим на отдельную строку в самый низ */
         }
 
         #patchInput:focus {
