@@ -306,62 +306,64 @@ document.getElementById('textInput').oninput = (e) => {
     const rawVal = e.target.value.trim();
     
     // 1. ПРОВЕРКА КОДА СПАСЕНИЯ
-if (rawVal === "142.0458.13.70") {
-    console.log("ВЕКТОР ПРИНЯТ: ОРБИТА СТАБИЛИЗИРОВАНА");
+document.getElementById('textInput').oninput = (e) => {
+    // 1. БЕРЕМ ЧИСТЫЙ ВВОД ПОЛЬЗОВАТЕЛЯ БЕЗ ПРОБЕЛОВ
+    const rawVal = e.target.value.trim();
 
-    // 1. ОЧИЩАЕМ ВСЕ ФЛАГИ ТРЕВОГИ В ПАМЯТИ И СТИЛИ
-    localStorage.removeItem('s9_emergency_flag'); // Гасим солнце
-    localStorage.removeItem('s9_emergency_reactor'); // Убираем реактор
-    localStorage.removeItem('s9_orbit_stabilized'); // Убираем промежуточный сигнал
-    
-    // Мгновенно снимаем красный режим на текущей странице
-    document.body.classList.remove('emergency-mode');
-    
-    // Вручную пинаем обновление плашки, чтобы она исчезла
-    if (typeof applyEmergencyStyles === 'function') {
-        applyEmergencyStyles();
+    // 2. ЖЕСТКАЯ ПРОВЕРКА КОДА ОРБИТЫ (ПЕРЕД ВСЕМИ ОСТАЛЬНЫМИ ФИЛЬТРАМИ)
+    if (rawVal === "142.0458.13.70") {
+        console.log("ВЕКТОР ПРИНЯТ: ОРБИТА СТАБИЛИЗИРОВАНА");
+
+        // Записываем данные в память
+        localStorage.removeItem('s9_emergency_flag'); // Гасим солнце
+        localStorage.setItem('s9_emergency_reactor', 'active'); // Ломаем реактор
+        localStorage.setItem('s9_orbit_stabilized', 'active');  // Сигнал для карты
+
+        // Перекрашиваем текущую страницу в аварийный красный режим
+        document.body.classList.add('emergency-mode');
+
+        // Обновляем текст плашки сверху мгновенно
+        if (typeof applyEmergencyStyles === 'function') {
+            applyEmergencyStyles();
+        }
+
+        // РАБОТА С ИНТЕРФЕЙСОМ И ТЕКСТОМ
+        const label = document.getElementById('statusLabel');
+        if (label) {
+            const genUI = document.getElementById('gen-ui');
+            const readUI = document.getElementById('read-ui');
+            const isReadMode = document.getElementById('mode-switch')?.checked;
+
+            if (genUI) genUI.classList.add('hidden');
+            if (readUI) readUI.classList.remove('hidden');
+            
+            // Текст меняется на оранжевое предупреждение
+            label.innerText = "ОРБИТА СТАБИЛЬНА. ВНИМАНИЕ: ОШИБКА ЯДРА РЕАКТОРА!";
+            label.style.color = "#ffaa00"; 
+            label.style.textShadow = "0 0 15px #ffaa00";
+            
+            setTimeout(() => {
+                label.innerText = "соедините точки";
+                label.style.color = "";
+                label.style.textShadow = "";
+
+                if (!isReadMode && genUI && readUI) {
+                    genUI.classList.remove('hidden');
+                    readUI.classList.add('hidden');
+                }
+            }, 4000);
+        }
+
+        // ИНЖЕНЕРНАЯ ОЧИСТКА ХОЛСТА (Твой фикс)
+        e.target.value = ""; 
+        if (typeof renderPath === 'function') renderPath('genPath', [], false); 
+        if (typeof updatePointsUI === 'function') updatePointsUI(); 
+
+        return; // Полностью останавливаем функцию, чтобы цифры не ушли в дешифратор глифов
     }
 
-    // 2. РАБОТА С ИНТЕРФЕЙСОМ И СТАТУСАМИ
-    const label = document.getElementById('statusLabel');
-    if (label) {
-        const genUI = document.getElementById('gen-ui');
-        const readUI = document.getElementById('read-ui');
-        const isReadMode = document.getElementById('mode-switch')?.checked;
-
-        // Показываем статус, скрываем инпут ввода букв
-        if (genUI) genUI.classList.add('hidden');
-        if (readUI) readUI.classList.remove('hidden');
-        
-        // ВЫВОДИМ ЗЕЛЁНОЕ СООБЩЕНИЕ ОБ УСПЕХЕ
-        label.innerText = "ВЕКТОР ПРИНЯТ: ОРБИТА СТАБИЛИЗИРОВАНА";
-        label.style.color = "#00ff44"; // Зелёный цвет успеха
-        label.style.textShadow = "0 0 15px #00ff44";
-        
-        // Через 4 секунды возвращаем элементы на место
-        setTimeout(() => {
-            label.innerText = "соедините точки";
-            label.style.color = "";
-            label.style.textShadow = "";
-
-            if (!isReadMode && genUI && readUI) {
-                genUI.classList.remove('hidden');
-                readUI.classList.add('hidden');
-            }
-        }, 4000);
-    }
-
-    // 3. ОБЯЗАТЕЛЬНАЯ ИНЖЕНЕРНАЯ ОЧИСТКА ХОЛСТА (Твой фикс)
-    e.target.value = ""; // Очищаем поле ввода
-    if (typeof renderPath === 'function') {
-        renderPath('genPath', [], false); // Стираем линии, чтобы экран был чистым
-    }
-    if (typeof updatePointsUI === 'function') {
-        updatePointsUI(); // Гасим светящиеся точки сетки
-    }
-
-    return; 
-}
+    // --- ДАЛЕЕ ИДЕТ ТВОЙ СТАРЫЙ КОД ФИЛЬТРАЦИИ БУКВ ДЛЯ ГЛИФОВ ---
+    // (Например: const val = rawVal.toUpperCase().replace(/[^А-ЯЁA-Z]/g, ''); и т.д.)
 
     // 2. ОБЫЧНАЯ ЛОГИКА ГЛИФОВ (Твоя оригинальная)
     const val = rawVal.toUpperCase().replace(/[^А-ЯЁA-Z]/g, '');
