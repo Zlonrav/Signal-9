@@ -167,10 +167,42 @@
         // Запуск телеметрии
         window.startStationTelemetry();
 
-        // Проверка режима ЧС при загрузке
-        if (localStorage.getItem('s9_emergency_flag') === 'active') {
-            window.triggerSignalLoss(true);
+        // Проверка режима ЧС при загрузке (вызываем нашу умную систему стилей)
+        if (typeof applyEmergencyStyles === 'function') {
+            applyEmergencyStyles();
         }
     });
 
-})();
+})(); // <--- ЗДЕСЬ ЗАКРЫВАЕТСЯ АНОНИМНАЯ ФУНКЦИЯ UI_ENGINE
+
+// --- ЦЕНТРАЛЬНАЯ СИСТЕМА МОНИТОРИНГА ЧС И ИНТЕРФЕЙСА ---
+function applyEmergencyStyles() {
+    const isSolar = localStorage.getItem('s9_emergency_flag') === 'active';
+    const isReactor = localStorage.getItem('s9_emergency_reactor') === 'active';
+
+    // 1. УПРАВЛЕНИЕ КРАСНЫМ РЕЖИМОМ СТАНЦИИ
+    if (isSolar || isReactor) {
+        document.body.classList.add('emergency-mode');
+        
+        // 2. ДИНАМИЧЕСКОЕ СОЗДАНИЕ И ОБНОВЛЕНИЕ ПЛАШКИ ПРЕДУПРЕЖДЕНИЯ
+        let bar = document.getElementById('emergency-bar');
+        if (!bar) {
+            bar = document.createElement('div');
+            bar.id = 'emergency-bar';
+            bar.style = "position:fixed; top:0; left:0; width:100%; background:#ff3300; color:#000; text-align:center; font-weight:bold; z-index:10000; padding:8px; font-family:monospace; letter-spacing:2px; text-transform:uppercase;";
+            document.body.appendChild(bar);
+        }
+        
+        // Подменяем текст плашки в зависимости от типа активной угрозы
+        bar.innerText = isReactor ? "ВНИМАНИЕ! КРИТИЧЕСКИЙ СБОЙ ПО РЕАКТОРА!" : "ВНИМАНИЕ! СОЛНЕЧНАЯ АКТИВНОСТЬ!";
+    } else {
+        // 3. ВОЗВРАЩАЕМ ШТАТНЫЙ РЕЖИМ (СИНИЙ НЕОН), КОГДА ВСЁ ЧИСТО
+        document.body.classList.remove('emergency-mode');
+        const bar = document.getElementById('emergency-bar');
+        if (bar) bar.remove();
+    }
+}
+
+// НАЗНАЧАЕМ ЕДИНЫЕ ОБРАБОТЧИКИ СОБЫТИЙ ДЛЯ СИНХРОНИЗАЦИИ ВКЛАДОК
+window.addEventListener('load', applyEmergencyStyles);
+window.addEventListener('storage', applyEmergencyStyles);
