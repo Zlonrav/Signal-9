@@ -1,3 +1,34 @@
+// --- ИНИЦИАЛИЗАЦИЯ ЦВЕТОВОГО РЕЖИМА ЯДРА ПРИ ЗАГРУЗКЕ ---
+(function initReactorVisuals() {
+    const isFixed = localStorage.getItem('s9_reactor_fixed') === 'true';
+    const isEmergency = localStorage.getItem('s9_emergency_reactor') === 'active' || 
+                        localStorage.getItem('s9_emergency_flag') === 'active';
+
+    if (isFixed) {
+        // ЕСЛИ РЕАКТОР УЖЕ ПОЧИНЕН — ОН ДЕСЯТКИ ЛЕТ БУДЕТ ЗЕЛЕНЫМ
+        document.documentElement.style.setProperty('--neon', '#00ff44');
+        document.documentElement.style.setProperty('--neon-glow', 'rgba(0, 255, 68, 0.2)');
+        
+        // Скрываем аварийный интерфейс патча и инпут
+        const patchUI = document.querySelector('.patch-interface');
+        if (patchUI) patchUI.style.display = "none";
+        
+        const statusElem = document.getElementById('patchStatus');
+        if (statusElem) {
+            statusElem.innerText = "РЕАКТОР СТАБИЛЕН. РАБОТА В ШТАТНОМ РЕЖИМЕ.";
+            statusElem.style.color = "#00ff44";
+        }
+    } else if (isEmergency) {
+        // ЕСЛИ ИДЕТ АВАРИЯ — КРАСИМ В КРАСНЫЙ
+        document.documentElement.style.setProperty('--neon', '#ff3200');
+        document.documentElement.style.setProperty('--neon-glow', 'rgba(255, 50, 0, 0.2)');
+    } else {
+        // ШТАТНОЕ СПОКОЙНОЕ ВРЕМЯ (ДО ВСЕХ КВЕСТОВ) — СИНИЙ РЕЖИМ
+        document.documentElement.style.setProperty('--neon', '#00f2ff');
+        document.documentElement.style.setProperty('--neon-glow', 'rgba(0, 242, 255, 0.1)');
+    }
+})();
+
 // Отрисовка глифа реактора при загрузке
 document.addEventListener('DOMContentLoaded', () => {
     const glyphCont = document.getElementById('core-glyph');
