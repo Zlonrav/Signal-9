@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const val = e.target.value.toUpperCase().trim();
             console.log("Текущий ввод в реакторе:", val); // Будет видно в консоли Хрома!
 
-                        if (val === "БЭКАП") {
+             if (val === "БЭКАП") {
                 console.log("Критический код БЭКАП принят!");
 
                 // 1. ЧИСТКА ПАМЯТИ СТАНЦИИ
@@ -55,53 +55,47 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 2. СНИМАЕМ АВАРИЙНЫЕ СТИЛИ С BODY И ПЛАШКИ
                 document.body.classList.remove('emergency-mode');
                 
-                // Принудительно меняем переменную неонового цвета на всей странице на ЗЕЛЁНЫЙ
+                // Принудительно переключаем неоновые переменные страницы на зелёный
                 document.documentElement.style.setProperty('--neon', '#00ff44');
                 document.documentElement.style.setProperty('--neon-glow', 'rgba(0, 255, 68, 0.5)');
                 
-                // СБРАСЫВАЕМ КРАСНЫЙ ФОН С ТЕЛА СТРАНИЦЫ
+                // Стабилизируем фон страницы
                 document.body.style.background = "#020208"; 
                 document.body.style.backgroundColor = "#020208";
-                document.body.style.animation = "none"; // Выключаем мигание всей страницы
+                document.body.style.animation = "none"; // Выключаем общую пульсацию
 
-                // Очищаем аварийные классы со всех крупных блоков страницы
-                const reactorWrap = document.querySelector('.reactor-page, .core-container, .main-frame, .wrapper');
-                if (reactorWrap) {
-                    reactorWrap.classList.remove('emergency-mode', 'error-state', 'alarm-active');
-                    reactorWrap.style.backgroundColor = "#020208";
-                    reactorWrap.style.boxShadow = "none";
-                }
-
+                // Удаляем плашку ЧС, если она есть
                 const bar = document.getElementById('emergency-bar');
                 if (bar) bar.remove();
 
-                // 3. ОБНОВЛЕНИЕ ТЕКСТА СТАТУСА (Зелёный триумф)
+                // 3. ОБНОВЛЕНИЕ ИНТЕРФЕЙСА ТЕКСТА И ПЕРЕКРАСКА РАМКИ
                 const statusElem = document.getElementById('patchStatus') || (typeof status !== 'undefined' ? status : null);
                 if (statusElem) {
                     statusElem.innerText = "ПРОТОКОЛ ВОССТАНОВЛЕН. СИСТЕМА СТАБИЛЬНА.";
                     statusElem.style.color = "#00ff44"; 
                     statusElem.style.textShadow = "0 0 15px #00ff44";
+                    
+                    // ТОЧЕЧНЫЙ ФИКС КРАСНОЙ РАМКИ СО СКРИНШОТА:
+                    // Берем родительский контейнер, в котором лежит текст статуса
+                    const parentBox = statusElem.parentElement;
+                    if (parentBox) {
+                        parentBox.style.borderColor = "#00ff44"; // Делаем рамку ЗЕЛЁНОЙ
+                        parentBox.style.boxShadow = "0 0 20px rgba(0, 255, 68, 0.3)";
+                        
+                        // Находим внутри этой рамки мелкий текст предупреждения и полностью его прячем
+                        const subTexts = parentBox.querySelectorAll('div, span, p, small');
+                        subTexts.forEach(el => {
+                            if (el !== statusElem) {
+                                el.style.display = "none";
+                            }
+                        });
+                    }
                 }
 
-                // Скрываем инпут ввода
+                // Скрываем инпут ввода букв
                 const inputElem = document.getElementById('patchInput') || (typeof input !== 'undefined' ? input : null);
                 if (inputElem) {
                     inputElem.style.display = "none";
-                }
-
-                // Перекрашиваем рамку интерфейса
-                const patchInterface = document.querySelector('.patch-interface');
-                if (patchInterface) {
-                    patchInterface.style.borderColor = "#00ff44";
-                    patchInterface.style.boxShadow = "0 0 30px rgba(0, 255, 68, 0.3)";
-                    
-                    // Прячем мелкую надпись "Внимание: требуется перепрошивка..."
-                    const subLabels = patchInterface.querySelectorAll('div');
-                    subLabels.forEach(div => {
-                        if (div.innerText.includes("ВНИМАНИЕ") || div.innerText.includes("БЭКАП") || div.innerText.includes("ОБНАРУЖЕНО")) {
-                            div.style.display = "none";
-                        }
-                    });
                 }
 
                 // 4. КРАСИМ ЦЕНТРАЛЬНЫЙ ГЛИФ В ЗЕЛЕНЫЙ
@@ -114,15 +108,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
 
-                // ПЕРЕКЛЮЧАЕМ ВСЕ ПОТОКИ ХАОТИЧНОГО КОДА В ЗЕЛЕНЫЙ РЕЖИМ ЛОГОВ
-                const glitchLines = document.querySelectorAll('.glitch-line, .code-stream, .matrix-text, div');
+                // Перекрашиваем все фоновые аварийные строки кода в мягкий зелёный лог
+                const glitchLines = document.querySelectorAll('.glitch-line, .code-stream, .matrix-text');
                 glitchLines.forEach(line => {
-                    if (line.style.color === 'rgb(255, 51, 51)' || line.classList.contains('error')) {
-                        line.style.color = "rgba(0, 255, 68, 0.4)";
-                    }
+                    line.style.color = "rgba(0, 255, 68, 0.3)";
+                    line.style.textShadow = "0 0 5px rgba(0, 255, 68, 0.5)";
                 });
 
-                // 5. ПЕРЕХОД В РУБКУ ЧЕРЕЗ 3 СЕКУНДЫ
+                // 5. ЖЕЛЕЗОБЕТОННЫЙ ТЕЛЕПОРТ В РУБКУ ЧЕРЕЗ 3 СЕКУНДЫ
+                console.log("Запуск таймера перехода в Рубку...");
                 setTimeout(() => {
                     window.location.href = "index.html";
                 }, 3000);
