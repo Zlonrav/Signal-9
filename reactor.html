@@ -24,17 +24,16 @@
 		    width: 300px;
 		    height: 300px;
 		    border-radius: 50%;
-		    /* Используем переменную неона станции для рамки круга */
-		    border: 2px solid var(--neon, rgba(255, 50, 0, 0.3));
+		    /* Если переменная --neon не задана, по умолчанию круг будет СИНИМ */
+		    border: 2px solid var(--neon, #00f2ff); 
 		    display: flex;
 		    align-items: center;
 		    justify-content: center;
 		    margin-bottom: 40px;
-		    /* Используем переменную свечения неона для фонового градиента */
-		    background: radial-gradient(circle, var(--neon-glow, rgba(255, 30, 0, 0.1)) 0%, transparent 70%);
-		    transition: all 0.5s ease; /* Добавляем плавное перетекание цвета */
+		    /* Если переменная --neon-glow не задана, градиент будет СИНИМ */
+		    background: radial-gradient(circle, var(--neon-glow, rgba(0, 242, 255, 0.1)) 0%, transparent 70%);
+		    transition: all 0.5s ease;
 		}
-
 
         /* Пульсация ядра при перегреве */
         .core-pulse {
