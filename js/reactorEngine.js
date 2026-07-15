@@ -26,7 +26,7 @@
                 });
             }
             if (statusElem) {
-                statusElem.innerText = "РЕАКТОР СТАБИЛЕН. РАБОТА В ШТАТНОМ РЕЖИМЕ.";
+                statusElem.innerText = "РАБОТА РЕАКТОРА В ШТАТНОМ РЕЖИМЕ.";
                 statusElem.style.color = "#00ff44";
                 statusElem.style.textShadow = "0 0 15px #00ff44";
             }
