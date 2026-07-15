@@ -99,14 +99,37 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 // 4. КРАСИМ ЦЕНТРАЛЬНЫЙ ГЛИФ В ЗЕЛЕНЫЙ
+                // 4. КРАСИМ ЦЕНТРАЛЬНЫЙ ГЛИФ И КРУГИ ВОКРУГ НЕГО В ЗЕЛЕНЫЙ
                 const glyphCont = document.getElementById('core-glyph');
                 if (glyphCont) {
+                    // Перекрашиваем саму «бабочку» БЭКАПа
                     const svg = glyphCont.querySelector('svg');
                     if (svg) {
                         svg.style.stroke = "#00ff44";
                         svg.style.filter = "drop-shadow(0 0 15px #00ff44)";
+                        
+                        // Если круг внутри SVG — красим его элементы stroke/fill
+                        const svgCircles = svg.querySelectorAll('circle, path');
+                        svgCircles.forEach(el => {
+                            if (el.getAttribute('stroke') || el.style.stroke) el.style.stroke = "#00ff44";
+                        });
                     }
+                    
+                    // ТОЧЕЧНЫЙ ФИКС КРАСНОГО КРУГА:
+                    // Если красный круг — это внешняя рамка самого контейнера глифа
+                    glyphCont.style.borderColor = "#00ff44";
+                    glyphCont.style.boxShadow = "0 0 20px rgba(0, 255, 68, 0.3)";
+                    
+                    // Проверяем, нет ли вокруг него других соседних кругов/декораций
+                    const subCircles = glyphCont.parentElement ? glyphCont.parentElement.querySelectorAll('.core-circle, .orbit, div') : [];
+                    subCircles.forEach(circle => {
+                        if (circle !== glyphCont) {
+                            circle.style.borderColor = "#00ff44";
+                            circle.style.boxShadow = "0 0 15px rgba(0, 255, 68, 0.2)";
+                        }
+                    });
                 }
+
 
                 // Перекрашиваем все фоновые аварийные строки кода в мягкий зелёный лог
                 const glitchLines = document.querySelectorAll('.glitch-line, .code-stream, .matrix-text');
