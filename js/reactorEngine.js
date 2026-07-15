@@ -1,33 +1,67 @@
-// --- ИНИЦИАЛИЗАЦИЯ ЦВЕТОВОГО РЕЖИМА ЯДРА ПРИ ЗАГРУЗКЕ ---
-(function initReactorVisuals() {
+// --- ИНИЦИАЛИЗАЦИЯ СОСТОЯНИЯ РЕАКТОРА ПРИ ЗАГРУЗКЕ СТРАНИЦЫ ---
+(function() {
     const isFixed = localStorage.getItem('s9_reactor_fixed') === 'true';
     const isEmergency = localStorage.getItem('s9_emergency_reactor') === 'active' || 
                         localStorage.getItem('s9_emergency_flag') === 'active';
-
-    if (isFixed) {
-        // ЕСЛИ РЕАКТОР УЖЕ ПОЧИНЕН — ОН ДЕСЯТКИ ЛЕТ БУДЕТ ЗЕЛЕНЫМ
-        document.documentElement.style.setProperty('--neon', '#00ff44');
-        document.documentElement.style.setProperty('--neon-glow', 'rgba(0, 255, 68, 0.2)');
-        
-        // Скрываем аварийный интерфейс патча и инпут
-        const patchUI = document.querySelector('.patch-interface');
-        if (patchUI) patchUI.style.display = "none";
-        
+    
+    // Ждем загрузки DOM, чтобы безопасно управлять элементами рамки
+    document.addEventListener('DOMContentLoaded', () => {
+        const inputElem = document.getElementById('patchInput');
+        const patchInterface = document.querySelector('.patch-interface');
         const statusElem = document.getElementById('patchStatus');
-        if (statusElem) {
-            statusElem.innerText = "РЕАКТОР СТАБИЛЕН. РАБОТА В ШТАТНОМ РЕЖИМЕ.";
-            statusElem.style.color = "#00ff44";
+        const glyphCont = document.getElementById('core-glyph');
+
+        if (isFixed) {
+            // === ВАРИАНТ 1: РЕАКТОР УСПЕШНО ПОЧИНЕН ===
+            document.documentElement.style.setProperty('--neon', '#00ff44');
+            document.documentElement.style.setProperty('--neon-glow', 'rgba(0, 255, 68, 0.2)');
+            document.body.classList.remove('emergency-mode');
+            
+            if (inputElem) inputElem.style.display = "none";
+            if (patchInterface) {
+                patchInterface.style.borderColor = "#00ff44";
+                patchInterface.style.boxShadow = "0 0 20px rgba(0, 255, 68, 0.2)";
+                patchInterface.querySelectorAll('div, span, p, small').forEach(el => {
+                    if (el.id !== 'patchStatus') el.style.display = "none";
+                });
+            }
+            if (statusElem) {
+                statusElem.innerText = "РЕАКТОР СТАБИЛЕН. РАБОТА В ШТАТНОМ РЕЖИМЕ.";
+                statusElem.style.color = "#00ff44";
+                statusElem.style.textShadow = "0 0 15px #00ff44";
+            }
+        } 
+        else if (isEmergency) {
+            // === ВАРИАНТ 2: ИДЕТ АКТИВНАЯ АВАРИЯ РЕАКТОРА ===
+            document.documentElement.style.setProperty('--neon', '#ff3200');
+            document.documentElement.style.setProperty('--neon-glow', 'rgba(255, 50, 0, 0.2)');
+            document.body.classList.add('emergency-mode');
+            
+            if (patchInterface) {
+                patchInterface.style.display = "block"; // Показываем рамку ввода патча
+                patchInterface.style.borderColor = "#ff3200";
+            }
+        } 
+        else {
+            // === ВАРИАНТ 3: ШТАТНЫЙ РЕЖИМ (ПОСЛЕ ТВОЕГО СБРОСА В КОНСОЛИ) ===
+            // В памяти пусто. Станция работает в мирном синем режиме.
+            document.documentElement.style.setProperty('--neon', '#00f2ff');
+            document.documentElement.style.setProperty('--neon-glow', 'rgba(0, 242, 255, 0.1)');
+            document.body.classList.remove('emergency-mode');
+
+            // ТВОЙ ФИКС: В мирное время рамки квеста вообще не должно быть видно на экране!
+            if (patchInterface) {
+                patchInterface.style.display = "none"; 
+            }
+            // Скрываем инпут, так как чинить прямо сейчас нечего
+            if (inputElem) inputElem.style.display = "none"; 
+            
+            console.log("Реактор переведен в штатный синий режим. Квест ожидает запуска.");
         }
-    } else if (isEmergency) {
-        // ЕСЛИ ИДЕТ АВАРИЯ — КРАСИМ В КРАСНЫЙ
-        document.documentElement.style.setProperty('--neon', '#ff3200');
-        document.documentElement.style.setProperty('--neon-glow', 'rgba(255, 50, 0, 0.2)');
-    } else {
-        // ШТАТНОЕ СПОКОЙНОЕ ВРЕМЯ (ДО ВСЕХ КВЕСТОВ) — СИНИЙ РЕЖИМ
-        document.documentElement.style.setProperty('--neon', '#00f2ff');
-        document.documentElement.style.setProperty('--neon-glow', 'rgba(0, 242, 255, 0.1)');
-    }
+    });
 })();
+// -------------------------------------------------------------
+
 
 // Отрисовка глифа реактора при загрузке
 document.addEventListener('DOMContentLoaded', () => {
