@@ -74,7 +74,7 @@
                     'ТЕРМИНАЛ': 'tools.html', 
                     'АРХИВ': 'archive.html', 
                     'КАРТА': 'map.html',
-                    'РЕАКТОР': 'reactor.html', // Проверь, чтобы здесь было именно так!
+                    'РЕАКТОР': 'reactor.html',
                     'ЯДРО': 'core_room.html',
                     'СКЛАД': 'storage.html',
                     'МЕДОТСЕК': 'medbay.html',
