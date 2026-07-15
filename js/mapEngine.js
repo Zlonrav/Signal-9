@@ -69,7 +69,18 @@
             
             if (isUnlocked) {
                 node.onclick = () => {
-                    const files = { 'РУБКА':'index.html', 'ТЕРМИНАЛ':'tools.html', 'АРХИВ':'archive.html', 'КАРТА':'map.html', 'РЕАКТОР': 'reactor.html' };
+                const files = { 
+                    'РУБКА': 'index.html', 
+                    'ТЕРМИНАЛ': 'tools.html', 
+                    'АРХИВ': 'archive.html', 
+                    'КАРТА': 'map.html',
+                    'РЕАКТОР': 'reactor.html', // Проверь, чтобы здесь было именно так!
+                    'ЯДРО': 'core_room.html',
+                    'СКЛАД': 'storage.html',
+                    'МЕДОТСЕК': 'medbay.html',
+                    'АНГАР': 'hangar.html',
+                    'ОБСЕРВАТОРИЯ': 'obs.html'
+                };
                     window.location.href = files[s.id] || (s.id.toLowerCase() + '.html');
                 };
             }
