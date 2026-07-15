@@ -37,34 +37,50 @@ document.addEventListener('DOMContentLoaded', () => {
         input.addEventListener('input', (e) => {
             const val = e.target.value.toUpperCase().trim();
             
-            if (val === "БЭКАП") {
-                // 1. ФИКСИРУЕМ УСПЕХ НАВСЕГДА
+                        if (val === "БЭКАП") {
+                // 1. ФИКСИРУЕМ УСПЕХ НАВСЕГДА И ЧИСТИМ ТРЕВОГИ
                 localStorage.setItem('s9_reactor_fixed', 'true');
-                
-                // 2. ПОЛНОСТЬЮ СНОСИМ ОБЕ АВАРИЙНЫЕ ПЕРЕМЕННЫЕ
                 localStorage.removeItem('s9_emergency_reactor');
                 localStorage.removeItem('s9_orbit_stabilized');
-                
-                // И убираем старую солнечную тревогу, если она где-то зависла
                 localStorage.removeItem('s9_emergency_flag');
                 
-                // 3. СНИМАЕМ КРАСНЫЙ РЕЖИМ С ТЕКУЩЕЙ СТРАНИЦЫ И ГАСИМ ПЛАШКУ
+                // 2. СНИМАЕМ КРАСНЫЙ РЕЖИМ ЧС И УДАЛЯЕМ ВЕРХНЮЮ ПЛАШКУ
                 document.body.classList.remove('emergency-mode');
                 const bar = document.getElementById('emergency-bar');
                 if (bar) bar.remove();
                 
-                // Если есть глобальная функция сброса сигнала — вызываем её для порядка
+                // Вызываем глобальный сброс сигнала, если он подключен
                 if (typeof window.triggerSignalLoss === 'function') {
                     window.triggerSignalLoss(false);
                 }
 
-                // 4. ВИЗУАЛЬНЫЙ ФИДБЕК ОБ УСПЕШНОМ ХЕЙНДШЕЙКЕ
-                status.innerText = "ПРОТОКОЛ ВОССТАНОВЛЕН. БЭКАП СОЗДАН.";
-                status.style.color = "#00ff44";
-                status.style.textShadow = "0 0 15px #00ff44";
-                input.style.display = "none";
+                // 3. ВИЗУАЛЬНЫЙ ФИДБЕК ОБ УСПЕХЕ
+                // Меняем текст главного статуса
+                if (status) {
+                    status.innerText = "ПРОТОКОЛ ВОССТАНОВЛЕН. ЯДРО СТАБИЛЬНО.";
+                    status.style.color = "#00ff44"; // Перекрашиваем статус в зелёный
+                    status.style.textShadow = "0 0 15px #00ff44";
+                }
                 
-                // Подсвечиваем центральный глиф зеленым цветом успеха
+                // Прячем поле ввода (инпут), чтобы пользователь больше ничего не писал
+                if (input) {
+                    input.style.display = "none";
+                }
+
+                // ПРЯЧЕМ СТАТИЧНУЮ СТРОКУ ТРЕВОГИ ("ВНИМАНИЕ: ТРЕБУЕТСЯ ПЕРЕПРОШИВКА...")
+                // Находим родительский блок интерфейса патча
+                const patchInterface = document.querySelector('.patch-interface');
+                if (patchInterface) {
+                    // Перекрашиваем рамку блока в зелёный цвет успеха
+                    patchInterface.style.borderColor = "#00ff44";
+                    patchInterface.style.boxShadow = "0 0 30px rgba(0, 255, 68, 0.2)";
+                    
+                    // Находим и скрываем вторую строчку с мелким текстом, чтобы она не мешалась
+                    const subHeader = patchInterface.querySelector('div:not(.status-header):not([style*="margin-top"])');
+                    if (subHeader) subHeader.style.display = "none";
+                }
+                
+                // 4. КРАСИМ ЦЕНТРАЛЬНЫЙ ГЛИФ В ЗЕЛЁНЫЙ ЦВЕТ УСПЕХА
                 const glyphCont = document.getElementById('core-glyph');
                 if (glyphCont) {
                     const svg = glyphCont.querySelector('svg');
@@ -74,7 +90,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
 
-                // Плавный уход в рубку через 3 секунды
+                // 5. ПРИНУДИТЕЛЬНЫЙ ПЛАВНЫЙ ПЕРЕХОД В РУБКУ ЧЕРЕЗ 3 СЕКУНДЫ
+                console.log("РЕАКТОР СТАБИЛИЗИРОВАН. ВОЗВРАТ В РУБКУ...");
                 setTimeout(() => {
                     window.location.href = "index.html";
                 }, 3000);
