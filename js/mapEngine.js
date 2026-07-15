@@ -121,5 +121,6 @@
         document.getElementById('mapLines').appendChild(line);
     }
 
+
     initMap();
 })();
