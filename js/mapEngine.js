@@ -69,7 +69,7 @@
             
             if (isUnlocked) {
                 node.onclick = () => {
-                    const files = { 'РУБКА':'index.html', 'ТЕРМИНАЛ':'tools.html', 'АРХИВ':'archive.html', 'КАРТА':'map.html' };
+                    const files = { 'РУБКА':'index.html', 'ТЕРМИНАЛ':'tools.html', 'АРХИВ':'archive.html', 'КАРТА':'map.html', 'РЕАКТОР': 'reactor.html' };
                     window.location.href = files[s.id] || (s.id.toLowerCase() + '.html');
                 };
             }
