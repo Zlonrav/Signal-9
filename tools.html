@@ -363,15 +363,6 @@ document.getElementById('textInput').oninput = (e) => {
     }
 
 
-    // 3. ОБЯЗАТЕЛЬНАЯ ИНЖЕНЕРНАЯ ОЧИСТКА ХОЛСТА (Твой фикс)
-    e.target.value = ""; 
-    if (typeof renderPath === 'function') renderPath('genPath', [], false); 
-    if (typeof updatePointsUI === 'function') updatePointsUI(); 
-
-    return; 
-}
-
-
     // --- ДАЛЕЕ ИДЕТ ТВОЙ СТАРЫЙ КОД ФИЛЬТРАЦИИ БУКВ ДЛЯ ГЛИФОВ ---
     // (Например: const val = rawVal.toUpperCase().replace(/[^А-ЯЁA-Z]/g, ''); и т.д.)
 
