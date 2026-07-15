@@ -108,25 +108,32 @@
 
         /* Поле для ввода слова БЭКАП */
         #patchInput {
+            /* КРИТИЧЕСКИЙ ФИКС: Отменяем глобальный position: absolute для инпута */
+            position: static !important;  
+            display: block !important;    /* Возвращаем в стандартный блочный поток */
+            
             background: transparent !important;
             border: none !important;
-            border-bottom: 2px solid var(--neon, #ff3300) !important; /* Линия ввода */
+            border-bottom: 2px solid var(--neon, #ff3300) !important; /* Четкая линия снизу */
             color: var(--neon, #ff3300) !important;
             font-family: 'JetBrains Mono', monospace !important;
-            font-size: 28px !important;       /* Крупные хакерские буквы */
+            font-size: 28px !important;       /* Большие буквы для ввода */
             text-align: center !important;
             
-            /* ЖЕСТКАЯ ШИРИНА ИНПУТА */
-            width: 300px !important;      
+            /* Жесткие размеры самого поля ввода */
+            width: 280px !important;      
+            height: 45px !important;
             
             outline: none !important;
             text-transform: uppercase !important;
             letter-spacing: 8px !important;
+            
+            /* Создаем аккуратный отступ сверху от текста */
+            margin: 20px auto 0 auto !important; 
             padding: 5px 0 !important;
-            margin-top: 15px !important; /* Гарантированный отступ сверху от текста */
             transition: all 0.3s ease;
-            display: block !important; /* Жестко переносим на отдельную строку в самый низ */
         }
+
 
         #patchInput:focus {
             border-bottom-color: var(--neon, #ff6600) !important;
