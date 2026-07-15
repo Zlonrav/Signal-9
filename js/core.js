@@ -5,15 +5,18 @@ function update() {
     // ОБЪЯВЛЯЕМ ПЕРЕМЕННУЮ ТОЛЬКО ОДИН РАЗ
     const now = Date.now();
     
-    // --- БЛОК ГЛОБАЛЬНОГО СБОЯ ---
-    const isGlobalEmergency = localStorage.getItem('s9_emergency_flag') === 'active';
+    // --- ИСПРАВЛЕННЫЙ БЛОК ГЛОБАЛЬНОГО СБОЯ ---
+    // Читаем оба флага — солнце и реактор
+    const isSolarEmergency = localStorage.getItem('s9_emergency_flag') === 'active';
+    const isReactorEmergency = localStorage.getItem('s9_emergency_reactor') === 'active';
+    const isGlobalEmergency = isSolarEmergency || isReactorEmergency;
     
     if (isGlobalEmergency) {
         if (!isSignalLoss) triggerSignalLoss(true);
         const timeSec = Math.floor(now / 1000);
         const timePassed = timeSec % (typeof CYCLE_TIME !== 'undefined' ? CYCLE_TIME : 128);
         updateMetaData(now, true, timePassed, 0);
-        return; // Завершаем выполнение кадра, если активен глобальный сбой
+        return; // Завершаем выполнение кадра, если активен любой глобальный сбой
     }
     // ----------------------------
 
@@ -22,21 +25,17 @@ function update() {
     const timeLeft = CYCLE_TIME - (timeSec % CYCLE_TIME);
     const timePassed = timeSec % CYCLE_TIME;
     const phraseIndex = Math.floor((timeSec / CYCLE_TIME) % PHRASES.length);
-    
-    // ... далее твой оригинальный код без изменений ...
 
     const phraseContainer = document.getElementById('currentPhrase');
 
-    const cyclePos = now % ERROR_INTERVAL;
-    const isErrorTime = cyclePos < ERROR_DURATION;
-
-    if (!isErrorTime && isSignalLoss) {
+    // УДАЛЕНО: Старая автоматическая логика сбоев по ERROR_INTERVAL, 
+    // которая сбрасывала ручные флаги ЧС.
+    
+    if (isSignalLoss) {
         if (!testBtn.dataset.manual || timeLeft === CYCLE_TIME) {
             testBtn.dataset.manual = "";
             triggerSignalLoss(false);
         }
-    } else if (isErrorTime && !isSignalLoss) {
-        triggerSignalLoss(true);
     }
 
     if (timePassed === 0 && isSignalLoss && !testBtn.dataset.manual) triggerSignalLoss(false);
@@ -93,14 +92,20 @@ if(testBtn) {
         e.preventDefault(); 
         e.stopPropagation();
         
-        // Читаем текущее глобальное состояние
-        const isEmergency = localStorage.getItem('s9_emergency_flag') === 'active';
+        // Читаем оба флага для кнопки переключения
+        const isSolar = localStorage.getItem('s9_emergency_flag') === 'active';
+        const isReactor = localStorage.getItem('s9_emergency_reactor') === 'active';
+        const isEmergency = isSolar || isReactor;
+        
         const newState = !isEmergency;
         
         if (newState) {
             localStorage.setItem('s9_emergency_flag', 'active');
         } else {
+            // Если тушим кнопкой — тушим сразу всё
             localStorage.removeItem('s9_emergency_flag');
+            localStorage.removeItem('s9_emergency_reactor');
+            localStorage.removeItem('s9_orbit_stabilized');
         }
         
         testBtn.dataset.manual = newState ? "true" : "";
@@ -108,8 +113,6 @@ if(testBtn) {
         testBtn.style.background = newState ? '#ff3333' : '#333';
     });
 }
-
-
 
 setInterval(update, 30);
 update();
