@@ -303,15 +303,11 @@ document.getElementById('mode-switch').onchange = (e) => {
 };
 
 document.getElementById('textInput').oninput = (e) => {
-    const rawVal = e.target.value.trim();
-    
-    // 1. ПРОВЕРКА КОДА СПАСЕНИЯ
-document.getElementById('textInput').oninput = (e) => {
     // 1. БЕРЕМ ЧИСТЫЙ ВВОД ПОЛЬЗОВАТЕЛЯ БЕЗ ПРОБЕЛОВ
     const rawVal = e.target.value.trim();
 
     // 2. ЖЕСТКАЯ ПРОВЕРКА КОДА ОРБИТЫ (ПЕРЕД ВСЕМИ ОСТАЛЬНЫМИ ФИЛЬТРАМИ)
-    if (rawVal === "142") {
+    if (rawVal === "142.0458.13.70") {
         console.log("ВЕКТОР ПРИНЯТ: ОРБИТА СТАБИЛИЗИРОВАНА");
 
         // Записываем данные в память
@@ -372,11 +368,6 @@ document.getElementById('textInput').oninput = (e) => {
     updatePointsUI();
 };
 
-
-
-
-
-
 document.getElementById('resetBtn').onclick = () => {
     const isRead = document.getElementById('mode-switch').checked;
     if (isRead) {
@@ -401,6 +392,7 @@ document.getElementById('playBtn').onclick = () => {
 // Запуск
 initDictionary();
 updatePointsUI();
+
 
 </script>
 
