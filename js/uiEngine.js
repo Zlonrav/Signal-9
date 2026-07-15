@@ -176,7 +176,7 @@
 })(); // <--- ЗДЕСЬ ЗАКРЫВАЕТСЯ АНОНИМНАЯ ФУНКЦИЯ UI_ENGINE
 
 // --- ЦЕНТРАЛЬНАЯ СИСТЕМА МОНИТОРИНГА ЧС И ИНТЕРФЕЙСА ---
-function applyEmergencyStyles() {
+window.applyEmergencyStyles = function() {
     const isSolar = localStorage.getItem('s9_emergency_flag') === 'active';
     const isReactor = localStorage.getItem('s9_emergency_reactor') === 'active';
 
@@ -201,8 +201,9 @@ function applyEmergencyStyles() {
         const bar = document.getElementById('emergency-bar');
         if (bar) bar.remove();
     }
-}
+};
 
 // НАЗНАЧАЕМ ЕДИНЫЕ ОБРАБОТЧИКИ СОБЫТИЙ ДЛЯ СИНХРОНИЗАЦИИ ВКЛАДОК
-window.addEventListener('load', applyEmergencyStyles);
-window.addEventListener('storage', applyEmergencyStyles);
+document.addEventListener('DOMContentLoaded', window.applyEmergencyStyles);
+window.addEventListener('load', window.applyEmergencyStyles);
+window.addEventListener('storage', window.applyEmergencyStyles);
