@@ -306,50 +306,62 @@ document.getElementById('textInput').oninput = (e) => {
     // 1. БЕРЕМ ЧИСТЫЙ ВВОД ПОЛЬЗОВАТЕЛЯ БЕЗ ПРОБЕЛОВ
     const rawVal = e.target.value.trim();
 
-    // 2. ЖЕСТКАЯ ПРОВЕРКА КОДА ОРБИТЫ (ПЕРЕД ВСЕМИ ОСТАЛЬНЫМИ ФИЛЬТРАМИ)
-   if (rawVal === "142") {
-    console.log("ВЕКТОР ПРИНЯТ: ОРБИТА СТАБИЛИЗИРОВАНА");
+        // 2. ЖЕСТКАЯ ПРОВЕРКА КОДА ОРБИТЫ (ПЕРЕД ВСЕМИ ОСТАЛЬНЫМИ ФИЛЬТРАМИ)
+    if (rawVal === "142.0458.13.70") {
+        console.log("ВЕКТОР ПРИНЯТ: ОРБИТА СТАБИЛИЗИРОВАНА");
 
-    // 1. ПЕРЕКЛЮЧАЕМ ФЛАГИ В ПАМЯТИ В СЛЕДУЮЩУЮ ФАЗУ
-    localStorage.removeItem('s9_emergency_flag'); // Солнечная ЧС устранена
-    
-    // Если реактор еще сломан — переходим во 2-й этап квеста
-    if (localStorage.getItem('s9_reactor_fixed') !== 'true') {
-        localStorage.setItem('s9_emergency_reactor', 'active'); // Включаем ЧС реактора
-        localStorage.setItem('s9_orbit_stabilized', 'active');  // Сигнал-ключ для тильды и карты
-    }
-
-    // Мгновенно перерисовываем плашку на новую угрозу
-    if (typeof applyEmergencyStyles === 'function') {
-        applyEmergencyStyles();
-    }
-
-    // 2. РАБОТА С ИНТЕРФЕЙСОМ И ТЕКСТОМ
-    const label = document.getElementById('statusLabel');
-    if (label) {
-        const genUI = document.getElementById('gen-ui');
-        const readUI = document.getElementById('read-ui');
-        const isReadMode = document.getElementById('mode-switch')?.checked;
-
-        if (genUI) genUI.classList.add('hidden');
-        if (readUI) readUI.classList.remove('hidden');
+        // 1. ПЕРЕКЛЮЧАЕМ ФЛАГИ В ПАМЯТИ В СЛЕДУЮЩУЮ ФАЗУ
+        localStorage.removeItem('s9_emergency_flag'); // Солнечная ЧС устранена
         
-        // Текст сообщает о переходе к реактору
-        label.innerText = "ОРБИТА СТАБИЛЬНА. ВНИМАНИЕ: ОШИБКА ЯДРА РЕАКТОРА!";
-        label.style.color = "#ffaa00"; // Тревожный оранжевый цвет
-        label.style.textShadow = "0 0 15px #ffaa00";
-        
-        setTimeout(() => {
-            label.innerText = "соедините точки";
-            label.style.color = "";
-            label.style.textShadow = "";
+        // Если реактор еще сломан — переходим во 2-й этап квеста
+        if (localStorage.getItem('s9_reactor_fixed') !== 'true') {
+            localStorage.setItem('s9_emergency_reactor', 'active'); // Включаем ЧС реактора
+            localStorage.setItem('s9_orbit_stabilized', 'active');  // Сигнал-ключ для тильды и карты
+            
+            // Принудительно держим класс аварии, чтобы страница осталась красной
+            document.body.classList.add('emergency-mode');
+        }
 
-            if (!isReadMode && genUI && readUI) {
-                genUI.classList.remove('hidden');
-                readUI.classList.add('hidden');
-            }
-        }, 4000);
+        // Мгновенно перерисовываем плашку на новую угрозу через глобальный контекст
+        if (typeof window.applyEmergencyStyles === 'function') {
+            window.applyEmergencyStyles();
+        }
+
+        // 2. РАБОТА С ИНТЕРФЕЙСОМ И ТЕКСТОМ
+        const label = document.getElementById('statusLabel');
+        if (label) {
+            const genUI = document.getElementById('gen-ui');
+            const readUI = document.getElementById('read-ui');
+            const isReadMode = document.getElementById('mode-switch')?.checked;
+
+            if (genUI) genUI.classList.add('hidden');
+            if (readUI) readUI.classList.remove('hidden');
+            
+            // Текст сообщает о переходе к реактору
+            label.innerText = "ОРБИТА СТАБИЛЬНА. ВНИМАНИЕ: ОШИБКА ЯДРА РЕАКТОРА!";
+            label.style.color = "#ffaa00"; // Тревожный оранжевый цвет
+            label.style.textShadow = "0 0 15px #ffaa00";
+            
+            setTimeout(() => {
+                label.innerText = "соедините точки";
+                label.style.color = "";
+                label.style.textShadow = "";
+
+                if (!isReadMode && genUI && readUI) {
+                    genUI.classList.remove('hidden');
+                    readUI.classList.add('hidden');
+                }
+            }, 4000);
+        }
+
+        // 3. ОБЯЗАТЕЛЬНАЯ ИНЖЕНЕРНАЯ ОЧИСТКА ХОЛСТА
+        e.target.value = ""; 
+        if (typeof renderPath === 'function') renderPath('genPath', [], false); 
+        if (typeof updatePointsUI === 'function') updatePointsUI(); 
+
+        return; 
     }
+
 
     // 3. ОБЯЗАТЕЛЬНАЯ ИНЖЕНЕРНАЯ ОЧИСТКА ХОЛСТА (Твой фикс)
     e.target.value = ""; 
