@@ -38,20 +38,40 @@ document.addEventListener('DOMContentLoaded', () => {
             const val = e.target.value.toUpperCase().trim();
             
             if (val === "БЭКАП") {
-                // ФИКСИРУЕМ УСПЕХ
+                // 1. ФИКСИРУЕМ УСПЕХ НАВСЕГДА
                 localStorage.setItem('s9_reactor_fixed', 'true');
                 
-                // ВЫКЛЮЧАЕМ АВАРИЮ ГЛОБАЛЬНО
+                // 2. ПОЛНОСТЬЮ СНОСИМ ОБЕ АВАРИЙНЫЕ ПЕРЕМЕННЫЕ
+                localStorage.removeItem('s9_emergency_reactor');
+                localStorage.removeItem('s9_orbit_stabilized');
+                
+                // И убираем старую солнечную тревогу, если она где-то зависла
                 localStorage.removeItem('s9_emergency_flag');
+                
+                // 3. СНИМАЕМ КРАСНЫЙ РЕЖИМ С ТЕКУЩЕЙ СТРАНИЦЫ И ГАСИМ ПЛАШКУ
                 document.body.classList.remove('emergency-mode');
+                const bar = document.getElementById('emergency-bar');
+                if (bar) bar.remove();
                 
-                // ВИЗУАЛЬНЫЙ ФИДБЕК
-                status.innerText = "ПРОТОКОЛ ВОССТАНОВЛЕН. БЭКАП СОЗДАН.";
-                status.style.color = "#00ff44";
-                input.style.display = "none";
-                
+                // Если есть глобальная функция сброса сигнала — вызываем её для порядка
                 if (typeof window.triggerSignalLoss === 'function') {
                     window.triggerSignalLoss(false);
+                }
+
+                // 4. ВИЗУАЛЬНЫЙ ФИДБЕК ОБ УСПЕШНОМ ХЕЙНДШЕЙКЕ
+                status.innerText = "ПРОТОКОЛ ВОССТАНОВЛЕН. БЭКАП СОЗДАН.";
+                status.style.color = "#00ff44";
+                status.style.textShadow = "0 0 15px #00ff44";
+                input.style.display = "none";
+                
+                // Подсвечиваем центральный глиф зеленым цветом успеха
+                const glyphCont = document.getElementById('core-glyph');
+                if (glyphCont) {
+                    const svg = glyphCont.querySelector('svg');
+                    if (svg) {
+                        svg.style.stroke = "#00ff44";
+                        svg.style.filter = "drop-shadow(0 0 15px #00ff44)";
+                    }
                 }
 
                 // Плавный уход в рубку через 3 секунды
@@ -59,6 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.location.href = "index.html";
                 }, 3000);
             }
+
         });
     }
 
