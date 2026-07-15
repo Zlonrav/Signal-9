@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 3. ОБНОВЛЕНИЕ ИНТЕРФЕЙСА ТЕКСТА И ПЕРЕКРАСКА РАМКИ
                 const statusElem = document.getElementById('patchStatus') || (typeof status !== 'undefined' ? status : null);
                 if (statusElem) {
-                    statusElem.innerText = "ПРОТОКОЛ ВОССТАНОВЛЕН. СИСТЕМА СТАБИЛЬНА.";
+                    statusElem.innerText = "РЕАКТОР ВОССТАНОВЛЕН. СИСТЕМА СТАБИЛЬНА.";
                     statusElem.style.color = "#00ff44"; 
                     statusElem.style.textShadow = "0 0 15px #00ff44";
                     
