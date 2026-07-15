@@ -69,15 +69,21 @@
             transition: color 0.5s ease;
         }
 
-        /* Поле для ввода патча */
+        /* Поле для ввода патча (Перенесено вниз страницы) */
         .patch-interface {
-            z-index: 100;
+            position: absolute;   /* Вырываем из центра и фиксируем */
+            bottom: 80px;         /* Смещаем вниз, оставляя красивый отступ */
+            left: 50%;            /* Центрируем по горизонтали */
+            transform: translateX(-50%); /* Идеальное выравнивание по центру */
+            z-index: 10100;       /* Ставим выше плашки ЧС (у неё 10000), чтобы текст не перекрывался */
             text-align: center;
-            background: rgba(2, 5, 8, 0.9);
-            padding: 20px;
-            border: 1px solid var(--neon, #ff3300); /* Перевели на переменную */
-            box-shadow: 0 0 30px var(--neon-glow, rgba(255, 30, 0, 0.2)); /* Перевели на переменную */
+            background: rgba(2, 5, 8, 0.95); /* Чуть плотнее фон, чтобы битый код не просвечивал */
+            padding: 20px 40px;   /* Немного расширили поля для солидности */
+            border: 1px solid var(--neon, #ff3300);
+            box-shadow: 0 0 30px var(--neon-glow, rgba(255, 30, 0, 0.2));
             transition: all 0.5s ease;
+            width: auto;          /* Автоматическая ширина по контенту */
+            min-width: 320px;     /* Ограничение снизу для стабильности */
         }
 
         .status-header {
