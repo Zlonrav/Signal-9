@@ -48,44 +48,61 @@
         nodesContainer.innerHTML = '';
         linesContainer.innerHTML = '';
 
-        SECTORS.forEach(s => {
-            const isUnlocked = typeof s.req === 'number' ? glyphsCount >= s.req : (s.req === 'emergency' ? isEmergency : false);
-            const node = document.createElement('div');
-            node.className = `map-node ${isUnlocked ? 'unlocked' : 'locked'}`;
-            node.style.left = `${s.x - 70.8}px`;
-            node.style.top = `${s.y - 70.8}px`;
+            SECTORS.forEach(s => {
+        const glyphsCount = Object.keys(localStorage).filter(k => k.startsWith('s9_glyph_')).length;
+        const isSolarEmergency = localStorage.getItem('s9_emergency_flag') === 'active';
+        
+        // Читаем новые статусы для бесшовного квеста
+        const isOrbitStabilized = localStorage.getItem('s9_orbit_stabilized') === 'active';
+        const isReactorEmergency = localStorage.getItem('s9_emergency_reactor') === 'active';
+        const isAdmin = glyphsCount >= 50;
 
-            const icon = isUnlocked ? ICONS[s.id] : '<path d="M30 40H50V60H30ZM35 40V32A5 5 0 0 1 45 32V40" stroke-width="1.5""")/>>';
-            const sectorID = `0x${Math.abs(s.id.split('').reduce((a,b)=>(((a<<5)-a)+b.charCodeAt(0)),0)).toString(16).toUpperCase().slice(0,4)}`;
+        // Базовое условие доступа по умолчанию для остальных комнат
+        let isUnlocked = typeof s.req === 'number' ? glyphsCount >= s.req : false;
 
-            node.innerHTML = `
-                <div class="node-glyph">
-                    <svg viewBox="0 0 80 80" fill="none" stroke="currentColor" stroke-width="2">${icon}</svg>
-                </div>
-                <div class="node-label">${s.id}</div>
-                <div class="node-meta">${isUnlocked ? sectorID : 'ACCESS_DENIED'}</div>
-                ${!isUnlocked ? `<div class="req-info">REQ: ${s.req} DATA</div>` : ''}
-            `;
-            
-            if (isUnlocked) {
-                node.onclick = () => {
-                const files = { 
-                    'РУБКА': 'index.html', 
-                    'ТЕРМИНАЛ': 'tools.html', 
-                    'АРХИВ': 'archive.html', 
-                    'КАРТА': 'map.html',
-                    'РЕАКТОР': 'reactor.html',
-                    'ЯДРО': 'core_room.html',
-                    'СКЛАД': 'storage.html',
-                    'МЕДОТСЕК': 'medbay.html',
-                    'АНГАР': 'hangar.html',
-                    'ОБСЕРВАТОРИЯ': 'obs.html'
-                };
-                    window.location.href = files[s.id] || (s.id.toLowerCase() + '.html');
-                };
-            }
-            nodesContainer.appendChild(node);
-        });
+        // ИСПРАВЛЕННОЕ УСЛОВИЕ ДЛЯ РЕАКТОРА:
+        if (s.id === 'РЕАКТОР') {
+            // Открывается, если орбита стабилизирована ИЛИ активна админская лазейка
+            isUnlocked = isOrbitStabilized || isAdmin;
+        }
+
+        const node = document.createElement('div');
+        
+        // Если идет активная фаза аварии реактора — заставляем его мигать
+        const emergencyClass = (s.id === 'РЕАКТОР' && isReactorEmergency) ? 'emergency-access' : '';
+        node.className = `map-node ${isUnlocked ? 'unlocked' : 'locked'} ${emergencyClass}`;
+        
+        node.style.left = `${s.x - 70.8}px`;
+        node.style.top = `${s.y - 70.8}px`;
+
+        const icon = isUnlocked ? ICONS[s.id] : '<path d="M30 40H50V60H30ZM35 40V32A5 5 0 0 1 45 32V40" stroke-width="1.5"/>';
+        
+        // Меняем мета-данные под узлом, если реактор поврежден
+        let metaText = isUnlocked ? `0x${Math.abs(s.id.split('').reduce((a,b)=>(((a<<5)-a)+b.charCodeAt(0)),0)).toString(16).toUpperCase().slice(0,4)}` : 'ACCESS_DENIED';
+        if (s.id === 'РЕАКТОР' && isReactorEmergency) {
+            metaText = "CORE_FAILURE";
+        }
+
+        node.innerHTML = `
+            <div class="node-glyph">
+                <svg viewBox="0 0 80 80" fill="none" stroke="currentColor" stroke-width="2">${icon}</svg>
+            </div>
+            <div class="node-label">${s.id}</div>
+            <div class="node-meta">${metaText}</div>
+            ${(!isUnlocked && s.id !== 'РЕАКТОР') ? `<div class="req-info">REQ: ${s.req} DATA</div>` : ''}
+            ${(s.id === 'РЕАКТОР' && !isUnlocked) ? `<div class="req-info">STANDBY MODE</div>` : ''}
+        `;
+        
+        if (isUnlocked) {
+            node.onclick = () => {
+                // Добавили РЕАКТОР в список путей для кликов по карте
+                const files = { 'РУБКА':'index.html', 'ТЕРМИНАЛ':'tools.html', 'АРХИВ':'archive.html', 'КАРТА':'map.html', 'РЕАКТОР':'reactor.html' };
+                window.location.href = files[s.id] || (s.id.toLowerCase() + '.html');
+            };
+        }
+        nodesContainer.appendChild(node);
+    });
+
 
         // Рисуем коридоры (Горизонтальный основной ствол)
         drawPath(startX, startY, startX + step * 5, startY); 
