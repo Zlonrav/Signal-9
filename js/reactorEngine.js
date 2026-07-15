@@ -32,55 +32,57 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(generateGlitch, 100);
     }
 
-    // 2. ПРОВЕРКА КОДА ПЕРЕПРОШИВКИ
+        // 2. ПРОВЕРКА КОДА ПЕРЕПРОШИВКИ
     if (input) {
+        // Гарантируем, что поле пустое и в фокусе при старте
+        input.value = "";
+        input.focus();
+
         input.addEventListener('input', (e) => {
+            // Читаем ввод: переводим в верхний регистр и убираем случайные пробелы по бокам
             const val = e.target.value.toUpperCase().trim();
-            
-                        if (val === "БЭКАП") {
-                // 1. ФИКСИРУЕМ УСПЕХ НАВСЕГДА И ЧИСТИМ ТРЕВОГИ
+            console.log("Текущий ввод в реакторе:", val); // Будет видно в консоли Хрома!
+
+            if (val === "БЭКАП") {
+                console.log("МАТЧ! Ключевое слово БЭКАП принято.");
+                
+                // ЗАПИСЬ В ПАМЯТЬ
                 localStorage.setItem('s9_reactor_fixed', 'true');
                 localStorage.removeItem('s9_emergency_reactor');
                 localStorage.removeItem('s9_orbit_stabilized');
                 localStorage.removeItem('s9_emergency_flag');
                 
-                // 2. СНИМАЕМ КРАСНЫЙ РЕЖИМ ЧС И УДАЛЯЕМ ВЕРХНЮЮ ПЛАШКУ
+                // СБРОС СТИЛЕЙ АВАРЕИ
                 document.body.classList.remove('emergency-mode');
                 const bar = document.getElementById('emergency-bar');
                 if (bar) bar.remove();
-                
-                // Вызываем глобальный сброс сигнала, если он подключен
-                if (typeof window.triggerSignalLoss === 'function') {
-                    window.triggerSignalLoss(false);
-                }
 
-                // 3. ВИЗУАЛЬНЫЙ ФИДБЕК ОБ УСПЕХЕ
-                // Меняем текст главного статуса
+                // ИЗМЕНЕНИЕ ИНТЕРФЕЙСА ТЕКСТА
                 if (status) {
-                    status.innerText = "ПРОТОКОЛ ВОССТАНОВЛЕН. ЯДРО СТАБИЛЬНО.";
-                    status.style.color = "#00ff44"; // Перекрашиваем статус в зелёный
+                    status.innerText = "ПРОТОКОЛ ВОССТАНОВЛЕН. СИСТЕМА СТАБИЛЬНА.";
+                    status.style.color = "#00ff44"; // Чистый зеленый неон
                     status.style.textShadow = "0 0 15px #00ff44";
                 }
                 
-                // Прячем поле ввода (инпут), чтобы пользователь больше ничего не писал
-                if (input) {
-                    input.style.display = "none";
-                }
+                // Прячем сам инпут ввода
+                input.style.display = "none";
 
-                // ПРЯЧЕМ СТАТИЧНУЮ СТРОКУ ТРЕВОГИ ("ВНИМАНИЕ: ТРЕБУЕТСЯ ПЕРЕПРОШИВКА...")
-                // Находим родительский блок интерфейса патча
+                // Находим блок интерфейса и скрываем мелкую подпись, чтобы не мозолила глаза
                 const patchInterface = document.querySelector('.patch-interface');
                 if (patchInterface) {
-                    // Перекрашиваем рамку блока в зелёный цвет успеха
                     patchInterface.style.borderColor = "#00ff44";
                     patchInterface.style.boxShadow = "0 0 30px rgba(0, 255, 68, 0.2)";
                     
-                    // Находим и скрываем вторую строчку с мелким текстом, чтобы она не мешалась
-                    const subHeader = patchInterface.querySelector('div:not(.status-header):not([style*="margin-top"])');
-                    if (subHeader) subHeader.style.display = "none";
+                    // Ищем строчку "ВНИМАНИЕ: ТРЕБУЕТСЯ ПЕРЕПРОШИВКА..." и убираем её
+                    const subLabels = patchInterface.querySelectorAll('div');
+                    subLabels.forEach(div => {
+                        if (div.innerText.includes("ВНИМАНИЕ") || div.innerText.includes("БЭКАП")) {
+                            div.style.display = "none";
+                        }
+                    });
                 }
-                
-                // 4. КРАСИМ ЦЕНТРАЛЬНЫЙ ГЛИФ В ЗЕЛЁНЫЙ ЦВЕТ УСПЕХА
+
+                // КРАСИМ ЦЕНТРАЛЬНЫЙ ГЛИФ В ЗЕЛЕНЫЙ
                 const glyphCont = document.getElementById('core-glyph');
                 if (glyphCont) {
                     const svg = glyphCont.querySelector('svg');
@@ -90,16 +92,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
 
-                // 5. ПРИНУДИТЕЛЬНЫЙ ПЛАВНЫЙ ПЕРЕХОД В РУБКУ ЧЕРЕЗ 3 СЕКУНДЫ
-                console.log("РЕАКТОР СТАБИЛИЗИРОВАН. ВОЗВРАТ В РУБКУ...");
+                // ТЕЛЕПОРТ В РУБКУ ЧЕРЕЗ 3 СЕКУНДЫ
                 setTimeout(() => {
                     window.location.href = "index.html";
                 }, 3000);
             }
-
         });
+    } else {
+        console.error("Критическая ошибка: Элемент patchInput не найден на странице!");
     }
 
-    // Запуск шума
-    generateGlitch();
+    // Запуск шума кода на фоне
+    if (typeof generateGlitch === 'function') {
+        generateGlitch();
+    }
 })();
