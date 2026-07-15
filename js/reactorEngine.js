@@ -44,45 +44,33 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("Текущий ввод в реакторе:", val); // Будет видно в консоли Хрома!
 
             if (val === "БЭКАП") {
-                console.log("МАТЧ! Ключевое слово БЭКАП принято.");
+                console.log("МАТЧ! Реактор исправлен.");
                 
-                // ЗАПИСЬ В ПАМЯТЬ
+                // 1. ФИКСИРУЕМ ПОЛНУЮ ПОБЕДУ НАД ВСЕМИ ЭТАПАМИ АВАРИИ
                 localStorage.setItem('s9_reactor_fixed', 'true');
                 localStorage.removeItem('s9_emergency_reactor');
-                localStorage.removeItem('s9_orbit_stabilized');
+                localStorage.removeItem('s9_orbit_stabilized'); // Стираем ключ доступа
                 localStorage.removeItem('s9_emergency_flag');
                 
-                // СБРОС СТИЛЕЙ АВАРЕИ
+                // 2. СНИМАЕМ АВАРИЙНЫЕ СТИЛИ С СИСТЕМЫ И ПЛАШКИ
                 document.body.classList.remove('emergency-mode');
                 const bar = document.getElementById('emergency-bar');
                 if (bar) bar.remove();
+                
+                if (typeof window.triggerSignalLoss === 'function') {
+                    window.triggerSignalLoss(false);
+                }
 
-                // ИЗМЕНЕНИЕ ИНТЕРФЕЙСА ТЕКСТА
+                // 3. ВИЗУАЛЬНЫЙ СТАТУС ПОБЕДЫ
                 if (status) {
-                    status.innerText = "ПРОТОКОЛ ВОССТАНОВЛЕН. СИСТЕМА СТАБИЛЬНА.";
-                    status.style.color = "#00ff44"; // Чистый зеленый неон
+                    status.innerText = "ПРОТОКОЛ ВОССТАНОВЛЕН. ВСЕ СИСТЕМЫ ШТАТНО.";
+                    status.style.color = "#00ff44"; // Яркий зелёный неон успеха
                     status.style.textShadow = "0 0 15px #00ff44";
                 }
                 
-                // Прячем сам инпут ввода
                 input.style.display = "none";
 
-                // Находим блок интерфейса и скрываем мелкую подпись, чтобы не мозолила глаза
-                const patchInterface = document.querySelector('.patch-interface');
-                if (patchInterface) {
-                    patchInterface.style.borderColor = "#00ff44";
-                    patchInterface.style.boxShadow = "0 0 30px rgba(0, 255, 68, 0.2)";
-                    
-                    // Ищем строчку "ВНИМАНИЕ: ТРЕБУЕТСЯ ПЕРЕПРОШИВКА..." и убираем её
-                    const subLabels = patchInterface.querySelectorAll('div');
-                    subLabels.forEach(div => {
-                        if (div.innerText.includes("ВНИМАНИЕ") || div.innerText.includes("БЭКАП")) {
-                            div.style.display = "none";
-                        }
-                    });
-                }
-
-                // КРАСИМ ЦЕНТРАЛЬНЫЙ ГЛИФ В ЗЕЛЕНЫЙ
+                // Подсвечиваем ядро зелёным
                 const glyphCont = document.getElementById('core-glyph');
                 if (glyphCont) {
                     const svg = glyphCont.querySelector('svg');
@@ -92,11 +80,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
 
-                // ТЕЛЕПОРТ В РУБКУ ЧЕРЕЗ 3 СЕКУНДЫ
+                // ВЫХОД В МИРНУЮ РУБКУ
                 setTimeout(() => {
                     window.location.href = "index.html";
                 }, 3000);
             }
+
         });
     } else {
         console.error("Критическая ошибка: Элемент patchInput не найден на странице!");
