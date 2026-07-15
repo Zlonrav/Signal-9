@@ -19,18 +19,22 @@
         }
 
         /* Центральное ядро */
-        .reactor-core {
-            position: relative;
-            width: 300px;
-            height: 300px;
-            border-radius: 50%;
-            border: 2px solid rgba(255, 50, 0, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 40px;
-            background: radial-gradient(circle, rgba(255, 30, 0, 0.1) 0%, transparent 70%);
-        }
+		.reactor-core {
+		    position: relative;
+		    width: 300px;
+		    height: 300px;
+		    border-radius: 50%;
+		    /* Используем переменную неона станции для рамки круга */
+		    border: 2px solid var(--neon, rgba(255, 50, 0, 0.3));
+		    display: flex;
+		    align-items: center;
+		    justify-content: center;
+		    margin-bottom: 40px;
+		    /* Используем переменную свечения неона для фонового градиента */
+		    background: radial-gradient(circle, var(--neon-glow, rgba(255, 30, 0, 0.1)) 0%, transparent 70%);
+		    transition: all 0.5s ease; /* Добавляем плавное перетекание цвета */
+		}
+
 
         /* Пульсация ядра при перегреве */
         .core-pulse {
