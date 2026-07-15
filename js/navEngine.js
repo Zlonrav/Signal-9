@@ -38,27 +38,24 @@
 
     function getUnlockedNodes() {
         const glyphsCount = Object.keys(localStorage).filter(k => k.startsWith('s9_glyph_')).length;
-        const isEmergency = localStorage.getItem('s9_emergency_flag') === 'active';
-        
-        // СЧИТЫВАЕМ НОВЫЕ ФЛАГИ БЕСШОВНОГО ПЕРЕХОДА:
+        const isAdmin = glyphsCount >= 50;
+    
+        // Считываем статус прохождения первого этапа
         const isOrbitStabilized = localStorage.getItem('s9_orbit_stabilized') === 'active';
-        const isReactorEmergency = localStorage.getItem('s9_emergency_reactor') === 'active';
-        const isAdmin = glyphsCount >= 50; // Наша админская лазейка
-
+    
         let nodes = ['РУБКА', 'ТЕРМИНАЛ'];
         
-        // Стандартные грейды по количеству глифов
         if (glyphsCount >= 3 || isAdmin) nodes.push('АРХИВ');
         if (glyphsCount >= 10 || isAdmin) nodes.push('КАРТА');
         
-        // УСЛОВИЕ ДЛЯ РЕАКТОРА (СИНХРОНИЗИРОВАНО С КАРТОЙ):
-        // Доступ открывается, если орбита стабилизирована, идет авария реактора ИЛИ если ты админ
-        if (isOrbitStabilized || isReactorEmergency || isEmergency || isAdmin) {
+        // СТРОГОЕ УСЛОВИЕ: Реактор появляется в тильде ТОЛЬКО после стабилизации орбиты (или админу)
+        if (isOrbitStabilized || isAdmin) {
             nodes.push('РЕАКТОР');
         }
         
         return nodes;
     }
+
 
 
     input.oninput = () => {
