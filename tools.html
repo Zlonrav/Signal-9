@@ -257,8 +257,15 @@ function updatePointsUI() {
             statusLabel.innerText = foundWord;
             statusLabel.classList.remove('error-state');
             
+
             // --- ПЕРЕДАЧА В АРХИВ ---
-            localStorage.setItem('s9_glyph_' + foundWord, 'true'); 
+		localStorage.setItem('s9_glyph_' + foundWord, 'true'); 
+		
+		// Проверяем, сколько всего глифов собрано
+		const totalGlyphs = Object.keys(localStorage).filter(k => k.startsWith('s9_glyph_')).length;
+		if (totalGlyphs >= 3) {
+		    localStorage.setItem('s9_map_unlocked', 'true'); // Выдаем ключ от карты
+		}
 
         } else if (readIndices.length >= 5) {
             statusLabel.innerText = "НЕ РАСПОЗНАННО";
