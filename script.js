@@ -1,426 +1,515 @@
-// --- КОНФИГУРАЦИЯ ---
-const POINTS = [{x:15,y:15},{x:40,y:15},{x:65,y:15},{x:15,y:40},{x:40,y:40},{x:65,y:40},{x:15,y:65},{x:40,y:65},{x:65,y:65}];
-const CYCLE_TIME = 128; 
-const TOTAL_DECRYPT_TIME = 110; 
-const CYRILLIC = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
-
-let signalDisplay = 98;
-let signalTarget = 98;
-let nextSignalUpdate = 0;
-let isSignalLoss = false;
-let lastStatusText = "";
-let packetDisplay = "0x" + Math.floor(Math.random() * 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
-let nextPacketAction = Date.now() + 500; // Начнем с короткого бега при загрузке
-let isPacketStatic = false; 
-let channelDisplay = Math.floor(Math.random() * 99 + 1).toString().padStart(2, '0');
-let nextChannelUpdate = Date.now() + 5000; // Канал будет жить 5 секунд
-
-
-const ERROR_INTERVAL = 7 * 60 * 60 * 1000; 
-const ERROR_DURATION = 128 * 1000;
-
-// --- ЗВУКОВОЙ ДВИЖОК ---
-let audioCtx, masterGain, noiseSource, isMuted = false, glyphGainNode;
-
-const toggleAudio = () => {
-    if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        masterGain = audioCtx.createGain();
-        masterGain.connect(audioCtx.destination);
-        masterGain.gain.value = 1.0;
-        const bufferSize = 2 * audioCtx.sampleRate,
-              noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate),
-              output = noiseBuffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) output[i] = Math.random() * 2 - 1;
-        noiseSource = audioCtx.createBufferSource();
-        noiseSource.buffer = noiseBuffer;
-        noiseSource.loop = true;
-        const filter = audioCtx.createBiquadFilter();
-        filter.type = 'lowpass'; filter.frequency.value = 60;
-        const noiseGain = audioCtx.createGain();
-        noiseGain.gain.value = 0.05; 
-        noiseSource.connect(filter).connect(noiseGain).connect(masterGain);
-        noiseSource.start();
-        document.getElementById('audio-status').innerText = "АУДИОДАТЧИКИ: ВКЛЮЧЕНЫ";
-    } else {
-        isMuted = !isMuted;
-        masterGain.gain.setTargetAtTime(isMuted ? 0 : 1.0, audioCtx.currentTime, 0.1);
-        document.getElementById('audio-status').innerText = isMuted ? "АУДИОДАТЧИКИ: ОТКЛЮЧЕНЫ" : "АУДИОДАТЧИКИ: ВКЛЮЧЕНЫ";
-    }
-};
-
-const playGlyphSound = async (pathIndices) => {
-    if (!audioCtx || isMuted || isSignalLoss) return;
-    if (glyphGainNode) {
-        const prevGain = glyphGainNode;
-        prevGain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.05);
-        setTimeout(() => prevGain.disconnect(), 60);
-    }
-    glyphGainNode = audioCtx.createGain();
-    glyphGainNode.connect(masterGain);
-    let currentTime = audioCtx.currentTime;
-    for (let i = 0; i < pathIndices.length - 1; i++) {
-        const p1 = POINTS[pathIndices[i]], p2 = POINTS[pathIndices[i+1]];
-        if (!p1 || !p2) continue;
-        const dx = Math.abs(p2.x - p1.x), dy = Math.abs(p2.y - p1.y);
-        const length = Math.sqrt(dx*dx + dy*dy) / 25;
-        let baseFreq = dx === 0 ? 260 : (dy !== 0 ? 220 : 180);
-        const step = (length * 0.14) / Math.floor(length * 15 || 1);
-        for (let g = 0; g < Math.floor(length * 15); g++) {
-            const osc = audioCtx.createOscillator(), gNode = audioCtx.createGain(), filter = audioCtx.createBiquadFilter();
-            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(baseFreq + (Math.random() * 10), currentTime);
-            filter.type = 'bandpass'; filter.frequency.setValueAtTime(baseFreq * 2, currentTime); filter.Q.value = 10;
-            gNode.gain.setValueAtTime(0, currentTime);
-            gNode.gain.linearRampToValueAtTime(0.1, currentTime + 0.005);
-            gNode.gain.exponentialRampToValueAtTime(0.0001, currentTime + step * 0.8);
-            osc.connect(filter).connect(gNode).connect(glyphGainNode);
-            osc.start(currentTime); osc.stop(currentTime + step);
-            currentTime += step;
-        }
-        const chime = audioCtx.createOscillator(), chimeGain = audioCtx.createGain();
-        chime.type = 'sine'; chime.frequency.setValueAtTime(baseFreq * 4, currentTime);
-        chimeGain.gain.setValueAtTime(0.05, currentTime);
-        chimeGain.gain.exponentialRampToValueAtTime(0.0001, currentTime + 0.05);
-        chime.connect(chimeGain).connect(glyphGainNode);
-        chime.start(currentTime); chime.stop(currentTime + 0.05);
-    }
-};
-
-// --- ГРАФИКА ---
-function getPath(word) {
-    let hash = 5381;
-    for (let i = 0; i < word.length; i++) hash = ((hash << 5) + hash) + word.charCodeAt(i);
-    let seed = Math.abs(hash), path = [], used = new Set();
-    const len = (seed % 3) + 5;
-    while(path.length < len && used.size < 9) {
-        seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-        let n = seed % 9; if(!used.has(n)) { path.push(n); used.add(n); }
-    }
-    return path;
-}
-
-function createSVG(path) {
-    if (!path || !path.length) return '';
-    const start = POINTS[path[0]]; // Исправлено: берем первый индекс массива
-    let d = `M ${start.x} ${start.y}`;
-    for(let i=0; i<path.length-1; i++) {
-        const c = POINTS[path[i]], n = POINTS[path[i+1]];
-        d += ` C ${c.x+(n.x-c.x)*0.5} ${c.y}, ${c.x+(n.x-c.x)*0.5} ${n.y}, ${n.x} ${n.y}`;
-    }
-    // Чистый SVG без внешних фильтров
-    return `<svg viewBox="0 0 80 80"><path d="${d}"></path></svg>`;
-}
-
-const getNoise = (len) => Array.from({length: Math.max(len, 0)}, () => CYRILLIC[Math.floor(Math.random() * CYRILLIC.length)]).join('');
-
-function renderPhrase(container, index) {
-    if (typeof PHRASES === 'undefined') return;
-    container.dataset.index = index;
-    container.innerHTML = '';
-    PHRASES[index].split(' ').forEach(word => {
-        const pathData = getPath(word), unit = document.createElement('div');
-        unit.className = 'glyph-unit';
-        unit.innerHTML = createSVG(pathData) + '<div class="glyph-label"></div>';
-        unit.dataset.wordActual = word.toUpperCase();
-        unit.onmouseenter = () => playGlyphSound(pathData);
-        container.appendChild(unit);
-    });
-}
-
-// --- ЛОГИКА ОБРЫВА ---
-const triggerSignalLoss = (active) => {
-    isSignalLoss = active;
-    const phraseContainer = document.getElementById('currentPhrase');
-    if (!phraseContainer) return;
-
-    if (active) {
-        document.body.classList.add('mode-error');
-        phraseContainer.innerHTML = '';
-        phraseContainer.dataset.index = "ERROR_MODE"; 
-        for (let i = 0; i < 5; i++) {
-            const unit = document.createElement('div');
-            unit.className = 'glyph-unit';
-            unit.innerHTML = '<span class="error-text">ERROR</span><div class="glyph-label"></div>';
-            phraseContainer.appendChild(unit);
-        }
-    } else {
-        document.body.classList.remove('mode-error');
-        phraseContainer.dataset.index = "";
-    }
-};
-
-// --- ГЛАВНЫЙ ЦИКЛ ---
-function update() {
-    if (typeof PHRASES === 'undefined') return;
-
-    const now = Date.now();
-    const timeSec = Math.floor(now / 1000);
-    const timeLeft = CYCLE_TIME - (timeSec % CYCLE_TIME);
-    const timePassed = timeSec % CYCLE_TIME;
-    const phraseIndex = Math.floor((timeSec / CYCLE_TIME) % PHRASES.length);
-    const phraseContainer = document.getElementById('currentPhrase');
-
-    // 1. АВТО-ЦИКЛ ERROR (синхронизация с системным временем)
-    const cyclePos = now % ERROR_INTERVAL;
-    const isErrorTime = cyclePos < ERROR_DURATION;
-
-    // Если время ошибки вышло, а мы всё еще в режиме ERROR — выключаем
-    if (!isErrorTime && isSignalLoss) {
-        // Если это был авто-обрыв ИЛИ если 128-сек таймер дошел до конца цикла
-        if (!testBtn.dataset.manual || timeLeft === CYCLE_TIME) {
-            testBtn.dataset.manual = ""; // Сбрасываем ручной флаг
-            triggerSignalLoss(false);
-        }
-    } 
-    // Если время ошибки пришло, а мы еще не в ней — включаем
-    else if (isErrorTime && !isSignalLoss) {
-        triggerSignalLoss(true);
-    }
-
-    // Авто-восстановление при смене 128-сек цикла
-    if (timePassed === 0 && isSignalLoss && !testBtn.dataset.manual) triggerSignalLoss(false);
-
-    // Таймеры работают всегда
-    if (document.getElementById('timer')) document.getElementById('timer').innerText = `ПРИЁМ СИГНАЛА: ${timeLeft} сек`;
-    if (document.getElementById('const-timer')) document.getElementById('const-timer').innerText = `REFRESH: ${timeLeft}s`;
-    const constGlyphElem = document.getElementById('const-glyph');
-    if (constGlyphElem && !constGlyphElem.innerHTML) constGlyphElem.innerHTML = createSVG(getPath("Расшифровка"));
-
-    // Мета-данные обновляются всегда
-    updateMetaData(now, isSignalLoss, timePassed, phraseIndex);
-
-    if (isSignalLoss) return;
-
-    // --- ОБЫЧНЫЙ РЕЖИМ ---
-    if (!phraseContainer.dataset.index || phraseContainer.dataset.index === "ERROR_MODE") {
-        renderPhrase(phraseContainer, phraseIndex);
-    }
-
-    if (timeLeft <= 1 || timePassed === 0) {
-        phraseContainer.classList.add('wave-transition');
-        document.body.classList.add('signal-glitch');
-        if (phraseContainer.dataset.index != phraseIndex) renderPhrase(phraseContainer, phraseIndex);
-    } else {
-        phraseContainer.classList.remove('wave-transition');
-        document.body.classList.remove('signal-glitch');
-    }
-
-    if (timeLeft <= 1.5 && timeLeft > 0) phraseContainer.classList.add('fade-out');
-    else phraseContainer.classList.remove('fade-out');
-
-    // Дешифровка
-    const units = document.querySelectorAll('.glyph-unit');
-    const words = PHRASES[phraseIndex].split(' ');
-    const timePerGlyph = TOTAL_DECRYPT_TIME / words.length;
-
-    units.forEach((unit, idx) => {
-        const word = unit.dataset.wordActual, label = unit.querySelector('.glyph-label');
-        if (!label) return;
-        const revealStart = idx * timePerGlyph;
-        let html = "";
-        if (timePassed < revealStart) {
-            html = `<span class="char-noise">${getNoise(14)}</span>`;
-            unit.classList.remove('done', 'pulse-trigger');
-        } else if (timePassed >= (revealStart + timePerGlyph)) {
-            html = `<span class="char-fixed">${word}</span>`;
-            if (!unit.classList.contains('done')) unit.classList.add('done', 'pulse-trigger');
-        } else {
-            const progress = (timePassed - revealStart) / timePerGlyph;
-            const revealCount = Math.floor(word.length * progress);
-            html = `<span class="char-fixed">${word.substring(0, revealCount)}</span><span class="char-noise">${getNoise(Math.max(14, word.length) - revealCount)}</span>`;
-            unit.classList.remove('done', 'pulse-trigger');
-        }
-        if (label.innerHTML !== html) label.innerHTML = html;
-    });
-}
-
-function updateMetaData(now, error, timePassed, phraseIndex) {
-    const statusMeta = document.getElementById('status-meta');
-    if (statusMeta) {
-        if (now > nextSignalUpdate) {
-            signalTarget = error ? 0.1 + Math.random() * 1.5 : 93 + Math.random() * 6;
-            nextSignalUpdate = now + 1500 + Math.random() * 2500;
-        }
-        signalDisplay += (signalTarget - signalDisplay) * 0.02;
-        let receptionText = signalDisplay < 94 ? '<span style="color:#ff3333; font-weight:bold;">НЕСТАБИЛЬНЫЙ</span>' : 'АКТИВНЫЙ';
-        if (error) receptionText = '<span style="color:#ff3333; font-weight:bold;">ОБРЫВ СВЯЗИ</span>';
-        statusMeta.innerHTML = `УРОВЕНЬ СИГНАЛА: ${signalDisplay.toFixed(1)}% | ПРИЁМ: ${receptionText}`;
-    }
-
-    const statusTextElem = document.getElementById('status-text');
-    const progressBar = document.getElementById('status-progress-bar');
-    if (statusTextElem) {
-        let currentText = error ? "КРИТИЧЕСКАЯ ОШИБКА ПЕРЕДАЧИ" : "ПОЛУЧЕНИЕ СИГНАЛА";
-        if (!error && timePassed < TOTAL_DECRYPT_TIME) {
-            const statuses = ["СИНХРОНИЗАЦИЯ ПОТОКА", "ИДЕНТИФИКАЦИЯ ПАКЕТОВ", "ДЕШИФРОВКА МАССИВА ДАННЫХ", "АНАЛИЗ ДАННЫХ"];
-            currentText = statuses[Math.floor(timePassed / 10) % statuses.length];
-            if(progressBar) progressBar.style.width = `${(timePassed / TOTAL_DECRYPT_TIME) * 100}%`;
-        } else if (!error) {
-            currentText = "РАБОТА ЗАВЕРШЕНА / 100%";
-            if(progressBar) { progressBar.style.width = "100%"; progressBar.style.background = "#00ff00"; }
-        }
-        if (lastStatusText !== currentText) lastStatusText = currentText;
-
-        let content = "";
-        const speed = error ? 0.03 : 0.009; // В режиме ошибки мигает быстрее
-        const lightPos = (now * speed) % (lastStatusText.length + 12) - 6;
-        for(let i=0; i<lastStatusText.length; i++) {
-            let opacity = 1;
-            if (error) opacity = Math.random() > 0.7 ? 1 : 0.2;
-            else if (timePassed < TOTAL_DECRYPT_TIME) {
-                opacity = Math.max(0.1, 1 - (Math.abs(i - lightPos) / 5));
-            }
-            content += `<span style="opacity:${opacity}">${lastStatusText[i]}</span>`;
-        }
-        statusTextElem.innerHTML = content;
-    }
-
-    const statusFooter = document.getElementById('status-footer');
-    if (statusFooter) {
-        // Логика смены КАНАЛА (раз в 5 секунд на новое случайное число)
-        if (!error && now > nextChannelUpdate) {
-            channelDisplay = Math.floor(Math.random() * 99 + 1).toString().padStart(2, '0');
-            nextChannelUpdate = now + 5000; // Задаем время до следующей смены
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>СИГНАЛ-9 // ТОПОЛОГИЯ СТАНЦИИ</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="style-tools.css">
+    <link rel="stylesheet" type="text/css" href="style-chat-terminal.css">
+    <style>
+        /* --- БАЗА --- */
+        body.tools-page {
+            overflow: hidden; 
+            height: 100vh;
+            background-color: #010306;
         }
 
-        let packetVal, chanVal;
-
-        if (error) {
-            packetVal = "ERR_LOST";
-            chanVal = "--";
-        } else if (timePassed >= TOTAL_DECRYPT_TIME) {
-            // При 100% фиксируем и пакет, и канал
-            const finalSeed = phraseIndex * 1234 + 567;
-            packetVal = "0x" + (Math.abs(finalSeed) % 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
-            chanVal = channelDisplay; // Оставляем последний активный канал
-        } else {
-            // Логика ПАКЕТА (бег 0.5с / пауза 3-10с)
-            if (now > nextPacketAction) {
-                isPacketStatic = !isPacketStatic;
-                const delay = isPacketStatic ? (3000 + Math.random() * 7000) : 500;
-                nextPacketAction = now + delay;
-            }
-            if (!isPacketStatic) {
-                packetDisplay = "0x" + Math.floor(Math.random() * 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
-            }
-            packetVal = packetDisplay;
-            chanVal = channelDisplay;
+        #display {
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
         }
 
-        statusFooter.innerText = `DECODING PACKET: ${packetVal} / SECURE CHANNEL ${chanVal}`;
-    }
-}
+        .map-header {
+            position: absolute;
+            top: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Michroma', sans-serif;
+            font-size: 14px;
+            letter-spacing: 8px;
+            color: var(--neon);
+            text-transform: uppercase;
+            opacity: 0.6;
+            text-shadow: 0 0 20px var(--neon);
+            z-index: 100;
+            pointer-events: none;
+        }
 
-// Кнопка теста
-const testBtn = document.getElementById('test-error-btn');
-if(testBtn) {
-    testBtn.addEventListener('mousedown', (e) => {
-        e.preventDefault(); e.stopPropagation();
-        const newState = !isSignalLoss;
-        testBtn.dataset.manual = newState ? "true" : "";
-        triggerSignalLoss(newState);
-        testBtn.style.background = newState ? '#ff3333' : '#333';
-    });
-}
+        /* --- КАРТА --- */
+        .map-container {
+            position: relative;
+            width: 1200px; 
+            height: 850px;
+        }
 
-document.addEventListener('mousedown', (e) => {
-    if (e.target.id === 'test-error-btn') return;
-    toggleAudio();
-});
+        /* Сетка на фоне */
+        .map-container::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(0, 242, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 242, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            background-position: center center;
+            mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+            -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+            pointer-events: none;
+        }
 
-setInterval(update, 30);
-update();
-const initStarfield = () => {
-    const canvas = document.getElementById('starfield');
-    const ctx = canvas.getContext('2d');
-    let width, height, stars = [], particles = [];
-
-    const resize = () => {
-        width = canvas.width = window.innerWidth;
-        height = canvas.height = window.innerHeight;
-    };
-
-    window.addEventListener('resize', resize);
-    resize();
-
-    // Статичные далекие звезды
-    for (let i = 0; i < 300; i++) {
-        stars.push({
-            x: Math.random() * width,
-            y: Math.random() * height,
-            size: Math.random() * 1.2,
-            opacity: Math.random(),
-            orbitSpeed: 0.00005 + Math.random() * 0.0001
-        });
-    }
-
-    // Частицы солнечного ветра
-    const createParticle = () => ({
-        x: -50,
-        y: Math.random() * height,
-        speed: 0.2 + Math.random() * 0.5,
-        size: Math.random() * 2,
-        life: 1
-    });
-
-    const draw = () => {
-        ctx.fillStyle = '#000';
-        ctx.fillRect(0, 0, width, height);
-
-        const now = Date.now();
-
-        // 1. Свечение звезды за краем (слева снизу)
-        const starGlow = ctx.createRadialGradient(0, height, 0, 0, height, width * 0.8);
-        // Пульсация яркости звезды
-        const pulse = Math.sin(now * 0.0005) * 0.02;
-        starGlow.addColorStop(0, `rgba(0, 242, 255, ${0.08 + pulse})`);
-        starGlow.addColorStop(0.5, `rgba(0, 50, 60, ${0.03 + pulse})`);
-        starGlow.addColorStop(1, 'transparent');
-        ctx.fillStyle = starGlow;
-        ctx.fillRect(0, 0, width, height);
-
-        // 2. Отрисовка звезд с орбитальным дрейфом (вращение вокруг центра звезды слева-снизу)
-        ctx.fillStyle = '#fff';
-        stars.forEach(s => {
-            ctx.globalAlpha = Math.abs(Math.sin(now * 0.001 + s.opacity * 10)) * 0.8;
-            ctx.beginPath();
-            ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Движение по орбите (вокруг точки 0, height)
-            const dx = s.x;
-            const dy = s.y - height;
-            const angle = Math.atan2(dy, dx) + s.orbitSpeed;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            s.x = Math.cos(angle) * dist;
-            s.y = Math.sin(angle) * dist + height;
-
-            if (s.x > width || s.y < 0) {
-                s.x = Math.random() * width;
-                s.y = Math.random() * height;
-            }
-        });
-
-        // 3. Солнечный ветер (частицы от звезды)
-        if (particles.length < 20 && Math.random() > 0.95) particles.push(createParticle());
+        /* --- СЛОЙ СВЯЗЕЙ --- */
+        .connections-layer {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+        }
         
-        ctx.fillStyle = 'rgba(0, 242, 255, 0.4)';
-        particles.forEach((p, i) => {
-            ctx.globalAlpha = p.life;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-            ctx.fill();
-            
-            p.x += p.speed;
-            p.y -= p.speed * 0.2;
-            p.life -= 0.002;
-            if (p.life <= 0) particles.splice(i, 1);
-        });
+        .link-bg { stroke: rgba(0, 242, 255, 0.05); stroke-width: 2px; transition: 0.3s; }
+        .link-flow { stroke: var(--neon); stroke-width: 2px; stroke-dasharray: 8 16; filter: drop-shadow(0 0 5px var(--neon)); animation: flow 20s linear infinite; transition: 0.3s;}
+        
+        .link-locked .link-bg { stroke: rgba(255, 255, 255, 0.05); stroke-dasharray: 4 4; }
+        .link-locked .link-flow { stroke: none; }
 
-        requestAnimationFrame(draw);
+        @keyframes flow { to { stroke-dashoffset: -1000; } }
+
+        /* =========================================
+           БАЗОВЫЙ УЗЕЛ
+           ========================================= */
+        .map-node {
+            position: absolute;
+            width: 130px;
+            height: 130px;
+            background: rgba(2, 10, 15, 0.85);
+            border: 1px solid rgba(0, 242, 255, 0.15);
+            text-decoration: none;
+            z-index: 10;
+            transform: translate(-50%, -50%);
+            transition: all 0.4s cubic-bezier(0.2, 1, 0.3, 1);
+            backdrop-filter: blur(8px);
+            box-sizing: border-box;
+        }
+
+        /* Уголки */
+        .map-node::before, .map-node::after {
+            content: ''; position: absolute; width: 10px; height: 10px; pointer-events: none; transition: 0.3s;
+        }
+        .map-node.unlocked::before { top: -1px; left: -1px; border-top: 2px solid var(--neon); border-left: 2px solid var(--neon); }
+        .map-node.unlocked::after { bottom: -1px; right: -1px; border-bottom: 2px solid var(--neon); border-right: 2px solid var(--neon); }
+
+        /* Наведение на ONLINE */
+        .map-node.unlocked:hover {
+            background: rgba(0, 242, 255, 0.1);
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.2), inset 0 0 20px rgba(0, 242, 255, 0.1);
+            transform: translate(-50%, -50%) scale(1.05);
+        }
+        .map-node.unlocked:hover::before, .map-node.unlocked:hover::after { width: 100%; height: 100%; opacity: 0.3; }
+
+        /* --- ГЛИФЫ --- */
+        .node-glyph {
+            position: absolute;
+            top: 35%; 
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 32px; /* Четверть плитки */
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .node-glyph svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        /* Тонкие линии для ONLINE */
+        .map-node.unlocked .node-glyph path {
+            stroke: var(--neon);
+            stroke-width: 2.5; 
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            filter: drop-shadow(0 0 4px var(--neon)) drop-shadow(0 0 1px #fff);
+            transition: 0.3s;
+        }
+
+        .map-node.unlocked:hover .node-glyph path {
+            stroke-width: 3;
+            filter: drop-shadow(0 0 8px var(--neon)) drop-shadow(0 0 2px #fff);
+        }
+
+        /* --- ТЕКСТ --- */
+        .node-title {
+            position: absolute;
+            top: 70%; 
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            font-size: 9px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--neon);
+            font-family: 'JetBrains Mono', monospace;
+            text-align: center;
+            font-weight: bold;
+            line-height: 1.3;
+            pointer-events: none;
+            transition: 0.3s;
+            text-shadow: 0 0 8px rgba(0, 242, 255, 0.5);
+        }
+
+        .node-status {
+            position: absolute;
+            bottom: 8px;
+            width: 100%;
+            text-align: center;
+            font-size: 8px;
+            font-family: monospace;
+            letter-spacing: 2px;
+            font-weight: bold;
+        }
+
+        /* =========================================
+           СТИЛИ ДЛЯ OFFLINE УЗЛОВ
+           ========================================= */
+        .map-node.locked {
+            border-color: rgba(150, 150, 150, 0.2);
+            cursor: not-allowed;
+            background: rgba(10, 10, 10, 0.85);
+        }
+
+        .map-node.locked::before { top: -1px; left: -1px; border-top: 2px solid #666; border-left: 2px solid #666; }
+        .map-node.locked::after { bottom: -1px; right: -1px; border-bottom: 2px solid #666; border-right: 2px solid #666; }
+
+        /* Тонкие серые линии для OFFLINE */
+        .map-node.locked .node-glyph path {
+            stroke: #555;
+            stroke-width: 2.5;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            filter: none;
+        }
+
+        .map-node.locked .node-title {
+            color: #888;
+            text-shadow: none;
+        }
+
+        .map-node.locked .node-status {
+            color: #ff3333;
+            text-shadow: 0 0 5px rgba(255, 51, 51, 0.5);
+        }
+
+        .map-node.unlocked .node-status { 
+            color: #00ff44; 
+            text-shadow: 0 0 5px rgba(0, 255, 68, 0.5);
+        }
+
+        /* Центральный хаб */
+        .map-node[data-id="hub"] {
+            width: 150px; height: 150px;
+            border-color: rgba(0, 242, 255, 0.4);
+            box-shadow: 0 0 40px rgba(0, 242, 255, 0.1);
+        }
+        .map-node[data-id="hub"] .node-glyph { width: 38px; height: 38px; }
+        .map-node[data-id="hub"].locked { border-color: rgba(150, 150, 150, 0.3); box-shadow: none; }
+
+        /* Терминал */
+        .map-node[data-id="tools"] .node-glyph { width: 38px; height: 38px; }
+
+        /* --- КОНСОЛЬ (ТИЛЬДА) --- */
+        #tilde-console {
+            display: none;
+            position: fixed;
+            top: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 800px;
+            background: rgba(2, 5, 8, 0.95);
+            border: 1px solid var(--neon);
+            border-top: none;
+            box-shadow: 0 10px 50px rgba(0, 242, 255, 0.2);
+            z-index: 99999;
+            font-family: 'JetBrains Mono', monospace;
+            backdrop-filter: blur(10px);
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        #tilde-console.active { display: flex; }
+
+        .console-header {
+            color: var(--neon);
+            font-size: 12px;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(0, 242, 255, 0.3);
+            padding-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .console-output {
+            color: #aaa;
+            font-size: 11px;
+            margin-bottom: 15px;
+            line-height: 1.5;
+            height: 80px;
+            overflow-y: auto;
+        }
+        .console-output .sys { color: var(--neon); }
+        .console-output .err { color: #ff3333; }
+        .console-output .ok { color: #00ff44; }
+
+        .console-input-wrapper { display: flex; align-items: center; gap: 10px; }
+        .console-input-wrapper span { color: var(--neon); font-size: 14px; font-weight: bold; }
+        
+        #console-input {
+            flex: 1; background: transparent; border: none;
+            border-bottom: 1px solid rgba(0, 242, 255, 0.5);
+            color: var(--neon); font-family: inherit; font-size: 14px;
+            outline: none; padding: 5px 0; text-transform: uppercase;
+        }
+        #console-input:focus { border-bottom-color: var(--neon); box-shadow: 0 5px 10px -5px var(--neon); }
+
+        .console-hint {
+            margin-top: 15px; font-size: 9px; color: #555;
+            display: flex; justify-content: space-between;
+        }
+    </style>
+</head>
+<body class="tools-page">
+    <canvas id="starfield"></canvas>
+    <div id="scanner-line"></div>
+    <div id="overlay-noise"></div>
+
+    <div class="map-header">СИСТЕМА ТОПОЛОГИИ // СЕКТОР 07</div>
+
+    <div id="display">
+        <div class="map-container" id="mapContainer">
+            <svg class="connections-layer" id="mapLines"></svg>
+            <div id="mapNodes"></div>
+        </div>
+    </div>
+
+    <!-- КОНСОЛЬ -->
+    <div id="tilde-console">
+        <div class="console-header">Терминал быстрого доступа // Введите ID отсека</div>
+        <div class="console-output" id="console-output">
+            <div>Инициализация протокола ручного перемещения...</div>
+            <div>Доступные ID: <span class="sys">HUB, TOOLS, MAP, ARCHIVE, REACTOR, EDR, TELEMETRY, HANGAR, SECTOR, UNINITIALIZED</span></div>
+        </div>
+        <div class="console-input-wrapper">
+            <span>></span>
+            <input type="text" id="console-input" autocomplete="off" spellcheck="false" placeholder="Введите ID...">
+        </div>
+        <div class="console-hint">
+            <span>[ESC] - закрыть</span>
+            <span>[ENTER] - перейти</span>
+        </div>
+    </div>
+
+    <div class="audio-control-fixed" id="audio-toggle">
+        <span id="audio-status-icon">○</span>
+        <span id="audio-status">АУДИОДАТЧИКИ: ВЫКЛ</span>
+    </div>
+
+<script>
+    // --- ГЕНЕРАТОР ГЛИФОВ ---
+    const POINTS = [{x:15,y:15},{x:40,y:15},{x:65,y:15},{x:15,y:40},{x:40,y:40},{x:65,y:40},{x:15,y:65},{x:40,y:65},{x:65,y:65}];
+    
+    function getPath(word) {
+        let hash = 5381;
+        for (let i = 0; i < word.length; i++) hash = ((hash << 5) + hash) + word.charCodeAt(i);
+        let seed = Math.abs(hash), path = [], used = new Set();
+        const len = (seed % 3) + 5;
+        while(path.length < len && used.size < 9) {
+            seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+            let n = seed % 9; if(!used.has(n)) { path.push(n); used.add(n); }
+        }
+        return path;
+    }
+
+    function createSVG(path) {
+        if (!path || !path.length) return '';
+        const start = POINTS[path[0]];
+        let d = `M ${start.x} ${start.y}`;
+        for(let i=0; i<path.length-1; i++) {
+            const c = POINTS[path[i]], n = POINTS[path[i+1]];
+            d += ` C ${c.x+(n.x-c.x)*0.5} ${c.y}, ${c.x+(n.x-c.x)*0.5} ${n.y}, ${n.x} ${n.y}`;
+        }
+        return `<svg viewBox="0 0 80 80"><path d="${d}"></path></svg>`;
+    }
+
+    // --- КОНФИГУРАЦИЯ КАРТЫ (ТВОЙ МАКЕТ) ---
+    const MAP_DATA = {
+        nodes: [
+            // Центр
+            { id: 'hub', title: 'ГЛАВНЫЙ\nХАБ', x: 600, y: 425, url: 'index.html', req: null },
+            
+            // Верхний ряд
+            { id: 'hangar', title: 'ТРАНСПОРТНЫЙ\nШЛЮЗ', x: 350, y: 200, url: 'hangar.html', req: 's9_hangar_open' },
+            { id: 'tools', title: 'ИНЖЕНЕРНЫЙ\nТЕРМИНАЛ', x: 600, y: 200, url: 'tools.html', req: null },
+            { id: 'res1', title: 'СЕКТОР\n[0x00]', x: 850, y: 200, url: '#', req: 's9_res1' },
+
+            // Средний ряд
+            { id: 'telemetry', title: 'МОДУЛЬ\nТЕЛЕМЕТРИИ', x: 150, y: 425, url: 'observatory.html', req: 's9_observatory' },
+            { id: 'reactor', title: 'ЭНЕРГОЯДРО', x: 350, y: 425, url: 'reactor.html', req: 's9_emergency_reactor' },
+            { id: 'edr', title: 'EDR\nСЕКТОР', x: 850, y: 425, url: 'edr.html', req: 's9_edr_open' },
+            { id: 'sector', title: 'НЕИНИЦИАЛИЗИРОВАН', x: 1050, y: 425, url: '#', req: 's9_sector_opened' },
+
+            // Нижний ряд
+            { id: 'archive', title: 'БАЗА\nДАННЫХ', x: 350, y: 650, url: 'archive.html', req: 's9_access_granted' },
+            { id: 'map', title: 'КАРТА', x: 600, y: 650, url: 'map2.html', req: null },
+            { id: 'res2', title: 'СЕКТОР\n[0xFF]', x: 850, y: 650, url: '#', req: 's9_res2' }
+        ],
+        links: [
+            // Центральные связи
+            { s: 'hub', t: 'tools' }, { s: 'hub', t: 'map' }, 
+            { s: 'hub', t: 'reactor' }, { s: 'hub', t: 'edr' },
+
+            // Верхние ветки
+            { s: 'tools', t: 'hangar' }, { s: 'tools', t: 'res1' },
+            
+            // Левая ветка
+            { s: 'reactor', t: 'telemetry' }, { s: 'reactor', t: 'archive' },
+            
+            // Правая ветка
+            { s: 'edr', t: 'sector' }, { s: 'edr', t: 'res2' },
+            
+            // Низ (связь карты)
+            { s: 'map', t: 'archive' }, { s: 'map', t: 'res2' }
+        ]
     };
 
-    draw();
-};
+    const isUnlocked = (node) => !node.req || localStorage.getItem(node.req) === 'true' || localStorage.getItem(node.req) === 'active';
 
-initStarfield();
+    function buildMap() {
+        const svg = document.getElementById('mapLines');
+        const nodesContainer = document.getElementById('mapNodes');
+
+        MAP_DATA.links.forEach(link => {
+            const source = MAP_DATA.nodes.find(n => n.id === link.s);
+            const target = MAP_DATA.nodes.find(n => n.id === link.t);
+            if (!source || !target) return;
+
+            const active = isUnlocked(source) && isUnlocked(target);
+            const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            g.setAttribute('class', active ? 'link-active' : 'link-locked');
+
+            const bgLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            bgLine.setAttribute('x1', source.x); bgLine.setAttribute('y1', source.y);
+            bgLine.setAttribute('x2', target.x); bgLine.setAttribute('y2', target.y);
+            bgLine.setAttribute('class', 'link-bg');
+            g.appendChild(bgLine);
+
+            if (active) {
+                const flowLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                flowLine.setAttribute('x1', source.x); flowLine.setAttribute('y1', source.y);
+                flowLine.setAttribute('x2', target.x); flowLine.setAttribute('y2', target.y);
+                flowLine.setAttribute('class', 'link-flow');
+                flowLine.style.animationDelay = `${Math.random() * -20}s`;
+                g.appendChild(flowLine);
+            }
+            svg.appendChild(g);
+        });
+
+        MAP_DATA.nodes.forEach(node => {
+            const open = isUnlocked(node);
+            const el = document.createElement(open ? 'a' : 'div');
+            
+            if (open) el.href = node.url;
+            el.className = `map-node ${open ? 'unlocked' : 'locked'}`;
+            el.setAttribute('data-id', node.id);
+            el.style.left = `${node.x}px`;
+            el.style.top = `${node.y}px`;
+
+            const formattedTitle = node.title.replace(/\n/g, '<br>');
+            const statusText = open ? 'ONLINE' : 'OFFLINE'; 
+            
+            // Берем первое слово для генерации глифа
+            const wordForGlyph = node.title.split('\n')[0].replace(/\[.*?\]/g, '').trim();
+            const glyphSVG = createSVG(getPath(wordForGlyph));
+
+            el.innerHTML = `
+                <div class="node-glyph">${glyphSVG}</div>
+                <div class="node-title">${formattedTitle}</div>
+                <div class="node-status">${statusText}</div>
+            `;
+            nodesContainer.appendChild(el);
+        });
+    }
+
+    // --- ТИЛЬДА ---
+    const consoleEl = document.getElementById('tilde-console');
+    const consoleInput = document.getElementById('console-input');
+    const consoleOutput = document.getElementById('console-output');
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === '`' || e.key === '~' || e.key === 'Ё' || e.key === 'ё') {
+            e.preventDefault();
+            consoleEl.classList.toggle('active');
+            if (consoleEl.classList.contains('active')) consoleInput.focus();
+        }
+        if (e.key === 'Escape' && consoleEl.classList.contains('active')) consoleEl.classList.remove('active');
+    });
+
+    consoleInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            const cmd = consoleInput.value.trim().toLowerCase();
+            consoleInput.value = '';
+
+            const targetNode = MAP_DATA.nodes.find(n => n.id.toLowerCase() === cmd || n.title.toLowerCase().includes(cmd));
+
+            if (!targetNode) {
+                consoleOutput.innerHTML += `<div class="err">ОШИБКА: Отсек '${cmd}' не найден.</div>`;
+                return;
+            }
+            if (targetNode.req && !isUnlocked(targetNode)) {
+                consoleOutput.innerHTML += `<div class="err">ОТКАЗАНО: Доступ к '${targetNode.title.replace(/\n/g, ' ')}' заблокирован.</div>`;
+                return;
+            }
+            if (targetNode.url === '#') {
+                consoleOutput.innerHTML += `<div class="err">ОШИБКА: Модуль '${targetNode.id}' в разработке.</div>`;
+                return;
+            }
+            consoleOutput.innerHTML += `<div class="ok">УСПЕХ: Переход в '${targetNode.title.replace(/\n/g, ' ')}'...</div>`;
+            setTimeout(() => { window.location.href = targetNode.url; }, 500);
+        }
+    });
+
+    // --- ФОН ---
+    function initStars() {
+        const canvas = document.getElementById('starfield');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        const resize = () => { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; };
+        window.addEventListener('resize', resize); resize();
+
+        const stars = Array.from({length: 200}, () => ({
+            x: Math.random() * width, y: Math.random() * height,
+            size: Math.random() * 1.5, alpha: Math.random(), speed: Math.random() * 0.03
+        }));
+
+        function draw() {
+            ctx.fillStyle = '#010306';
+            ctx.fillRect(0, 0, width, height);
+            stars.forEach(s => {
+                ctx.fillStyle = `rgba(0, 242, 255, ${Math.abs(Math.sin(Date.now() * 0.001 + s.alpha * 10)) * 0.5})`;
+                ctx.beginPath(); ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2); ctx.fill();
+                s.x -= s.speed; if(s.x < 0) s.x = width;
+            });
+            requestAnimationFrame(draw);
+        }
+        draw();
+    }
+
+    buildMap();
+    initStars();
+</script>
+</body>
+</html>
