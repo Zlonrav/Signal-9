@@ -6,11 +6,10 @@
     let currentState = 'IDLE';
     const page = window.location.pathname.split('/').pop() || 'index.html';
 
-    // Создаем DOM консоли
     const overlay = document.createElement('div');
     overlay.id = 'tilde-console';
     overlay.innerHTML = `
-        <div class="console-header">Терминал Управления // Введите команду</div>
+        <div class="console-header">Консоль Управления // Введите команду</div>
         <div class="console-output" id="terminal-output">
             <div>СИСТЕМА ГОТОВА. ВВЕДИТЕ <span class="sys">help</span> ДЛЯ СПИСКА КОМАНД.</div>
         </div>
@@ -45,22 +44,64 @@
         return `${yyyy}${mm}${dd}`;
     }
 
-    // Логика команд
+    // Умный HELP
+    function showHelp(topic) {
+        const glyphsCount = Object.keys(localStorage).filter(k => k.startsWith('s9_glyph_')).length;
+        
+        if (topic) {
+            const topics = {
+                'scan': 'Запуск глубокого сканирования космоса для поиска источника сигнала.',
+                'map': 'Переход на навигационную карту станции.',
+                'hub': 'Возврат в Главный Хаб (главная страница).',
+                'archive': 'Попытка подключения к базе данных (требует 3 глифа).',
+                'reactor': 'Переход в сектор Энергоядра.',
+                'restore': 'Восстановление системы из точки доступа (только в Реакторе).',
+                'rebuild': 'Пересборка ядра (только в Реакторе).',
+                'include': 'Включить сектор в буфер обмена (только в Реакторе).',
+                'check': 'Проверить сектор (только в Реакторе).',
+                'backup': 'Восстановить из бэкапа. Формат: backup = YYYYMMDD (только в Реакторе).'
+            };
+            if (topics[topic]) {
+                print(`<span class="sys">[${topic.toUpperCase()}]</span> ${topics[topic]}`);
+            } else {
+                print(`НЕТ ИНФОРМАЦИИ ПО КОМАНДЕ '${topic}'.`, 'err');
+            }
+            return;
+        }
+
+        // Общий список доступных команд
+        let cmds = ['help', 'scan (нужно 3 глифа)', 'map', 'hub', 'archive (нужно 3 глифа)', 'reset'];
+        if (page === 'reactor.html') {
+            cmds = ['help', 'restore', 'rebuild', 'include = 0XF4AD', 'check = 0XF4AD', 'backup = YYYYMMDD', 'hub'];
+        }
+        print(`ДОСТУПНЫЕ КОМАНДЫ: <span class="sys">${cmds.join(' | ')}</span>`);
+    }
+
     function processCommand(cmd) {
         print(`> ${cmd}`, 'sys');
         
-        // Обработка Yes/No
+        if (cmd.startsWith('help ')) {
+            showHelp(cmd.split(' ')[1]);
+            return;
+        }
+
         if (currentState !== 'IDLE' && (cmd === 'yes' || cmd === 'no')) {
             handleYesNo(cmd === 'yes');
             return;
         }
 
+        const glyphsCount = Object.keys(localStorage).filter(k => k.startsWith('s9_glyph_')).length;
+
         switch(cmd) {
             case 'help':
-                print("ДОСТУПНЫЕ КОМАНДЫ: scan, restore, rebuild, include = 0XF4AD, check = 0XF4AD, backup = YYYYMMDD, hub, map, reset");
+                showHelp();
                 break;
             
             case 'scan':
+                if (glyphsCount < 3) {
+                    print("ОШИБКА: НЕДОСТАТОЧНО ГЛИФОВ ДЛЯ ИНИЦИАЛИЗАЦИИ СКАНИРОВАНИЯ. ОТКРОЙТЕ КАРТУ (НУЖНО 3 ГЛИФА).", "err");
+                    break;
+                }
                 if (localStorage.getItem('s9_emergency_reactor') === 'active') {
                     print("ОШИБКА: СКАНИРОВАНИЕ НЕВОЗМОЖНО. ЭНЕРГОЯДРО НЕИСПРАВНО.", "err");
                 } else {
@@ -74,6 +115,22 @@
                 }
                 break;
 
+            case 'map':
+                window.location.href = 'map.html';
+                break;
+            case 'hub':
+                window.location.href = 'index.html';
+                break;
+            case 'reactor':
+                if (glyphsCount >= 3) window.location.href = 'reactor.html';
+                else print("ОШИБКА: КАРТА ЗАБЛОКИРОВАНА. НУЖНО 3 ГЛИФА.", "err");
+                break;
+            case 'archive':
+                if (glyphsCount >= 3) window.location.href = 'archive.html';
+                else print("ОШИБКА: АРХИВ ЗАБЛОКИРОВАН. НУЖНО 3 ГЛИФА.", "err");
+                break;
+
+            // --- КОМАНДЫ РЕАКТОРА ---
             case 'restore':
                 if (page !== 'reactor.html') {
                     print("ОШИБКА: КОМАНДА ДОСТУПНА ТОЛЬКО В СЕКТОРЕ ЭНЕРГОЯДРА.", "err");
@@ -109,20 +166,12 @@
                 currentState = 'APPLY_CONFIRM';
                 break;
 
-            case 'hub':
-                window.location.href = 'index.html';
-                break;
-            case 'map':
-                window.location.href = 'map.html';
-                break;
-            case 'reactor':
-                window.location.href = 'reactor.html';
-                break;
             case 'reset':
                 localStorage.clear();
                 print("СИСТЕМА СБРОШЕНА. ПЕРЕЗАГРУЗКА...");
                 setTimeout(() => location.reload(), 1000);
                 break;
+                
             default:
                 if (cmd.startsWith('backup = ')) {
                     if (page !== 'reactor.html') break;
@@ -167,7 +216,6 @@
         }
     }
 
-    // Обработчики событий
     document.addEventListener('keydown', (e) => {
         if (e.key === '`' || e.key === '~' || e.key === 'Ё' || e.key === 'ё') {
             e.preventDefault();
