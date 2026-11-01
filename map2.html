@@ -1,13 +1,15 @@
-<!DOCTYPE html> <!-- 11 -->
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <script src="js/authGuard.js"></script> 
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
     <title>СИГНАЛ-9 // ТОПОЛОГИЯ СТАНЦИИ</title>
     <link rel="stylesheet" type="text/css" href="style.css">
     <link rel="stylesheet" type="text/css" href="style-tools.css">
     <link rel="stylesheet" type="text/css" href="style-chat-terminal.css">
     <style>
-        /* --- БАЗА --- */
+        /* --- СПЕЦИФИЧНЫЕ СТИЛИ ДЛЯ КАРТЫ --- */
         body.tools-page {
             overflow: hidden; 
             height: 100vh;
@@ -38,7 +40,6 @@
             pointer-events: none;
         }
 
-        /* --- КАРТА --- */
         .map-container {
             position: relative;
             width: 1200px; 
@@ -76,9 +77,7 @@
 
         @keyframes flow { to { stroke-dashoffset: -1000; } }
 
-        /* =========================================
-           БАЗОВЫЙ УЗЕЛ
-           ========================================= */
+        /* --- УЗЛЫ --- */
         .map-node {
             position: absolute;
             width: 130px;
@@ -114,7 +113,7 @@
             top: 35%; 
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 32px; /* Четверть плитки */
+            width: 32px;
             height: 32px;
             display: flex;
             align-items: center;
@@ -174,9 +173,7 @@
             font-weight: bold;
         }
 
-        /* =========================================
-           СТИЛИ ДЛЯ OFFLINE УЗЛОВ
-           ========================================= */
+        /* --- OFFLINE УЗЛЫ --- */
         .map-node.locked {
             border-color: rgba(150, 150, 150, 0.2);
             cursor: not-allowed;
@@ -186,7 +183,6 @@
         .map-node.locked::before { top: -1px; left: -1px; border-top: 2px solid #666; border-left: 2px solid #666; }
         .map-node.locked::after { bottom: -1px; right: -1px; border-bottom: 2px solid #666; border-right: 2px solid #666; }
 
-        /* Тонкие серые линии для OFFLINE */
         .map-node.locked .node-glyph path {
             stroke: #555;
             stroke-width: 2.5;
@@ -196,20 +192,9 @@
             filter: none;
         }
 
-        .map-node.locked .node-title {
-            color: #888;
-            text-shadow: none;
-        }
-
-        .map-node.locked .node-status {
-            color: #ff3333;
-            text-shadow: 0 0 5px rgba(255, 51, 51, 0.5);
-        }
-
-        .map-node.unlocked .node-status { 
-            color: #00ff44; 
-            text-shadow: 0 0 5px rgba(0, 255, 68, 0.5);
-        }
+        .map-node.locked .node-title { color: #888; text-shadow: none; }
+        .map-node.locked .node-status { color: #ff3333; text-shadow: 0 0 5px rgba(255, 51, 51, 0.5); }
+        .map-node.unlocked .node-status { color: #00ff44; text-shadow: 0 0 5px rgba(0, 255, 68, 0.5); }
 
         /* Центральный хаб */
         .map-node[data-id="hub"] {
@@ -220,7 +205,6 @@
         .map-node[data-id="hub"] .node-glyph { width: 38px; height: 38px; }
         .map-node[data-id="hub"].locked { border-color: rgba(150, 150, 150, 0.3); box-shadow: none; }
 
-        /* Терминал */
         .map-node[data-id="tools"] .node-glyph { width: 38px; height: 38px; }
 
         /* --- КОНСОЛЬ (ТИЛЬДА) --- */
@@ -283,12 +267,29 @@
     </style>
 </head>
 <body class="tools-page">
+
+    <!-- 1. СИСТЕМНЫЙ ТЕРМИНАЛ (ИЗ ШАБЛОНА) -->
+    <div class="chat-system">
+        <div id="quest-field" class="question" onclick="handleChatClick()"></div>
+        <div id="answer-field" class="answer-field"></div>
+    </div>
+    <script>
+        window.roomChat = [
+            { q: "> СТАТУС ТОПОЛОГИИ", a: "КАРТА СТАНЦИИ ЧАСТИЧНО ВОССТАНОВЛЕНА. ОБНАРУЖЕНЫ ОТКЛЮЧЕННЫЕ СЕКТОРА." },
+            { q: "> ПОЧЕМУ НЕКОТОРЫЕ УЗЛЫ СЕРЫЕ?", a: "ЭТИ МОДУЛИ НЕ ИНИЦИАЛИЗИРОВАНЫ ИЛИ НЕ ОТВЕЧАЮТ НА ЗАПРОСЫ. ТРЕБУЕТСЯ РУЧНОЕ ПОДКЛЮЧЕНИЕ." }
+        ];
+    </script> 
+    <!-- КОНЕЦ ТЕРМИНАЛА -->
+
+    <!-- 2. ФОНОВЫЕ СЛОИ (ИЗ ШАБЛОНА) -->
     <canvas id="starfield"></canvas>
     <div id="scanner-line"></div>
     <div id="overlay-noise"></div>
 
+    <!-- 3. ЗАГОЛОВОК КАРТЫ -->
     <div class="map-header">СИСТЕМА ТОПОЛОГИИ // СЕКТОР 07</div>
 
+    <!-- 4. ОСНОВНОЙ КОНТЕНТ (КАРТА) -->
     <div id="display">
         <div class="map-container" id="mapContainer">
             <svg class="connections-layer" id="mapLines"></svg>
@@ -296,12 +297,12 @@
         </div>
     </div>
 
-    <!-- КОНСОЛЬ -->
+    <!-- 5. КОНСОЛЬ (ТИЛЬДА) -->
     <div id="tilde-console">
         <div class="console-header">Терминал быстрого доступа // Введите ID отсека</div>
         <div class="console-output" id="console-output">
             <div>Инициализация протокола ручного перемещения...</div>
-            <div>Доступные ID: <span class="sys">HUB, TOOLS, MAP, ARCHIVE, REACTOR, EDR, TELEMETRY, HANGAR, SECTOR, UNINITIALIZED</span></div>
+            <div>Доступные ID: <span class="sys">HUB, TOOLS, MAP, ARCHIVE, REACTOR, EDR, TELEMETRY, HANGAR, UNINITIALIZED</span></div>
         </div>
         <div class="console-input-wrapper">
             <span>></span>
@@ -313,203 +314,185 @@
         </div>
     </div>
 
+    <!-- 6. НИЖНИЕ КНОПКИ (ИЗ ШАБЛОНА) -->
     <div class="audio-control-fixed" id="audio-toggle">
         <span id="audio-status-icon">○</span>
         <span id="audio-status">АУДИОДАТЧИКИ: ВЫКЛ</span>
     </div>
 
-<script>
-    // --- ГЕНЕРАТОР ГЛИФОВ ---
-    const POINTS = [{x:15,y:15},{x:40,y:15},{x:65,y:15},{x:15,y:40},{x:40,y:40},{x:65,y:40},{x:15,y:65},{x:40,y:65},{x:65,y:65}];
-    
-    function getPath(word) {
-        let hash = 5381;
-        for (let i = 0; i < word.length; i++) hash = ((hash << 5) + hash) + word.charCodeAt(i);
-        let seed = Math.abs(hash), path = [], used = new Set();
-        const len = (seed % 3) + 5;
-        while(path.length < len && used.size < 9) {
-            seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-            let n = seed % 9; if(!used.has(n)) { path.push(n); used.add(n); }
-        }
-        return path;
-    }
+    <a href="tools.html" class="terminal-link-fixed">
+        <span>□</span> ИНЖЕНЕРНЫЙ ТЕРМИНАЛ
+    </a>
 
-    function createSVG(path) {
-        if (!path || !path.length) return '';
-        const start = POINTS[path[0]];
-        let d = `M ${start.x} ${start.y}`;
-        for(let i=0; i<path.length-1; i++) {
-            const c = POINTS[path[i]], n = POINTS[path[i+1]];
-            d += ` C ${c.x+(n.x-c.x)*0.5} ${c.y}, ${c.x+(n.x-c.x)*0.5} ${n.y}, ${n.x} ${n.y}`;
-        }
-        return `<svg viewBox="0 0 80 80"><path d="${d}"></path></svg>`;
-    }
+    <!-- 7. ПОДКЛЮЧЕНИЕ РЕСУРСОВ (ИЗ ШАБЛОНА) -->
+    <script src="js/loader.js"></script>
 
-    // --- КОНФИГУРАЦИЯ КАРТЫ (ТВОЙ МАКЕТ) ---
-    const MAP_DATA = {
-        nodes: [
-            // Центр
-            { id: 'hub', title: 'ГЛАВНЫЙ\nХАБ', x: 600, y: 425, url: 'index.html', req: null },
-            
-            // Верхний ряд
-            { id: 'hangar', title: 'ТРАНСПОРТНЫЙ\nШЛЮЗ', x: 350, y: 200, url: 'hangar.html', req: 's9_hangar_open' },
-            { id: 'tools', title: 'ИНЖЕНЕРНЫЙ\nТЕРМИНАЛ', x: 600, y: 200, url: 'tools.html', req: null },
-            { id: 'res1', title: 'СЕКТОР\n[0x00]', x: 850, y: 200, url: '#', req: 's9_res1' },
-
-            // Средний ряд
-            { id: 'telemetry', title: 'МОДУЛЬ\nТЕЛЕМЕТРИИ', x: 150, y: 425, url: 'observatory.html', req: 's9_observatory' },
-            { id: 'reactor', title: 'ЭНЕРГОЯДРО', x: 350, y: 425, url: 'reactor.html', req: 's9_emergency_reactor' },
-            { id: 'edr', title: 'EDR\nСЕКТОР', x: 850, y: 425, url: 'edr.html', req: 's9_edr_open' },
-            { id: 'sector', title: 'НЕИНИЦИАЛИЗИРОВАН', x: 1050, y: 425, url: '#', req: 's9_sector_opened' },
-
-            // Нижний ряд
-            { id: 'archive', title: 'БАЗА\nДАННЫХ', x: 350, y: 650, url: 'archive.html', req: 's9_access_granted' },
-            { id: 'map', title: 'КАРТА', x: 600, y: 650, url: 'map2.html', req: null },
-            { id: 'res2', title: 'СЕКТОР\n[0xFF]', x: 850, y: 650, url: '#', req: 's9_res2' }
-        ],
-        links: [
-            // Центральные связи
-            { s: 'hub', t: 'tools' }, { s: 'hub', t: 'map' }, 
-            { s: 'hub', t: 'reactor' }, { s: 'hub', t: 'edr' },
-
-            // Верхние ветки
-            { s: 'tools', t: 'hangar' }, { s: 'tools', t: 'res1' },
-            
-            // Левая ветка
-            { s: 'reactor', t: 'telemetry' }, { s: 'reactor', t: 'archive' },
-            
-            // Правая ветка
-            { s: 'edr', t: 'sector' }, { s: 'edr', t: 'res2' },
-            
-            // Низ (связь карты)
-            { s: 'map', t: 'archive' }, { s: 'map', t: 'res2' }
-        ]
-    };
-
-    const isUnlocked = (node) => !node.req || localStorage.getItem(node.req) === 'true' || localStorage.getItem(node.req) === 'active';
-
-    function buildMap() {
-        const svg = document.getElementById('mapLines');
-        const nodesContainer = document.getElementById('mapNodes');
-
-        MAP_DATA.links.forEach(link => {
-            const source = MAP_DATA.nodes.find(n => n.id === link.s);
-            const target = MAP_DATA.nodes.find(n => n.id === link.t);
-            if (!source || !target) return;
-
-            const active = isUnlocked(source) && isUnlocked(target);
-            const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-            g.setAttribute('class', active ? 'link-active' : 'link-locked');
-
-            const bgLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            bgLine.setAttribute('x1', source.x); bgLine.setAttribute('y1', source.y);
-            bgLine.setAttribute('x2', target.x); bgLine.setAttribute('y2', target.y);
-            bgLine.setAttribute('class', 'link-bg');
-            g.appendChild(bgLine);
-
-            if (active) {
-                const flowLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                flowLine.setAttribute('x1', source.x); flowLine.setAttribute('y1', source.y);
-                flowLine.setAttribute('x2', target.x); flowLine.setAttribute('y2', target.y);
-                flowLine.setAttribute('class', 'link-flow');
-                flowLine.style.animationDelay = `${Math.random() * -20}s`;
-                g.appendChild(flowLine);
+    <!-- 8. СКРИПТ КАРТЫ -->
+    <script>
+        // --- ГЕНЕРАТОР ГЛИФОВ ---
+        const POINTS = [{x:15,y:15},{x:40,y:15},{x:65,y:15},{x:15,y:40},{x:40,y:40},{x:65,y:40},{x:15,y:65},{x:40,y:65},{x:65,y:65}];
+        
+        function getPath(word) {
+            let hash = 5381;
+            for (let i = 0; i < word.length; i++) hash = ((hash << 5) + hash) + word.charCodeAt(i);
+            let seed = Math.abs(hash), path = [], used = new Set();
+            const len = (seed % 3) + 5;
+            while(path.length < len && used.size < 9) {
+                seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+                let n = seed % 9; if(!used.has(n)) { path.push(n); used.add(n); }
             }
-            svg.appendChild(g);
-        });
-
-        MAP_DATA.nodes.forEach(node => {
-            const open = isUnlocked(node);
-            const el = document.createElement(open ? 'a' : 'div');
-            
-            if (open) el.href = node.url;
-            el.className = `map-node ${open ? 'unlocked' : 'locked'}`;
-            el.setAttribute('data-id', node.id);
-            el.style.left = `${node.x}px`;
-            el.style.top = `${node.y}px`;
-
-            const formattedTitle = node.title.replace(/\n/g, '<br>');
-            const statusText = open ? 'ONLINE' : 'OFFLINE'; 
-            
-            // Берем первое слово для генерации глифа
-            const wordForGlyph = node.title.split('\n')[0].replace(/\[.*?\]/g, '').trim();
-            const glyphSVG = createSVG(getPath(wordForGlyph));
-
-            el.innerHTML = `
-                <div class="node-glyph">${glyphSVG}</div>
-                <div class="node-title">${formattedTitle}</div>
-                <div class="node-status">${statusText}</div>
-            `;
-            nodesContainer.appendChild(el);
-        });
-    }
-
-    // --- ТИЛЬДА ---
-    const consoleEl = document.getElementById('tilde-console');
-    const consoleInput = document.getElementById('console-input');
-    const consoleOutput = document.getElementById('console-output');
-
-    document.addEventListener('keydown', (e) => {
-        if (e.key === '`' || e.key === '~' || e.key === 'Ё' || e.key === 'ё') {
-            e.preventDefault();
-            consoleEl.classList.toggle('active');
-            if (consoleEl.classList.contains('active')) consoleInput.focus();
+            return path;
         }
-        if (e.key === 'Escape' && consoleEl.classList.contains('active')) consoleEl.classList.remove('active');
-    });
 
-    consoleInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            const cmd = consoleInput.value.trim().toLowerCase();
-            consoleInput.value = '';
-
-            const targetNode = MAP_DATA.nodes.find(n => n.id.toLowerCase() === cmd || n.title.toLowerCase().includes(cmd));
-
-            if (!targetNode) {
-                consoleOutput.innerHTML += `<div class="err">ОШИБКА: Отсек '${cmd}' не найден.</div>`;
-                return;
+        function createSVG(path) {
+            if (!path || !path.length) return '';
+            const start = POINTS[path[0]];
+            let d = `M ${start.x} ${start.y}`;
+            for(let i=0; i<path.length-1; i++) {
+                const c = POINTS[path[i]], n = POINTS[path[i+1]];
+                d += ` C ${c.x+(n.x-c.x)*0.5} ${c.y}, ${c.x+(n.x-c.x)*0.5} ${n.y}, ${n.x} ${n.y}`;
             }
-            if (targetNode.req && !isUnlocked(targetNode)) {
-                consoleOutput.innerHTML += `<div class="err">ОТКАЗАНО: Доступ к '${targetNode.title.replace(/\n/g, ' ')}' заблокирован.</div>`;
-                return;
-            }
-            if (targetNode.url === '#') {
-                consoleOutput.innerHTML += `<div class="err">ОШИБКА: Модуль '${targetNode.id}' в разработке.</div>`;
-                return;
-            }
-            consoleOutput.innerHTML += `<div class="ok">УСПЕХ: Переход в '${targetNode.title.replace(/\n/g, ' ')}'...</div>`;
-            setTimeout(() => { window.location.href = targetNode.url; }, 500);
+            return `<svg viewBox="0 0 80 80"><path d="${d}"></path></svg>`;
         }
-    });
 
-    // --- ФОН ---
-    function initStars() {
-        const canvas = document.getElementById('starfield');
-        const ctx = canvas.getContext('2d');
-        let width, height;
-        const resize = () => { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; };
-        window.addEventListener('resize', resize); resize();
+        // --- КОНФИГУРАЦИЯ КАРТЫ (С ПЕРЕСТАНОВКОЙ) ---
+        const MAP_DATA = {
+            nodes: [
+                // Центр
+                { id: 'hub', title: 'ГЛАВНЫЙ\nХАБ', x: 600, y: 425, url: 'index.html', req: null },
+                
+                // Верхний ряд
+                { id: 'uninitialized', title: 'НЕИНИЦИАЛИЗИРОВАН', x: 350, y: 200, url: '#', req: 's9_sector_opened' }, // Теперь слева
+                { id: 'tools', title: 'ИНЖЕНЕРНЫЙ\nТЕРМИНАЛ', x: 600, y: 200, url: 'tools.html', req: null },
+                { id: 'res1', title: 'СЕКТОР\n[0x00]', x: 850, y: 200, url: '#', req: 's9_res1' },
 
-        const stars = Array.from({length: 200}, () => ({
-            x: Math.random() * width, y: Math.random() * height,
-            size: Math.random() * 1.5, alpha: Math.random(), speed: Math.random() * 0.03
-        }));
+                // Средний ряд
+                { id: 'telemetry', title: 'МОДУЛЬ\nТЕЛЕМЕТРИИ', x: 150, y: 425, url: 'observatory.html', req: 's9_observatory' },
+                { id: 'reactor', title: 'ЭНЕРГОЯДРО', x: 350, y: 425, url: 'reactor.html', req: 's9_emergency_reactor' },
+                { id: 'edr', title: 'EDR\nСЕКТОР', x: 850, y: 425, url: 'edr.html', req: 's9_edr_open' },
+                { id: 'hangar', title: 'ТРАНСПОРТНЫЙ\nШЛЮЗ', x: 1050, y: 425, url: 'hangar.html', req: 's9_hangar_open' }, // Теперь справа
 
-        function draw() {
-            ctx.fillStyle = '#010306';
-            ctx.fillRect(0, 0, width, height);
-            stars.forEach(s => {
-                ctx.fillStyle = `rgba(0, 242, 255, ${Math.abs(Math.sin(Date.now() * 0.001 + s.alpha * 10)) * 0.5})`;
-                ctx.beginPath(); ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2); ctx.fill();
-                s.x -= s.speed; if(s.x < 0) s.x = width;
+                // Нижний ряд
+                { id: 'archive', title: 'БАЗА\nДАННЫХ', x: 350, y: 650, url: 'archive.html', req: 's9_access_granted' },
+                { id: 'map', title: 'КАРТА', x: 600, y: 650, url: 'map2.html', req: null },
+                { id: 'res2', title: 'СЕКТОР\n[0xFF]', x: 850, y: 650, url: '#', req: 's9_res2' }
+            ],
+            links: [
+                // Центральные связи
+                { s: 'hub', t: 'tools' }, { s: 'hub', t: 'map' }, 
+                { s: 'hub', t: 'reactor' }, { s: 'hub', t: 'edr' },
+
+                // Верхние ветки
+                { s: 'tools', t: 'uninitialized' }, { s: 'tools', t: 'res1' },
+                
+                // Левая ветка
+                { s: 'reactor', t: 'telemetry' }, { s: 'reactor', t: 'archive' },
+                
+                // Правая ветка
+                { s: 'edr', t: 'hangar' }, { s: 'edr', t: 'res2' },
+                
+                // Низ (связь карты)
+                { s: 'map', t: 'archive' }, { s: 'map', t: 'res2' }
+            ]
+        };
+
+        const isUnlocked = (node) => !node.req || localStorage.getItem(node.req) === 'true' || localStorage.getItem(node.req) === 'active';
+
+        function buildMap() {
+            const svg = document.getElementById('mapLines');
+            const nodesContainer = document.getElementById('mapNodes');
+
+            MAP_DATA.links.forEach(link => {
+                const source = MAP_DATA.nodes.find(n => n.id === link.s);
+                const target = MAP_DATA.nodes.find(n => n.id === link.t);
+                if (!source || !target) return;
+
+                const active = isUnlocked(source) && isUnlocked(target);
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                g.setAttribute('class', active ? 'link-active' : 'link-locked');
+
+                const bgLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                bgLine.setAttribute('x1', source.x); bgLine.setAttribute('y1', source.y);
+                bgLine.setAttribute('x2', target.x); bgLine.setAttribute('y2', target.y);
+                bgLine.setAttribute('class', 'link-bg');
+                g.appendChild(bgLine);
+
+                if (active) {
+                    const flowLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    flowLine.setAttribute('x1', source.x); flowLine.setAttribute('y1', source.y);
+                    flowLine.setAttribute('x2', target.x); flowLine.setAttribute('y2', target.y);
+                    flowLine.setAttribute('class', 'link-flow');
+                    flowLine.style.animationDelay = `${Math.random() * -20}s`;
+                    g.appendChild(flowLine);
+                }
+                svg.appendChild(g);
             });
-            requestAnimationFrame(draw);
-        }
-        draw();
-    }
 
-    buildMap();
-    initStars();
-</script>
+            MAP_DATA.nodes.forEach(node => {
+                const open = isUnlocked(node);
+                const el = document.createElement(open ? 'a' : 'div');
+                
+                if (open) el.href = node.url;
+                el.className = `map-node ${open ? 'unlocked' : 'locked'}`;
+                el.setAttribute('data-id', node.id);
+                el.style.left = `${node.x}px`;
+                el.style.top = `${node.y}px`;
+
+                const formattedTitle = node.title.replace(/\n/g, '<br>');
+                const statusText = open ? 'ONLINE' : 'OFFLINE'; 
+                
+                const wordForGlyph = node.title.split('\n')[0].replace(/\[.*?\]/g, '').trim();
+                const glyphSVG = createSVG(getPath(wordForGlyph));
+
+                el.innerHTML = `
+                    <div class="node-glyph">${glyphSVG}</div>
+                    <div class="node-title">${formattedTitle}</div>
+                    <div class="node-status">${statusText}</div>
+                `;
+                nodesContainer.appendChild(el);
+            });
+        }
+
+        // --- ТИЛЬДА ---
+        const consoleEl = document.getElementById('tilde-console');
+        const consoleInput = document.getElementById('console-input');
+        const consoleOutput = document.getElementById('console-output');
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '`' || e.key === '~' || e.key === 'Ё' || e.key === 'ё') {
+                e.preventDefault();
+                consoleEl.classList.toggle('active');
+                if (consoleEl.classList.contains('active')) consoleInput.focus();
+            }
+            if (e.key === 'Escape' && consoleEl.classList.contains('active')) consoleEl.classList.remove('active');
+        });
+
+        consoleInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const cmd = consoleInput.value.trim().toLowerCase();
+                consoleInput.value = '';
+
+                const targetNode = MAP_DATA.nodes.find(n => n.id.toLowerCase() === cmd || n.title.toLowerCase().includes(cmd));
+
+                if (!targetNode) {
+                    consoleOutput.innerHTML += `<div class="err">ОШИБКА: Отсек '${cmd}' не найден.</div>`;
+                    return;
+                }
+                if (targetNode.req && !isUnlocked(targetNode)) {
+                    consoleOutput.innerHTML += `<div class="err">ОТКАЗАНО: Доступ к '${targetNode.title.replace(/\n/g, ' ')}' заблокирован.</div>`;
+                    return;
+                }
+                if (targetNode.url === '#') {
+                    consoleOutput.innerHTML += `<div class="err">ОШИБКА: Модуль '${targetNode.id}' в разработке.</div>`;
+                    return;
+                }
+                consoleOutput.innerHTML += `<div class="ok">УСПЕХ: Переход в '${targetNode.title.replace(/\n/g, ' ')}'...</div>`;
+                setTimeout(() => { window.location.href = targetNode.url; }, 500);
+            }
+        });
+
+        // Инициализация
+        buildMap();
+    </script>
 </body>
 </html>
