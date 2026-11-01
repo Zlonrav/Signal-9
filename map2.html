@@ -85,25 +85,22 @@
             height: 130px;
             background: rgba(2, 10, 15, 0.85);
             border: 1px solid rgba(0, 242, 255, 0.15);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start; /* Прижимаем к верху для иконок */
             text-decoration: none;
             z-index: 10;
             transform: translate(-50%, -50%);
             transition: all 0.4s cubic-bezier(0.2, 1, 0.3, 1);
             backdrop-filter: blur(8px);
-            padding-top: 25px; /* Отступ сверху для глифа */
             box-sizing: border-box;
         }
 
+        /* Уголки */
         .map-node::before, .map-node::after {
             content: ''; position: absolute; width: 10px; height: 10px; pointer-events: none; transition: 0.3s;
         }
         .map-node.unlocked::before { top: -1px; left: -1px; border-top: 2px solid var(--neon); border-left: 2px solid var(--neon); }
         .map-node.unlocked::after { bottom: -1px; right: -1px; border-bottom: 2px solid var(--neon); border-right: 2px solid var(--neon); }
 
+        /* Наведение на ONLINE */
         .map-node.unlocked:hover {
             background: rgba(0, 242, 255, 0.1);
             box-shadow: 0 0 30px rgba(0, 242, 255, 0.2), inset 0 0 20px rgba(0, 242, 255, 0.1);
@@ -111,11 +108,14 @@
         }
         .map-node.unlocked:hover::before, .map-node.unlocked:hover::after { width: 100%; height: 100%; opacity: 0.3; }
 
-        /* --- ГЛИФЫ --- */
+        /* --- ГЛИФЫ (ПОЗИЦИОНИРОВАНИЕ) --- */
         .node-glyph {
-            width: 45px;
-            height: 45px;
-            margin-bottom: 15px;
+            position: absolute;
+            top: 35%; /* Центр верхней половины */
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 32px; /* Четверть от 130px */
+            height: 32px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -127,24 +127,29 @@
             overflow: visible;
         }
 
-        /* Стиль линий глифа для ONLINE */
+        /* Тонкие линии для ONLINE */
         .map-node.unlocked .node-glyph path {
             stroke: var(--neon);
-            stroke-width: 4;
+            stroke-width: 2.5; /* Тонкие линии */
             fill: none;
             stroke-linecap: round;
             stroke-linejoin: round;
-            filter: drop-shadow(0 0 5px var(--neon)) drop-shadow(0 0 2px #fff);
+            filter: drop-shadow(0 0 4px var(--neon)) drop-shadow(0 0 1px #fff);
             transition: 0.3s;
         }
 
         .map-node.unlocked:hover .node-glyph path {
-            stroke-width: 5;
-            filter: drop-shadow(0 0 10px var(--neon)) drop-shadow(0 0 4px #fff);
+            stroke-width: 3;
+            filter: drop-shadow(0 0 8px var(--neon)) drop-shadow(0 0 2px #fff);
         }
 
         /* --- ТЕКСТ --- */
         .node-title {
+            position: absolute;
+            top: 70%; /* Четко под глифом */
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
             font-size: 9px;
             letter-spacing: 1px;
             text-transform: uppercase;
@@ -160,7 +165,9 @@
 
         .node-status {
             position: absolute;
-            bottom: 10px;
+            bottom: 8px;
+            width: 100%;
+            text-align: center;
             font-size: 8px;
             font-family: monospace;
             letter-spacing: 2px;
@@ -179,10 +186,10 @@
         .map-node.locked::before { top: -1px; left: -1px; border-top: 2px solid #666; border-left: 2px solid #666; }
         .map-node.locked::after { bottom: -1px; right: -1px; border-bottom: 2px solid #666; border-right: 2px solid #666; }
 
-        /* Стиль линий глифа для OFFLINE */
+        /* Тонкие серые линии для OFFLINE */
         .map-node.locked .node-glyph path {
             stroke: #555;
-            stroke-width: 4;
+            stroke-width: 2.5;
             fill: none;
             stroke-linecap: round;
             stroke-linejoin: round;
@@ -204,18 +211,17 @@
             text-shadow: 0 0 5px rgba(0, 255, 68, 0.5);
         }
 
-        /* Центральный хаб (Увеличенный) */
+        /* Центральный хаб */
         .map-node[data-id="hub"] {
             width: 150px; height: 150px;
             border-color: rgba(0, 242, 255, 0.4);
             box-shadow: 0 0 40px rgba(0, 242, 255, 0.1);
-            padding-top: 30px;
         }
-        .map-node[data-id="hub"] .node-glyph { width: 60px; height: 60px; }
+        .map-node[data-id="hub"] .node-glyph { width: 38px; height: 38px; }
         .map-node[data-id="hub"].locked { border-color: rgba(150, 150, 150, 0.3); box-shadow: none; }
 
-        /* Узел Терминала (особый стиль) */
-        .map-node[data-id="tools"] .node-glyph { width: 55px; height: 55px; }
+        /* Терминал */
+        .map-node[data-id="tools"] .node-glyph { width: 38px; height: 38px; }
 
         /* --- КОНСОЛЬ (ТИЛЬДА) --- */
         #tilde-console {
@@ -233,7 +239,6 @@
             backdrop-filter: blur(10px);
             flex-direction: column;
             padding: 20px;
-            transition: transform 0.3s ease, opacity 0.3s ease;
         }
 
         #tilde-console.active { display: flex; }
@@ -260,33 +265,20 @@
         .console-output .err { color: #ff3333; }
         .console-output .ok { color: #00ff44; }
 
-        .console-input-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        .console-input-wrapper { display: flex; align-items: center; gap: 10px; }
         .console-input-wrapper span { color: var(--neon); font-size: 14px; font-weight: bold; }
         
         #console-input {
-            flex: 1;
-            background: transparent;
-            border: none;
+            flex: 1; background: transparent; border: none;
             border-bottom: 1px solid rgba(0, 242, 255, 0.5);
-            color: var(--neon);
-            font-family: inherit;
-            font-size: 14px;
-            outline: none;
-            padding: 5px 0;
-            text-transform: uppercase;
+            color: var(--neon); font-family: inherit; font-size: 14px;
+            outline: none; padding: 5px 0; text-transform: uppercase;
         }
         #console-input:focus { border-bottom-color: var(--neon); box-shadow: 0 5px 10px -5px var(--neon); }
 
         .console-hint {
-            margin-top: 15px;
-            font-size: 9px;
-            color: #555;
-            display: flex;
-            justify-content: space-between;
+            margin-top: 15px; font-size: 9px; color: #555;
+            display: flex; justify-content: space-between;
         }
     </style>
 </head>
@@ -304,7 +296,7 @@
         </div>
     </div>
 
-    <!-- КОНСОЛЬ (ТИЛЬДА) -->
+    <!-- КОНСОЛЬ -->
     <div id="tilde-console">
         <div class="console-header">Терминал быстрого доступа // Введите ID отсека</div>
         <div class="console-output" id="console-output">
@@ -327,9 +319,7 @@
     </div>
 
 <script>
-    // ==========================================
-    // 1. ГЕНЕРАТОР ГЛИФОВ (Из script.js)
-    // ==========================================
+    // --- ГЕНЕРАТОР ГЛИФОВ ---
     const POINTS = [{x:15,y:15},{x:40,y:15},{x:65,y:15},{x:15,y:40},{x:40,y:40},{x:65,y:40},{x:15,y:65},{x:40,y:65},{x:65,y:65}];
     
     function getPath(word) {
@@ -355,52 +345,39 @@
         return `<svg viewBox="0 0 80 80"><path d="${d}"></path></svg>`;
     }
 
-    // ==========================================
-    // 2. КОНФИГУРАЦИЯ КАРТЫ
-    // ==========================================
+    // --- КОНФИГУРАЦИЯ КАРТЫ ---
     const MAP_DATA = {
         nodes: [
-            // Центр
             { id: 'hub', title: 'ГЛАВНЫЙ\nХАБ', x: 600, y: 425, url: 'index.html', req: null },
             
-            // Верх (Терминал теперь здесь!)
             { id: 'tools', title: 'ИНЖЕНЕРНЫЙ\nТЕРМИНАЛ', x: 600, y: 200, url: 'tools.html', req: null },
             { id: 'sector', title: 'НЕИЗВЕСТНЫЙ\nСЕКТОР', x: 300, y: 200, url: '#', req: 's9_sector_opened' },
             { id: 'reserved1', title: 'МОДУЛЬ\n[РЕЗЕРВ]', x: 900, y: 200, url: '#', req: 's9_res1' },
 
-            // Средний ряд
             { id: 'observatory', title: 'ОБСЕРВАТОРИЯ', x: 150, y: 425, url: 'observatory.html', req: 's9_observatory' },
             { id: 'map', title: 'КАРТА', x: 350, y: 425, url: 'map2.html', req: null },
             { id: 'reactor', title: 'РЕАКТОР', x: 850, y: 425, url: 'reactor.html', req: 's9_emergency_reactor' },
             { id: 'hangar', title: 'АНГАР', x: 1050, y: 425, url: 'hangar.html', req: 's9_hangar_open' },
 
-            // Нижний ряд
             { id: 'archive', title: 'АРХИВ', x: 350, y: 650, url: 'archive.html', req: 's9_access_granted' },
             { id: 'reserved2', title: 'МОДУЛЬ\n[РЕЗЕРВ]', x: 600, y: 650, url: '#', req: 's9_res2' },
             { id: 'medbay', title: 'МЕДОТСЕК', x: 850, y: 650, url: 'medbay.html', req: 's9_medbay_open' }
         ],
         links: [
-            // Крест от центра
             { s: 'hub', t: 'map' }, { s: 'hub', t: 'tools' }, 
             { s: 'hub', t: 'reactor' }, { s: 'hub', t: 'reserved2' },
-            
-            // Верхние связи
             { s: 'tools', t: 'sector' }, { s: 'tools', t: 'reserved1' },
-            
-            // Периметр
             { s: 'sector', t: 'map' }, { s: 'map', t: 'archive' }, { s: 'observatory', t: 'map' },
             { s: 'reactor', t: 'hangar' }, { s: 'reactor', t: 'medbay' }
         ]
     };
 
-    // --- ДВИЖОК КАРТЫ ---
     const isUnlocked = (node) => !node.req || localStorage.getItem(node.req) === 'true' || localStorage.getItem(node.req) === 'active';
 
     function buildMap() {
         const svg = document.getElementById('mapLines');
         const nodesContainer = document.getElementById('mapNodes');
 
-        // 1. Отрисовка линий
         MAP_DATA.links.forEach(link => {
             const source = MAP_DATA.nodes.find(n => n.id === link.s);
             const target = MAP_DATA.nodes.find(n => n.id === link.t);
@@ -427,7 +404,6 @@
             svg.appendChild(g);
         });
 
-        // 2. Отрисовка узлов
         MAP_DATA.nodes.forEach(node => {
             const open = isUnlocked(node);
             const el = document.createElement(open ? 'a' : 'div');
@@ -441,7 +417,7 @@
             const formattedTitle = node.title.replace(/\n/g, '<br>');
             const statusText = open ? 'ONLINE' : 'OFFLINE'; 
             
-            // Генерируем глиф на основе названия (убираем переносы и скобки)
+            // Берем первое слово без скобок для генерации глифа
             const wordForGlyph = node.title.split('\n')[0].replace(/\[.*?\]/g, '').trim();
             const glyphSVG = createSVG(getPath(wordForGlyph));
 
@@ -454,7 +430,7 @@
         });
     }
 
-    // --- КОНСОЛЬ (ТИЛЬДА) ---
+    // --- ТИЛЬДА ---
     const consoleEl = document.getElementById('tilde-console');
     const consoleInput = document.getElementById('console-input');
     const consoleOutput = document.getElementById('console-output');
