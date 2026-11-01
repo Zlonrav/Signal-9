@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>СИГНАЛ-9 // КАРТА СТАНЦИИ</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="style-tools.css">
+    <link rel="stylesheet" type="text/css" href="style-chat-terminal.css">
+    <style>
+        /* Изолированные стили для топологии карты */
+        body.tools-page {
+            overflow: hidden; /* Убираем скролл для карты */
+            height: 100vh;
+        }
+
+        #display {
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .map-wrapper {
+            position: relative;
+            width: 1100px; 
+            height: 700px;
+            margin: 0 auto;
+        }
+
+        /* Слой для соединительных линий (Трасситы) */
+        .map-connections {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .map-connections line {
+            stroke: var(--neon);
+            stroke-width: 2;
+            transition: all 0.5s ease;
+        }
+
+        /* Стили для активных линий */
+        .map-connections line.active {
+            opacity: 0.4;
+            stroke-dasharray: 10 5;
+            animation: flowLine 20s linear infinite;
+            filter: drop-shadow(0 0 5px var(--neon));
+        }
+
+        /* Стили для заблокированных линий */
+        .map-connections line.locked {
+            opacity: 0.05;
+            stroke-dasharray: 5 15;
+        }
+
+        @keyframes flowLine {
+            to { stroke-dashoffset: -200; }
+        }
+
+        /* Узлы отсеков */
+        .map-node {
+            position: absolute;
+            width: 141.6px;
+            height: 141.6px;
+            background: rgba(10, 26, 32, 0.8);
+            border: 1px solid rgba(0, 242, 255, 0.2);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.4s cubic-bezier(0.2, 1, 0.3, 1);
+            text-decoration: none;
+            z-index: 10;
+            /* Центрирование относительно координат x,y */
+            transform: translate(-50%, -50%);
+            backdrop-filter: blur(5px);
+        }
+
+        .map-node.unlocked:hover {
+            border-color: var(--neon);
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.3);
+            transform: translate(-50%, -50%) scale(1.1);
+            background: rgba(0, 242, 255, 0.1);
+        }
+
+        .map-node.locked {
+            opacity: 0.4;
+            cursor: not-allowed;
+            filter: grayscale(1);
+            border-style: dashed;
+        }
+
+        /* Иконка и текст внутри узла */
+        .node-glyph {
+            width: 50px;
+            height: 50px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--neon);
+        }
+
+        .node-glyph svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 0 5px var(--neon));
+        }
+
+        .map-node.locked .node-glyph svg {
+            filter: none;
+            color: #ff3300; /* Красный цвет для заблокированных */
+        }
+
+        .node-label {
+            font-size: 9px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--neon);
+            font-family: 'JetBrains Mono', monospace;
+            text-align: center;
+            pointer-events: none;
+            font-weight: bold;
+        }
+
+        .req-info {
+            font-size: 7px;
+            opacity: 0.5;
+            margin-top: 4px;
+            color: #fff;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body class="tools-page">
+    <canvas id="starfield"></canvas>
+    <div id="scanner-line"></div>
+    <div id="overlay-noise"></div>
+
+    <div id="display">
+        <div class="map-wrapper" id="mapWrapper">
+            <!-- Слой SVG для линий связи -->
+            <svg class="map-connections" id="mapLines"></svg>
+            
+            <!-- Контейнер для узлов -->
+            <div id="mapNodesContainer"></div>
+        </div>
+    </div>
+
+    <!-- Служебная панель для тестирования (потом удалишь) -->
+    <div style="position: fixed; bottom: 20px; left: 20px; z-index: 1000; display: flex; gap: 10px;">
+        <button onclick="localStorage.setItem('s9_access_granted', 'true'); location.reload();" style="background:#222; color:#00f2ff; border:1px solid #00f2ff; padding:5px; cursor:pointer;">+ ДОСТУП</button>
+        <button onclick="localStorage.clear(); location.reload();" style="background:#222; color:#ff3333; border:1px solid #ff3333; padding:5px; cursor:pointer;">СБРОС</button>
+    </div>
+
+    <!-- Кнопки терминала и аудио -->
+    <div class="audio-control-fixed" id="audio-toggle">
+        <span id="audio-status-icon">○</span>
+        <span id="audio-status">АУДИОДАТЧИКИ: ВЫКЛ</span>
+    </div>
+
+    <a href="tools.html" class="terminal-link-fixed">
+        <span>□</span> ИНЖЕНЕРНЫЙ ТЕРМИНАЛ
+    </a>
+
+<script>
+    // ==========================================
+    // 1. КОНФИГУРАЦИЯ КАРТЫ
+    // ==========================================
+    const MAP_CONFIG = {
+        center: { x: 550, y: 350 }, // Центр карты (550x350 для 1100x700)
+        nodes: [
+            { 
+                id: 'hub', 
+                label: 'ЦЕНТРАЛЬНЫЙ ХАБ', 
+                x: 550, y: 350, 
+                url: 'index.html', 
+                req: null, 
+                icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v4m0 12v4M2 12h4m12 0h4"></path></svg>`
+            },
+            { 
+                id: 'archive', 
+                label: 'АРХИВ ДАННЫХ', 
+                x: 300, y: 200, 
+                url: 'archive.html', 
+                req: 's9_access_granted', // Требует флаг авторизации
+                icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>`
+            },
+            { 
+                id: 'reactor', 
+                label: 'РЕАКТОРНЫЙ ОТСЕК', 
+                x: 300, y: 500, 
+                url: 'reactor.html', 
+                req: 's9_emergency_reactor', // Требует аварии реактора (появляется после ввода 142)
+                icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>`
+            },
+            { 
+                id: 'tools', 
+                label: 'ИНЖЕНЕРНЫЙ ТЕРМИНАЛ', 
+                x: 800, y: 200, 
+                url: 'tools.html', 
+                req: null, 
+                icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>`
+            },
+            { 
+                id: 'gate', 
+                label: 'ШЛЮЗ', 
+                x: 800, y: 500, 
+                url: '#', 
+                req: 's9_gate_opened', // Этот флаг мы еще не создали (заблокирован)
+                icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`
+            }
+        ],
+        // Массив связей (откуда -> куда)
+        links: [
+            { source: 'hub', target: 'archive' },
+            { source: 'hub', target: 'reactor' },
+            { source: 'hub', target: 'tools' },
+            { source: 'hub', target: 'gate' },
+            { source: 'tools', target: 'gate' } // Секретная линия
+        ]
+    };
+
+    // ==========================================
+    // 2. ДВИЖОК ОТРИСОВКИ КАРТЫ
+    // ==========================================
+    const nodesContainer = document.getElementById('mapNodesContainer');
+    const linesContainer = document.getElementById('mapLines');
+
+    function initMap() {
+        // 1. Рисуем линии
+        MAP_CONFIG.links.forEach(link => {
+            const sourceNode = MAP_CONFIG.nodes.find(n => n.id === link.source);
+            const targetNode = MAP_CONFIG.nodes.find(n => n.id === link.target);
+            
+            if (sourceNode && targetNode) {
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', sourceNode.x);
+                line.setAttribute('y1', sourceNode.y);
+                line.setAttribute('x2', targetNode.x);
+                line.setAttribute('y2', targetNode.y);
+                
+                // Проверяем, открыты ли оба узла для анимации линии
+                const isSourceOpen = !sourceNode.req || localStorage.getItem(sourceNode.req) === 'true';
+                const isTargetOpen = !targetNode.req || localStorage.getItem(targetNode.req) === 'true';
+                
+                if (isSourceOpen && isTargetOpen) {
+                    line.classList.add('active');
+                } else {
+                    line.classList.add('locked');
+                }
+                
+                linesContainer.appendChild(line);
+            }
+        });
+
+        // 2. Рисуем узлы
+        MAP_CONFIG.nodes.forEach(node => {
+            const isUnlocked = !node.req || localStorage.getItem(node.req) === 'true';
+            
+            // Создаем контейнер (ссылку, если открыто, или div, если закрыто)
+            const el = document.createElement(isUnlocked ? 'a' : 'div');
+            
+            if (isUnlocked) {
+                el.href = node.url;
+            }
+            
+            el.className = `map-node ${isUnlocked ? 'unlocked' : 'locked'}`;
+            el.style.left = `${node.x}px`;
+            el.style.top = `${node.y}px`;
+            
+            // Наполнение
+            el.innerHTML = `
+                <div class="node-glyph">${node.icon}</div>
+                <div class="node-label">${node.label}</div>
+                <div class="req-info">${isUnlocked ? 'ДОСТУП РАЗРЕШЕН' : 'ЗАБЛОКИРОВАНО'}</div>
+            `;
+            
+            nodesContainer.appendChild(el);
+        });
+    }
+
+    // ==========================================
+    // 3. ЗВЕЗДНОЕ НЕБО (Базовое)
+    // ==========================================
+    function initStarfield() {
+        const canvas = document.getElementById('starfield');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        
+        const resize = () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        };
+        window.addEventListener('resize', resize);
+        resize();
+
+        const stars = Array.from({length: 200}, () => ({
+            x: Math.random() * width, y: Math.random() * height,
+            size: Math.random() * 1.5, alpha: Math.random(), speed: Math.random() * 0.02
+        }));
+
+        function draw() {
+            ctx.fillStyle = '#020508';
+            ctx.fillRect(0, 0, width, height);
+            
+            ctx.fillStyle = '#00f2ff';
+            stars.forEach(s => {
+                ctx.globalAlpha = Math.abs(Math.sin(Date.now() * 0.001 + s.alpha * 10));
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+                ctx.fill();
+                s.x -= s.speed; // Медленный дрейф
+                if(s.x < 0) s.x = width;
+            });
+            requestAnimationFrame(draw);
+        }
+        draw();
+    }
+
+    // Запуск
+    initMap();
+    initStarfield();
+</script>
+</body>
+</html>
