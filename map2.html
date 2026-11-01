@@ -2,15 +2,16 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>СИГНАЛ-9 // КАРТА СТАНЦИИ (ТЕСТ)</title>
+    <title>СИГНАЛ-9 // ТОПОЛОГИЯ СТАНЦИИ</title>
     <link rel="stylesheet" type="text/css" href="style.css">
     <link rel="stylesheet" type="text/css" href="style-tools.css">
     <link rel="stylesheet" type="text/css" href="style-chat-terminal.css">
     <style>
-        /* Изолированные стили для топологии карты */
+        /* --- ОБЩИЕ СТИЛИ --- */
         body.tools-page {
             overflow: hidden; 
             height: 100vh;
+            background-color: #010306; /* Более глубокий черный */
         }
 
         #display {
@@ -19,16 +20,63 @@
             justify-content: center;
             height: 100vh;
             overflow: hidden;
+            perspective: 1000px; /* Для легкого 3D эффекта */
         }
 
+        /* Заголовок карты */
+        .map-header {
+            position: absolute;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Michroma', sans-serif;
+            font-size: 14px;
+            letter-spacing: 8px;
+            color: var(--neon);
+            text-transform: uppercase;
+            opacity: 0.7;
+            text-shadow: 0 0 15px var(--neon);
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        /* --- КАРТА --- */
         .map-wrapper {
             position: relative;
-            width: 1100px; 
+            width: 1000px; 
             height: 700px;
             margin: 0 auto;
+            /* Фоновая тактическая сетка */
+            background-image: 
+                linear-gradient(rgba(0, 242, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 242, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            background-position: center center;
+            border-radius: 50%;
+            box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.8);
         }
 
-        /* Слой для соединительных линий */
+        /* Радарные круги вокруг центра */
+        .radar-bg {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 800px; height: 800px;
+            border-radius: 50%;
+            border: 1px solid rgba(0, 242, 255, 0.05);
+            pointer-events: none;
+        }
+        .radar-bg::before {
+            content: ''; position: absolute;
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 500px; height: 500px;
+            border-radius: 50%;
+            border: 1px dashed rgba(0, 242, 255, 0.1);
+            animation: rotateRadar 30s linear infinite;
+        }
+        @keyframes rotateRadar { to { transform: translate(-50%, -50%) rotate(360deg); } }
+
+        /* --- ЛИНИИ --- */
         .map-connections {
             position: absolute;
             inset: 0;
@@ -37,103 +85,161 @@
         }
 
         .map-connections line {
-            stroke: var(--neon);
             stroke-width: 2;
             transition: all 0.5s ease;
         }
 
-        /* Стили для активных линий */
-        .map-connections line.active {
-            opacity: 0.4;
-            stroke-dasharray: 10 5;
-            animation: flowLine 20s linear infinite;
+        /* Заблокированные линии */
+        .map-connections line.locked {
+            stroke: rgba(255, 51, 51, 0.1);
+            stroke-dasharray: 4 8;
+        }
+
+        /* Активные линии (Энергопоток) */
+        .map-connections line.active-bg {
+            stroke: rgba(0, 242, 255, 0.2);
+        }
+        .map-connections line.active-flow {
+            stroke: var(--neon);
+            stroke-dasharray: 10 30;
+            animation: flowEnergy 2s linear infinite;
             filter: drop-shadow(0 0 5px var(--neon));
         }
 
-        /* Стили для заблокированных линий */
-        .map-connections line.locked {
-            opacity: 0.05;
-            stroke-dasharray: 5 15;
+        @keyframes flowEnergy {
+            to { stroke-dashoffset: -40; }
         }
 
-        @keyframes flowLine {
-            to { stroke-dashoffset: -200; }
-        }
-
-        /* Узлы отсеков */
+        /* --- УЗЛЫ (ГОЛОГРАММЫ) --- */
         .map-node {
             position: absolute;
-            width: 141.6px;
-            height: 141.6px;
-            background: rgba(10, 26, 32, 0.8);
+            width: 130px;
+            height: 130px;
+            background: rgba(2, 10, 15, 0.7);
             border: 1px solid rgba(0, 242, 255, 0.2);
-            border-radius: 8px;
+            /* Срезанные углы для Sci-Fi эффекта */
+            clip-path: polygon(15% 0, 100% 0, 100% 85%, 85% 100%, 0 100%, 0 15%);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            transition: all 0.4s cubic-bezier(0.2, 1, 0.3, 1);
             text-decoration: none;
             z-index: 10;
-            /* Центрирование относительно координат x,y */
             transform: translate(-50%, -50%);
+            transition: all 0.3s cubic-bezier(0.2, 1, 0.3, 1);
             backdrop-filter: blur(5px);
+            animation: floatNode 4s ease-in-out infinite;
+        }
+
+        /* Внутренняя рамка */
+        .map-node::after {
+            content: '';
+            position: absolute;
+            inset: 2px;
+            border: 1px solid rgba(0, 242, 255, 0.1);
+            clip-path: polygon(15% 0, 100% 0, 100% 85%, 85% 100%, 0 100%, 0 15%);
+            pointer-events: none;
+        }
+
+        /* Анимация парения */
+        @keyframes floatNode {
+            0%, 100% { transform: translate(-50%, -50%) translateY(0); }
+            50% { transform: translate(-50%, -50%) translateY(-8px); }
         }
 
         .map-node.unlocked:hover {
             border-color: var(--neon);
-            box-shadow: 0 0 30px rgba(0, 242, 255, 0.3);
-            transform: translate(-50%, -50%) scale(1.1);
             background: rgba(0, 242, 255, 0.1);
+            box-shadow: 0 0 40px rgba(0, 242, 255, 0.2);
+            animation-play-state: paused; /* Останавливаем парение при наведении */
+            transform: translate(-50%, -50%) scale(1.1);
         }
 
         .map-node.locked {
-            opacity: 0.4;
+            opacity: 0.3;
             cursor: not-allowed;
             filter: grayscale(1);
-            border-style: dashed;
         }
 
-        /* Иконка и текст внутри узла */
+        /* Иконки */
         .node-glyph {
-            width: 50px;
-            height: 50px;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 40px;
+            height: 40px;
+            margin-bottom: 12px;
             color: var(--neon);
+            transition: all 0.3s;
         }
 
         .node-glyph svg {
             width: 100%;
             height: 100%;
-            filter: drop-shadow(0 0 5px var(--neon));
+            filter: drop-shadow(0 0 8px var(--neon));
         }
 
-        .map-node.locked .node-glyph svg {
-            filter: none;
-            color: #ff3300; /* Красный цвет для заблокированных */
+        .map-node.locked .node-glyph {
+            color: #888;
         }
+        .map-node.locked .node-glyph svg { filter: none; }
 
+        /* Текст */
         .node-label {
             font-size: 9px;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
             text-transform: uppercase;
             color: var(--neon);
             font-family: 'JetBrains Mono', monospace;
             text-align: center;
             pointer-events: none;
             font-weight: bold;
+            text-shadow: 0 0 5px rgba(0, 242, 255, 0.5);
         }
 
         .req-info {
             font-size: 7px;
-            opacity: 0.5;
-            margin-top: 4px;
-            color: #fff;
+            margin-top: 6px;
             font-family: monospace;
+            letter-spacing: 1px;
+            padding: 2px 6px;
+            border-radius: 2px;
         }
+        .map-node.unlocked .req-info { color: #00ff44; background: rgba(0, 255, 68, 0.1); }
+        .map-node.locked .req-info { color: #ff3333; background: rgba(255, 51, 51, 0.1); }
+
+        /* Центральный хаб - особый стиль */
+        .map-node[data-id="hub"] {
+            width: 160px;
+            height: 160px;
+            border-width: 2px;
+            border-color: rgba(0, 242, 255, 0.5);
+            box-shadow: 0 0 50px rgba(0, 242, 255, 0.1);
+            background: radial-gradient(circle, rgba(0, 242, 255, 0.15) 0%, transparent 70%);
+        }
+
+        /* --- ТЕСТОВАЯ ПАНЕЛЬ --- */
+        .test-panel {
+            position: fixed;
+            top: 80px;
+            right: 30px;
+            z-index: 1000;
+            background: rgba(0, 10, 15, 0.8);
+            border: 1px solid rgba(0, 242, 255, 0.2);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            backdrop-filter: blur(5px);
+        }
+        .test-panel-title {
+            color: var(--neon); font-family: monospace; font-size: 9px; letter-spacing: 2px; margin-bottom: 5px; text-align: center; opacity: 0.6;
+        }
+        .test-btn {
+            background: transparent; color: var(--neon); border: 1px solid rgba(0, 242, 255, 0.3);
+            padding: 6px 10px; cursor: pointer; font-family: monospace; font-size: 9px; transition: 0.2s;
+            text-align: left;
+        }
+        .test-btn:hover { background: rgba(0, 242, 255, 0.1); border-color: var(--neon); }
+        .test-btn.reset { color: #ff3333; border-color: rgba(255, 51, 51, 0.3); }
+        .test-btn.reset:hover { background: rgba(255, 51, 51, 0.1); border-color: #ff3333; }
     </style>
 </head>
 <body class="tools-page">
@@ -141,25 +247,25 @@
     <div id="scanner-line"></div>
     <div id="overlay-noise"></div>
 
+    <div class="map-header">СИСТЕМА ТОПОЛОГИИ // СЕКТОР 07</div>
+
     <div id="display">
         <div class="map-wrapper" id="mapWrapper">
-            <!-- Слой SVG для линий связи -->
+            <div class="radar-bg"></div>
             <svg class="map-connections" id="mapLines"></svg>
-            
-            <!-- Контейнер для узлов -->
             <div id="mapNodesContainer"></div>
         </div>
     </div>
 
-    <!-- Служебная панель для тестирования -->
-    <div style="position: fixed; bottom: 20px; left: 20px; z-index: 1000; display: flex; gap: 10px; background: rgba(0,0,0,0.5); padding: 10px; border: 1px solid rgba(0,242,255,0.2);">
-        <div style="color:var(--neon); font-family:monospace; font-size:10px; margin-right:10px; align-self:center;">ТЕСТ:</div>
-        <button onclick="localStorage.setItem('s9_access_granted', 'true'); location.reload();" style="background:transparent; color:#00f2ff; border:1px solid #00f2ff; padding:5px; cursor:pointer; font-family:monospace;">+ ДОСТУП АРХИВ</button>
-        <button onclick="localStorage.setItem('s9_emergency_reactor', 'active'); location.reload();" style="background:transparent; color:#ffaa00; border:1px solid #ffaa00; padding:5px; cursor:pointer; font-family:monospace;">+ АВАРИЯ РЕАКТОРА</button>
-        <button onclick="localStorage.clear(); location.reload();" style="background:transparent; color:#ff3333; border:1px solid #ff3333; padding:5px; cursor:pointer; font-family:monospace;">СБРОС</button>
+    <!-- Панель тестирования (справа) -->
+    <div class="test-panel">
+        <div class="test-panel-title">[ ОТЛАДКА СИСТЕМЫ ]</div>
+        <button class="test-btn" onclick="localStorage.setItem('s9_access_granted', 'true'); location.reload();">+ ДОСТУП АРХИВ</button>
+        <button class="test-btn" onclick="localStorage.setItem('s9_emergency_reactor', 'active'); location.reload();">+ АВАРИЯ РЕАКТОРА</button>
+        <button class="test-btn" onclick="localStorage.setItem('s9_gate_opened', 'true'); location.reload();">+ ОТКРЫТЬ ШЛЮЗ</button>
+        <button class="test-btn reset" onclick="localStorage.clear(); location.reload();">СБРОС ВСЕХ ДАННЫХ</button>
     </div>
 
-    <!-- Кнопки терминала и аудио -->
     <div class="audio-control-fixed" id="audio-toggle">
         <span id="audio-status-icon">○</span>
         <span id="audio-status">АУДИОДАТЧИКИ: ВЫКЛ</span>
@@ -174,108 +280,86 @@
     // 1. КОНФИГУРАЦИЯ КАРТЫ
     // ==========================================
     const MAP_CONFIG = {
-        center: { x: 550, y: 350 }, // Центр карты (550x350 для 1100x700)
         nodes: [
-            { 
-                id: 'hub', 
-                label: 'ЦЕНТРАЛЬНЫЙ ХАБ', 
-                x: 550, y: 350, 
-                url: 'index.html', 
-                req: null, 
-                icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v4m0 12v4M2 12h4m12 0h4"></path></svg>`
-            },
-            { 
-                id: 'archive', 
-                label: 'АРХИВ ДАННЫХ', 
-                x: 300, y: 200, 
-                url: 'archive.html', 
-                req: 's9_access_granted', // Требует флаг авторизации
-                icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>`
-            },
-            { 
-                id: 'reactor', 
-                label: 'РЕАКТОРНЫЙ ОТСЕК', 
-                x: 300, y: 500, 
-                url: 'reactor.html', 
-                req: 's9_emergency_reactor', // Требует флаг аварии реактора
-                icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>`
-            },
-            { 
-                id: 'tools', 
-                label: 'ИНЖЕНЕРНЫЙ ТЕРМИНАЛ', 
-                x: 800, y: 200, 
-                url: 'tools.html', 
-                req: null, 
-                icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>`
-            },
-            { 
-                id: 'gate', 
-                label: 'ШЛЮЗ', 
-                x: 800, y: 500, 
-                url: '#', 
-                req: 's9_gate_opened', // Этот флаг мы еще не создали (заблокирован)
-                icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`
-            }
+            { id: 'hub', label: 'ЦЕНТРАЛЬНЫЙ ХАБ', x: 500, y: 350, url: 'index.html', req: null, 
+              icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v6m0 8v6M2 12h6m8 0h6"></path></svg>` },
+            { id: 'archive', label: 'АРХИВ ДАННЫХ', x: 250, y: 200, url: 'archive.html', req: 's9_access_granted', 
+              icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h16M4 12h16M4 18h16M8 6v12M16 6v12"></path></svg>` },
+            { id: 'reactor', label: 'РЕАКТОРНЫЙ ОТСЕК', x: 250, y: 500, url: 'reactor.html', req: 's9_emergency_reactor', 
+              icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>` },
+            { id: 'tools', label: 'ИНЖЕНЕРНЫЙ ТЕРМИНАЛ', x: 750, y: 200, url: 'tools.html', req: null, 
+              icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>` },
+            { id: 'gate', label: 'ШЛЮЗ', x: 750, y: 500, url: '#', req: 's9_gate_opened', 
+              icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>` }
         ],
-        // Массив связей (откуда -> куда)
         links: [
             { source: 'hub', target: 'archive' },
             { source: 'hub', target: 'reactor' },
             { source: 'hub', target: 'tools' },
             { source: 'hub', target: 'gate' },
-            { source: 'tools', target: 'gate' } // Секретная линия
+            { source: 'tools', target: 'gate' }
         ]
     };
 
     // ==========================================
-    // 2. ДВИЖОК ОТРИСОВКИ КАРТЫ
+    // 2. ДВИЖОК ОТРИСОВКИ
     // ==========================================
     const nodesContainer = document.getElementById('mapNodesContainer');
     const linesContainer = document.getElementById('mapLines');
 
+    function isNodeUnlocked(node) {
+        if (!node.req) return true;
+        const val = localStorage.getItem(node.req);
+        return val === 'true' || val === 'active';
+    }
+
     function initMap() {
-        // 1. Рисуем линии
+        // 1. Линии
         MAP_CONFIG.links.forEach(link => {
             const sourceNode = MAP_CONFIG.nodes.find(n => n.id === link.source);
             const targetNode = MAP_CONFIG.nodes.find(n => n.id === link.target);
             
             if (sourceNode && targetNode) {
-                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                line.setAttribute('x1', sourceNode.x);
-                line.setAttribute('y1', sourceNode.y);
-                line.setAttribute('x2', targetNode.x);
-                line.setAttribute('y2', targetNode.y);
-                
-                // Проверяем, открыты ли оба узла для анимации линии
-                const isSourceOpen = !sourceNode.req || localStorage.getItem(sourceNode.req) === 'true' || localStorage.getItem(sourceNode.req) === 'active';
-                const isTargetOpen = !targetNode.req || localStorage.getItem(targetNode.req) === 'true' || localStorage.getItem(targetNode.req) === 'active';
-                
-                if (isSourceOpen && isTargetOpen) {
-                    line.classList.add('active');
-                } else {
-                    line.classList.add('locked');
+                const isSourceOpen = isNodeUnlocked(sourceNode);
+                const isTargetOpen = isNodeUnlocked(targetNode);
+                const isActive = isSourceOpen && isTargetOpen;
+
+                // Создаем 2 линии для эффекта глубины
+                const bgLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                bgLine.setAttribute('x1', sourceNode.x);
+                bgLine.setAttribute('y1', sourceNode.y);
+                bgLine.setAttribute('x2', targetNode.x);
+                bgLine.setAttribute('y2', targetNode.y);
+                bgLine.setAttribute('class', isActive ? 'active-bg' : 'locked');
+                linesContainer.appendChild(bgLine);
+
+                if (isActive) {
+                    const flowLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    flowLine.setAttribute('x1', sourceNode.x);
+                    flowLine.setAttribute('y1', sourceNode.y);
+                    flowLine.setAttribute('x2', targetNode.x);
+                    flowLine.setAttribute('y2', targetNode.y);
+                    flowLine.setAttribute('class', 'active-flow');
+                    linesContainer.appendChild(flowLine);
                 }
-                
-                linesContainer.appendChild(line);
             }
         });
 
-        // 2. Рисуем узлы
+        // 2. Узлы
         MAP_CONFIG.nodes.forEach(node => {
-            const isUnlocked = !node.req || localStorage.getItem(node.req) === 'true' || localStorage.getItem(node.req) === 'active';
-            
-            // Создаем контейнер (ссылку, если открыто, или div, если закрыто)
+            const isUnlocked = isNodeUnlocked(node);
             const el = document.createElement(isUnlocked ? 'a' : 'div');
             
-            if (isUnlocked) {
-                el.href = node.url;
-            }
+            if (isUnlocked) el.href = node.url;
             
             el.className = `map-node ${isUnlocked ? 'unlocked' : 'locked'}`;
+            el.setAttribute('data-id', node.id);
             el.style.left = `${node.x}px`;
             el.style.top = `${node.y}px`;
             
-            // Наполнение
+            // Добавляем случайную задержку парения, чтобы узлы не двигались синхронно
+            el.style.animationDelay = `${Math.random() * 2}s`;
+
             el.innerHTML = `
                 <div class="node-glyph">${node.icon}</div>
                 <div class="node-label">${node.label}</div>
@@ -287,7 +371,7 @@
     }
 
     // ==========================================
-    // 3. ЗВЕЗДНОЕ НЕБО (Базовое)
+    // 3. ЗВЕЗДНОЕ НЕБО
     // ==========================================
     function initStarfield() {
         const canvas = document.getElementById('starfield');
@@ -301,22 +385,21 @@
         window.addEventListener('resize', resize);
         resize();
 
-        const stars = Array.from({length: 200}, () => ({
+        const stars = Array.from({length: 250}, () => ({
             x: Math.random() * width, y: Math.random() * height,
-            size: Math.random() * 1.5, alpha: Math.random(), speed: Math.random() * 0.02
+            size: Math.random() * 1.5, alpha: Math.random(), speed: Math.random() * 0.05
         }));
 
         function draw() {
-            ctx.fillStyle = '#020508';
+            ctx.fillStyle = '#010306';
             ctx.fillRect(0, 0, width, height);
             
-            ctx.fillStyle = '#00f2ff';
             stars.forEach(s => {
-                ctx.globalAlpha = Math.abs(Math.sin(Date.now() * 0.001 + s.alpha * 10));
+                ctx.fillStyle = `rgba(0, 242, 255, ${Math.abs(Math.sin(Date.now() * 0.001 + s.alpha * 10)) * 0.6})`;
                 ctx.beginPath();
                 ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
                 ctx.fill();
-                s.x -= s.speed; // Медленный дрейф
+                s.x -= s.speed; 
                 if(s.x < 0) s.x = width;
             });
             requestAnimationFrame(draw);
@@ -324,7 +407,6 @@
         draw();
     }
 
-    // Запуск
     initMap();
     initStarfield();
 </script>
