@@ -1,3 +1,5 @@
+/* style-terminal.css */
+
 /* Затемняющий фон */
 #tilde-overlay-bg {
     display: none;
@@ -12,20 +14,17 @@
 #tilde-console {
     display: none;
     position: fixed;
-    /* ИДЕАЛЬНОЕ ЦЕНТРИРОВАНИЕ */
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     
     width: 800px;
     max-width: 90vw;
+    height: 450px; /* ФИКСИРОВАННАЯ ВЫСОТА КОНСОЛИ */
     
-    /* АБСОЛЮТНО НЕПРОЗРАЧНЫЙ ФОН И МАКСИМАЛЬНЫЙ Z-INDEX */
     background: #020508; 
     border: 1px solid var(--neon);
     box-shadow: 0 0 50px rgba(0, 242, 255, 0.2);
-    
-    /* Ставим на самый верхний слой, выше сканера */
     z-index: 2147483647 !important; 
     
     font-family: 'JetBrains Mono', monospace;
@@ -49,7 +48,10 @@
     font-size: 11px;
     margin-bottom: 15px;
     line-height: 1.6;
-    height: 250px; /* Сделал чуть выше для удобства */
+    
+    /* РАСТЯГИВАЕМ БЛОК ВЫВОДА НА ВСЁ ДОСТУПНОЕ МЕСТО */
+    flex-grow: 1; 
+    height: auto;
     overflow-y: auto;
 }
 
@@ -71,6 +73,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
+    margin-top: auto; /* Прижимаем к низу */
 }
 .console-input-wrapper span {
     color: var(--neon);
