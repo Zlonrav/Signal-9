@@ -1,4 +1,4 @@
-// --- ЗАГРУЗЧИК СИСТЕМ СТАНЦИИ СИГНАЛ-9 ---
+// js/loader.js
 (function() {
     const scripts = [
         "js/phrases.js",
@@ -7,9 +7,9 @@
         "js/audioEngine.js",
         "js/visualEngine.js",
         "js/uiEngine.js",
-        "js/room_chat.js",   // <--- НОВЫЙ
+        "js/roomChat.js",   
         "js/chatEngine.js",
-        "js/terminal.js"     // <--- ЗАМЕНА navEngine.js
+        "js/terminal.js"    
     ];
     scripts.forEach(src => {
         document.write(`<script src="${src}"></script>`);
