@@ -6,8 +6,123 @@
     const page = window.location.pathname.split('/').pop() || 'index.html';
     if (page === '404.html') return;
 
+    // 1. ВНЕДРЯЕМ СТИЛИ ПРЯМО В JS (Гарантия единого вида на всех страницах)
+    const style = document.createElement('style');
+    style.innerHTML = `
+        #tilde-overlay-bg {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 999998;
+        }
+        #tilde-overlay-bg.active { display: block; }
+
+        #tilde-console {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 800px;
+            max-width: 95vw;
+            height: 450px;
+            background: #020508;
+            border: 1px solid var(--neon);
+            box-shadow: 0 0 50px rgba(0, 242, 255, 0.2);
+            z-index: 2147483647 !important;
+            font-family: 'JetBrains Mono', monospace;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow: hidden; /* Жестко обрезаем всё, что пытается вылезти */
+        }
+        #tilde-console.active { display: flex; }
+        
+        /* Сброс стилей для всех элементов внутри консоли */
+        #tilde-console * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        #tilde-console .console-header {
+            color: var(--neon);
+            font-size: 12px;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(0, 242, 255, 0.3);
+            padding-bottom: 10px;
+            text-transform: uppercase;
+            flex-shrink: 0;
+        }
+
+        #tilde-console .console-output {
+            color: #ccc;
+            font-size: 11px;
+            line-height: 1.6;
+            flex-grow: 1;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            padding-right: 10px;
+        }
+
+        #tilde-console .console-output::-webkit-scrollbar { width: 4px; }
+        #tilde-console .console-output::-webkit-scrollbar-track { background: #000; }
+        #tilde-console .console-output::-webkit-scrollbar-thumb {
+            background: var(--neon);
+            box-shadow: 0 0 10px var(--neon);
+            border-radius: 2px;
+        }
+
+        #tilde-console .sys { color: var(--neon); font-weight: bold; }
+        #tilde-console .err { color: #ff3333; }
+        #tilde-console .ok { color: #00ff44; }
+        #tilde-console .warn { color: #ffaa00; }
+
+        #tilde-console .console-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+            border-top: 1px solid rgba(0, 242, 255, 0.2);
+            padding-top: 15px;
+        }
+
+        #tilde-console .console-input-wrapper span {
+            color: var(--neon);
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        #tilde-console #terminal-input {
+            flex: 1;
+            background: transparent !important;
+            border: none !important;
+            color: var(--neon) !important;
+            font-family: inherit !important;
+            font-size: 14px !important;
+            outline: none !important;
+            text-transform: uppercase;
+            box-shadow: none !important;
+            position: static !important;
+            width: 100% !important;
+        }
+
+        #tilde-console .console-hint {
+            margin-top: 15px;
+            font-size: 9px;
+            color: #555;
+            display: flex;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+    `;
+    document.head.appendChild(style);
+
     let currentState = 'IDLE';
 
+    // 2. СОЗДАЕМ HTML
     const bgOverlay = document.createElement('div');
     bgOverlay.id = 'tilde-overlay-bg';
     document.body.appendChild(bgOverlay);
@@ -192,11 +307,8 @@
             case 'BACKUP_CONFIRM':
                 print("ЯДРО ВОССТАНОВЛЕНО. ПОДАЧА ЭНЕРГИИ СТАБИЛИЗИРОВАНА.", "ok");
                 localStorage.removeItem('s9_emergency_reactor');
-                
-                // Вызываем обновление стилей и шлем сигнал движку реактора
                 if (typeof applyEmergencyStyles === 'function') applyEmergencyStyles();
                 window.dispatchEvent(new Event('s9_reactor_updated')); 
-                
                 currentState = 'IDLE'; 
                 break;
         }
@@ -205,7 +317,11 @@
     function toggleConsole(show) {
         overlay.classList.toggle('active', show);
         bgOverlay.classList.toggle('active', show);
-        if (show) input.focus();
+        if (show) {
+            // Очищаем поле ввода при открытии, чтобы туда не попадал старый мусор
+            input.value = ''; 
+            setTimeout(() => input.focus(), 50);
+        }
     }
 
     document.addEventListener('keydown', (e) => {
