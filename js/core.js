@@ -28,16 +28,6 @@ function update() {
 
     const phraseContainer = document.getElementById('currentPhrase');
 
-    // УДАЛЕНО: Старая автоматическая логика сбоев по ERROR_INTERVAL, 
-    // которая сбрасывала ручные флаги ЧС.
-    
-    if (isSignalLoss) {
-        if (!testBtn.dataset.manual || timeLeft === CYCLE_TIME) {
-            testBtn.dataset.manual = "";
-            triggerSignalLoss(false);
-        }
-    }
-
     if (timePassed === 0 && isSignalLoss && !testBtn.dataset.manual) triggerSignalLoss(false);
 
     if (document.getElementById('timer')) document.getElementById('timer').innerText = `ПРИЁМ СИГНАЛА: ${timeLeft} сек`;
@@ -82,35 +72,6 @@ function update() {
             unit.classList.remove('done', 'pulse-trigger');
         }
         if (label.innerHTML !== html) label.innerHTML = html;
-    });
-}
-
-// Кнопка теста
-const testBtn = document.getElementById('test-error-btn');
-if(testBtn) {
-    testBtn.addEventListener('mousedown', (e) => {
-        e.preventDefault(); 
-        e.stopPropagation();
-        
-        // Читаем оба флага для кнопки переключения
-        const isSolar = localStorage.getItem('s9_emergency_flag') === 'active';
-        const isReactor = localStorage.getItem('s9_emergency_reactor') === 'active';
-        const isEmergency = isSolar || isReactor;
-        
-        const newState = !isEmergency;
-        
-        if (newState) {
-            localStorage.setItem('s9_emergency_flag', 'active');
-        } else {
-            // Если тушим кнопкой — тушим сразу всё
-            localStorage.removeItem('s9_emergency_flag');
-            localStorage.removeItem('s9_emergency_reactor');
-            localStorage.removeItem('s9_orbit_stabilized');
-        }
-        
-        testBtn.dataset.manual = newState ? "true" : "";
-        triggerSignalLoss(newState);
-        testBtn.style.background = newState ? '#ff3333' : '#333';
     });
 }
 
