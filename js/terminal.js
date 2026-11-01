@@ -54,16 +54,15 @@
         if (topic) {
             const topics = {
                 'help': 'Показывает список доступных команд.',
-                'hub': 'Возврат в Главный Хаб (главная страница).',
-                'map': 'Переход на навигационную карту станции.',
-                'terminal': 'Переход в Инженерный Терминал для ввода глифов.',
-                'archive': 'Переход в Базу Данных (требуется 3 глифа).',
-                'core': 'Переход в сектор Энергоядра (требуется сканирование).',
+                'hub': 'Возврат в Главный Хаб.',
+                'map': 'Переход на навигационную карту.',
+                'terminal': 'Переход в Инженерный Терминал.',
+                'archive': 'База Данных (требуется 3 глифа).',
+                'core': 'Сектор Энергоядра (требуется сканирование).',
                 'scan': 'Запуск сканирования. Вызывает перегрузку ядра.',
-                'restore': 'Восстановление из точки доступа (В Энергоядре).',
-                'rebuild': 'Пересборка ядра (В Энергоядре).',
-                'backup': 'Восстановить из бэкапа: backup = YYYYMMDD (В Энергоядре).',
-                'reset': 'Полный сброс прогресса игры (Y/N).'
+                'restore': 'Восстановление из точки доступа.',
+                'rebuild': 'Пересборка ядра.',
+                'backup': 'Восстановить из бэкапа: backup = YYYYMMDD.'
             };
             print(topics[topic] ? `<span class="sys">[${topic.toUpperCase()}]</span> ${topics[topic]}` : `НЕТ ИНФОРМАЦИИ ПО '${topic}'.`, topics[topic] ? 'normal' : 'err');
             return;
@@ -73,7 +72,7 @@
         print(`> help [команда] - помощь по команде`);
         print(`> hub - главная консоль`);
         print(`> map - карта станции`);
-        print(`> terminal - инженерный терминал (ввод глифов)`);
+        print(`> terminal - инженерный терминал`);
         
         if (glyphsCount >= 3) print(`> archive - архив глифов`);
         else print(`> archive - архив глифов <span class="err">[OFFLINE]</span>`);
@@ -93,8 +92,6 @@
                 print(`> backup = YYYYMMDD - восстановить из бэкапа`);
             }
         }
-        
-        print(`> reset - полный сброс прогресса`);
     }
 
     function processCommand(cmd) {
@@ -127,7 +124,7 @@
                     setTimeout(() => {
                         print("ТРЕБУЕМАЯ МОЩНОСТЬ: 150%");
                         print("КРИТИЧЕСКИЙ ПЕРЕГРУЗ. ВЫБРОС ПЛАЗМЫ В ЭНЕРГОЯДРЕ.", "err");
-                        print("ДОСТУП К СЕКТОРУ 'CORE' РАЗРЕШЕН. ОТПРАВЛЯЙТЕСЬ ТУДА ДЛЯ РЕМОНТА.", "warn");
+                        print("ДОСТУП К СЕКТОРУ 'CORE' РАЗРЕШЕН. ОТПРАВЛЯЙТЕСЬ ТУДА.", "warn");
                         localStorage.setItem('s9_emergency_reactor', 'active');
                         localStorage.setItem('s9_core_unlocked', 'true');
                         if (typeof applyEmergencyStyles === 'function') applyEmergencyStyles();
@@ -172,11 +169,6 @@
             case 'check = 0xf4ad':
                 if (page === 'reactor.html') { print("ВВЕДЕНО, ПРОВЕРЕНО. ПРИМЕНИТЬ? (Y/N)"); currentState = 'APPLY_CONFIRM'; }
                 break;
-
-            case 'reset':
-                print("ВЫ УВЕРЕНЫ? ВЕСЬ ПРОГРЕСС БУДЕТ УДАЛЕН. (Y/N)", "warn");
-                currentState = 'RESET_CONFIRM';
-                break;
                 
             default:
                 if (cmd.startsWith('backup = ') && page === 'reactor.html') {
@@ -200,9 +192,13 @@
             case 'BACKUP_CONFIRM':
                 print("ЯДРО ВОССТАНОВЛЕНО. ПОДАЧА ЭНЕРГИИ СТАБИЛИЗИРОВАНА.", "ok");
                 localStorage.removeItem('s9_emergency_reactor');
-                if (typeof applyEmergencyStyles === 'function') applyEmergencyStyles(); currentState = 'IDLE'; break;
-            case 'RESET_CONFIRM':
-                localStorage.clear(); print("СИСТЕМА СБРОШЕНА. ПЕРЕЗАГРУЗКА...", "ok"); setTimeout(() => window.location.href = 'login.html', 1000); currentState = 'IDLE'; break;
+                
+                // Вызываем обновление стилей и шлем сигнал движку реактора
+                if (typeof applyEmergencyStyles === 'function') applyEmergencyStyles();
+                window.dispatchEvent(new Event('s9_reactor_updated')); 
+                
+                currentState = 'IDLE'; 
+                break;
         }
     }
 
