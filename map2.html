@@ -24,7 +24,7 @@
 
         .map-header {
             position: absolute;
-            top: 30px;
+            top: 25px;
             left: 50%;
             transform: translateX(-50%);
             font-family: 'Michroma', sans-serif;
@@ -42,7 +42,7 @@
         .map-container {
             position: relative;
             width: 1200px; 
-            height: 800px;
+            height: 850px;
         }
 
         /* Сетка на фоне */
@@ -71,14 +71,13 @@
         .link-bg { stroke: rgba(0, 242, 255, 0.05); stroke-width: 2px; transition: 0.3s; }
         .link-flow { stroke: var(--neon); stroke-width: 2px; stroke-dasharray: 8 16; filter: drop-shadow(0 0 5px var(--neon)); animation: flow 20s linear infinite; transition: 0.3s;}
         
-        /* Линии к OFFLINE узлам */
         .link-locked .link-bg { stroke: rgba(255, 255, 255, 0.05); stroke-dasharray: 4 4; }
         .link-locked .link-flow { stroke: none; }
 
         @keyframes flow { to { stroke-dashoffset: -1000; } }
 
         /* =========================================
-           БАЗОВЫЙ УЗЕЛ (ОДИНАКОВЫЙ ДЛЯ ВСЕХ)
+           БАЗОВЫЙ УЗЕЛ
            ========================================= */
         .map-node {
             position: absolute;
@@ -89,24 +88,22 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start; /* Прижимаем к верху для иконок */
             text-decoration: none;
             z-index: 10;
             transform: translate(-50%, -50%);
             transition: all 0.4s cubic-bezier(0.2, 1, 0.3, 1);
             backdrop-filter: blur(8px);
-            padding-bottom: 15px; /* Отступ снизу для статуса */
+            padding-top: 25px; /* Отступ сверху для глифа */
             box-sizing: border-box;
         }
 
-        /* Уголки */
         .map-node::before, .map-node::after {
             content: ''; position: absolute; width: 10px; height: 10px; pointer-events: none; transition: 0.3s;
         }
         .map-node.unlocked::before { top: -1px; left: -1px; border-top: 2px solid var(--neon); border-left: 2px solid var(--neon); }
         .map-node.unlocked::after { bottom: -1px; right: -1px; border-bottom: 2px solid var(--neon); border-right: 2px solid var(--neon); }
 
-        /* Наведение на ONLINE */
         .map-node.unlocked:hover {
             background: rgba(0, 242, 255, 0.1);
             box-shadow: 0 0 30px rgba(0, 242, 255, 0.2), inset 0 0 20px rgba(0, 242, 255, 0.1);
@@ -114,16 +111,48 @@
         }
         .map-node.unlocked:hover::before, .map-node.unlocked:hover::after { width: 100%; height: 100%; opacity: 0.3; }
 
+        /* --- ГЛИФЫ --- */
+        .node-glyph {
+            width: 45px;
+            height: 45px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .node-glyph svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        /* Стиль линий глифа для ONLINE */
+        .map-node.unlocked .node-glyph path {
+            stroke: var(--neon);
+            stroke-width: 4;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            filter: drop-shadow(0 0 5px var(--neon)) drop-shadow(0 0 2px #fff);
+            transition: 0.3s;
+        }
+
+        .map-node.unlocked:hover .node-glyph path {
+            stroke-width: 5;
+            filter: drop-shadow(0 0 10px var(--neon)) drop-shadow(0 0 4px #fff);
+        }
+
         /* --- ТЕКСТ --- */
         .node-title {
-            font-size: 12px; /* Увеличили шрифт, так как нет иконок */
-            letter-spacing: 2px;
+            font-size: 9px;
+            letter-spacing: 1px;
             text-transform: uppercase;
             color: var(--neon);
             font-family: 'JetBrains Mono', monospace;
             text-align: center;
             font-weight: bold;
-            line-height: 1.4;
+            line-height: 1.3;
             pointer-events: none;
             transition: 0.3s;
             text-shadow: 0 0 8px rgba(0, 242, 255, 0.5);
@@ -132,69 +161,79 @@
         .node-status {
             position: absolute;
             bottom: 10px;
-            font-size: 9px;
+            font-size: 8px;
             font-family: monospace;
             letter-spacing: 2px;
             font-weight: bold;
         }
 
         /* =========================================
-           СТИЛИ ДЛЯ OFFLINE УЗЛОВ (ИДЕНТИЧНЫ, НО СЕРЫЕ)
+           СТИЛИ ДЛЯ OFFLINE УЗЛОВ
            ========================================= */
         .map-node.locked {
-            border-color: rgba(150, 150, 150, 0.2); /* Серый бордер */
+            border-color: rgba(150, 150, 150, 0.2);
             cursor: not-allowed;
             background: rgba(10, 10, 10, 0.85);
         }
 
-        /* Серые уголки */
         .map-node.locked::before { top: -1px; left: -1px; border-top: 2px solid #666; border-left: 2px solid #666; }
         .map-node.locked::after { bottom: -1px; right: -1px; border-bottom: 2px solid #666; border-right: 2px solid #666; }
 
-        /* Серый текст */
-        .map-node.locked .node-title {
-            color: #888;
-            text-shadow: none; /* Убираем свечение */
+        /* Стиль линий глифа для OFFLINE */
+        .map-node.locked .node-glyph path {
+            stroke: #555;
+            stroke-width: 4;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            filter: none;
         }
 
-        /* Красный OFFLINE */
+        .map-node.locked .node-title {
+            color: #888;
+            text-shadow: none;
+        }
+
         .map-node.locked .node-status {
             color: #ff3333;
             text-shadow: 0 0 5px rgba(255, 51, 51, 0.5);
         }
 
-        /* Зеленый ONLINE */
         .map-node.unlocked .node-status { 
             color: #00ff44; 
             text-shadow: 0 0 5px rgba(0, 255, 68, 0.5);
         }
 
-        /* Центральный хаб */
+        /* Центральный хаб (Увеличенный) */
         .map-node[data-id="hub"] {
             width: 150px; height: 150px;
             border-color: rgba(0, 242, 255, 0.4);
             box-shadow: 0 0 40px rgba(0, 242, 255, 0.1);
+            padding-top: 30px;
         }
-        .map-node[data-id="hub"].locked {
-            border-color: rgba(150, 150, 150, 0.3);
-            box-shadow: none;
-        }
+        .map-node[data-id="hub"] .node-glyph { width: 60px; height: 60px; }
+        .map-node[data-id="hub"].locked { border-color: rgba(150, 150, 150, 0.3); box-shadow: none; }
+
+        /* Узел Терминала (особый стиль) */
+        .map-node[data-id="tools"] .node-glyph { width: 55px; height: 55px; }
 
         /* --- КОНСОЛЬ (ТИЛЬДА) --- */
         #tilde-console {
             display: none;
             position: fixed;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 600px;
+            top: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 800px;
             background: rgba(2, 5, 8, 0.95);
             border: 1px solid var(--neon);
-            box-shadow: 0 0 50px rgba(0, 242, 255, 0.2);
+            border-top: none;
+            box-shadow: 0 10px 50px rgba(0, 242, 255, 0.2);
             z-index: 99999;
             font-family: 'JetBrains Mono', monospace;
             backdrop-filter: blur(10px);
             flex-direction: column;
             padding: 20px;
+            transition: transform 0.3s ease, opacity 0.3s ease;
         }
 
         #tilde-console.active { display: flex; }
@@ -214,7 +253,7 @@
             font-size: 11px;
             margin-bottom: 15px;
             line-height: 1.5;
-            height: 100px;
+            height: 80px;
             overflow-y: auto;
         }
         .console-output .sys { color: var(--neon); }
@@ -265,7 +304,7 @@
         </div>
     </div>
 
-    <!-- СКРЫТАЯ КОНСОЛЬ ПО ТИЛЬДЕ -->
+    <!-- КОНСОЛЬ (ТИЛЬДА) -->
     <div id="tilde-console">
         <div class="console-header">Терминал быстрого доступа // Введите ID отсека</div>
         <div class="console-output" id="console-output">
@@ -287,41 +326,70 @@
         <span id="audio-status">АУДИОДАТЧИКИ: ВЫКЛ</span>
     </div>
 
-    <a href="tools.html" class="terminal-link-fixed">
-        <span>□</span> ИНЖЕНЕРНЫЙ ТЕРМИНАЛ
-    </a>
-
 <script>
-    // --- КОНФИГУРАЦИЯ КАРТЫ ---
-    // Убрали поле icon из всех узлов
+    // ==========================================
+    // 1. ГЕНЕРАТОР ГЛИФОВ (Из script.js)
+    // ==========================================
+    const POINTS = [{x:15,y:15},{x:40,y:15},{x:65,y:15},{x:15,y:40},{x:40,y:40},{x:65,y:40},{x:15,y:65},{x:40,y:65},{x:65,y:65}];
+    
+    function getPath(word) {
+        let hash = 5381;
+        for (let i = 0; i < word.length; i++) hash = ((hash << 5) + hash) + word.charCodeAt(i);
+        let seed = Math.abs(hash), path = [], used = new Set();
+        const len = (seed % 3) + 5;
+        while(path.length < len && used.size < 9) {
+            seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+            let n = seed % 9; if(!used.has(n)) { path.push(n); used.add(n); }
+        }
+        return path;
+    }
+
+    function createSVG(path) {
+        if (!path || !path.length) return '';
+        const start = POINTS[path[0]];
+        let d = `M ${start.x} ${start.y}`;
+        for(let i=0; i<path.length-1; i++) {
+            const c = POINTS[path[i]], n = POINTS[path[i+1]];
+            d += ` C ${c.x+(n.x-c.x)*0.5} ${c.y}, ${c.x+(n.x-c.x)*0.5} ${n.y}, ${n.x} ${n.y}`;
+        }
+        return `<svg viewBox="0 0 80 80"><path d="${d}"></path></svg>`;
+    }
+
+    // ==========================================
+    // 2. КОНФИГУРАЦИЯ КАРТЫ
+    // ==========================================
     const MAP_DATA = {
         nodes: [
             // Центр
-            { id: 'hub', title: 'ГЛАВНЫЙ\nХАБ', x: 600, y: 400, url: 'index.html', req: null },
+            { id: 'hub', title: 'ГЛАВНЫЙ\nХАБ', x: 600, y: 425, url: 'index.html', req: null },
             
-            // Верхний ряд (Y: 200)
-            { id: 'sector', title: 'НЕИЗВЕСТНЫЙ\nСЕКТОР', x: 350, y: 200, url: '#', req: 's9_sector_opened' },
-            { id: 'reserved1', title: 'МОДУЛЬ\n[РЕЗЕРВ]', x: 600, y: 150, url: '#', req: 's9_res1' },
-            { id: 'tools', title: 'ХРАНИЛИЩЕ\n(ТЕРМИНАЛ)', x: 850, y: 200, url: 'tools.html', req: null },
+            // Верх (Терминал теперь здесь!)
+            { id: 'tools', title: 'ИНЖЕНЕРНЫЙ\nТЕРМИНАЛ', x: 600, y: 200, url: 'tools.html', req: null },
+            { id: 'sector', title: 'НЕИЗВЕСТНЫЙ\nСЕКТОР', x: 300, y: 200, url: '#', req: 's9_sector_opened' },
+            { id: 'reserved1', title: 'МОДУЛЬ\n[РЕЗЕРВ]', x: 900, y: 200, url: '#', req: 's9_res1' },
 
-            // Средний ряд (Y: 400)
-            { id: 'observatory', title: 'ОБСЕРВАТОРИЯ', x: 150, y: 400, url: 'observatory.html', req: 's9_observatory' },
-            { id: 'map', title: 'КАРТА', x: 350, y: 400, url: 'map2.html', req: null },
-            { id: 'reactor', title: 'РЕАКТОР', x: 850, y: 400, url: 'reactor.html', req: 's9_emergency_reactor' },
-            { id: 'hangar', title: 'АНГАР', x: 1050, y: 400, url: 'hangar.html', req: 's9_hangar_open' },
+            // Средний ряд
+            { id: 'observatory', title: 'ОБСЕРВАТОРИЯ', x: 150, y: 425, url: 'observatory.html', req: 's9_observatory' },
+            { id: 'map', title: 'КАРТА', x: 350, y: 425, url: 'map2.html', req: null },
+            { id: 'reactor', title: 'РЕАКТОР', x: 850, y: 425, url: 'reactor.html', req: 's9_emergency_reactor' },
+            { id: 'hangar', title: 'АНГАР', x: 1050, y: 425, url: 'hangar.html', req: 's9_hangar_open' },
 
-            // Нижний ряд (Y: 600)
-            { id: 'archive', title: 'АРХИВ', x: 350, y: 600, url: 'archive.html', req: 's9_access_granted' },
+            // Нижний ряд
+            { id: 'archive', title: 'АРХИВ', x: 350, y: 650, url: 'archive.html', req: 's9_access_granted' },
             { id: 'reserved2', title: 'МОДУЛЬ\n[РЕЗЕРВ]', x: 600, y: 650, url: '#', req: 's9_res2' },
-            { id: 'medbay', title: 'МЕДОТСЕК', x: 850, y: 600, url: 'medbay.html', req: 's9_medbay_open' }
+            { id: 'medbay', title: 'МЕДОТСЕК', x: 850, y: 650, url: 'medbay.html', req: 's9_medbay_open' }
         ],
         links: [
             // Крест от центра
-            { s: 'hub', t: 'map' }, { s: 'hub', t: 'reserved1' }, 
+            { s: 'hub', t: 'map' }, { s: 'hub', t: 'tools' }, 
             { s: 'hub', t: 'reactor' }, { s: 'hub', t: 'reserved2' },
+            
+            // Верхние связи
+            { s: 'tools', t: 'sector' }, { s: 'tools', t: 'reserved1' },
+            
             // Периметр
             { s: 'sector', t: 'map' }, { s: 'map', t: 'archive' }, { s: 'observatory', t: 'map' },
-            { s: 'tools', t: 'reactor' }, { s: 'reactor', t: 'hangar' }, { s: 'reactor', t: 'medbay' }
+            { s: 'reactor', t: 'hangar' }, { s: 'reactor', t: 'medbay' }
         ]
     };
 
@@ -372,9 +440,13 @@
 
             const formattedTitle = node.title.replace(/\n/g, '<br>');
             const statusText = open ? 'ONLINE' : 'OFFLINE'; 
+            
+            // Генерируем глиф на основе названия (убираем переносы и скобки)
+            const wordForGlyph = node.title.split('\n')[0].replace(/\[.*?\]/g, '').trim();
+            const glyphSVG = createSVG(getPath(wordForGlyph));
 
-            // Убрали div с иконкой, оставили только текст и статус
             el.innerHTML = `
+                <div class="node-glyph">${glyphSVG}</div>
                 <div class="node-title">${formattedTitle}</div>
                 <div class="node-status">${statusText}</div>
             `;
@@ -382,7 +454,7 @@
         });
     }
 
-    // --- КОНСОЛЬ БЫСТРОГО ДОСТУПА (ТИЛЬДА) ---
+    // --- КОНСОЛЬ (ТИЛЬДА) ---
     const consoleEl = document.getElementById('tilde-console');
     const consoleInput = document.getElementById('console-input');
     const consoleOutput = document.getElementById('console-output');
