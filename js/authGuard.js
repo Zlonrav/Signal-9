@@ -5,6 +5,10 @@
     // СТРАНИЦЫ-ИСКЛЮЧЕНИЯ (Сюда можно заходить без ключа)
     const isLoginPage = path.includes('login.html');
     const isToolsPage = path.includes('tools.html');
+    const isMapPage = path.includes('map.html');
+        if (!localStorage.getItem('s9_map_unlocked') && isMapPage) {
+            window.location.replace('404.html');
+        }
 
     // ЛОГИКА: 
     // Если ключа нет И мы пытаемся зайти НЕ на логин И НЕ в терминал -> ВЫГОНЯЕМ
