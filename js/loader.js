@@ -9,7 +9,7 @@
         "js/uiEngine.js",
         "js/roomChat.js",   
         "js/chatEngine.js",
-        "js/terminal.js"    
+        "js/terminal.js"   
     ];
     scripts.forEach(src => {
         document.write(`<script src="${src}"></script>`);
