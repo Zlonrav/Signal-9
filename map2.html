@@ -327,12 +327,13 @@
     <!-- 7. ПОДКЛЮЧЕНИЕ РЕСУРСОВ (ИЗ ШАБЛОНА) -->
     <script src="js/loader.js"></script>
 
-    <!-- 8. СКРИПТ КАРТЫ -->
+    <!-- 8. СКРИПТ КАРТЫ (В ИЗОЛИРОВАННОЙ ОБЛАСТИ ВИДИМОСТИ) -->
     <script>
-        // --- ГЕНЕРАТОР ГЛИФОВ ---
-        const POINTS = [{x:15,y:15},{x:40,y:15},{x:65,y:15},{x:15,y:40},{x:40,y:40},{x:65,y:40},{x:15,y:65},{x:40,y:65},{x:65,y:65}];
+    (function() {
+        // Уникальные имена, чтобы не конфликтовать с твоими скриптами
+        const MAP_POINTS = [{x:15,y:15},{x:40,y:15},{x:65,y:15},{x:15,y:40},{x:40,y:40},{x:65,y:40},{x:15,y:65},{x:40,y:65},{x:65,y:65}];
         
-        function getPath(word) {
+        function getMapPath(word) {
             let hash = 5381;
             for (let i = 0; i < word.length; i++) hash = ((hash << 5) + hash) + word.charCodeAt(i);
             let seed = Math.abs(hash), path = [], used = new Set();
@@ -344,54 +345,44 @@
             return path;
         }
 
-        function createSVG(path) {
+        function createMapSVG(path) {
             if (!path || !path.length) return '';
-            const start = POINTS[path[0]];
+            const start = MAP_POINTS[path[0]];
             let d = `M ${start.x} ${start.y}`;
             for(let i=0; i<path.length-1; i++) {
-                const c = POINTS[path[i]], n = POINTS[path[i+1]];
+                const c = MAP_POINTS[path[i]], n = MAP_POINTS[path[i+1]];
                 d += ` C ${c.x+(n.x-c.x)*0.5} ${c.y}, ${c.x+(n.x-c.x)*0.5} ${n.y}, ${n.x} ${n.y}`;
             }
             return `<svg viewBox="0 0 80 80"><path d="${d}"></path></svg>`;
         }
 
-        // --- КОНФИГУРАЦИЯ КАРТЫ (С ПЕРЕСТАНОВКОЙ) ---
         const MAP_DATA = {
             nodes: [
-                // Центр
                 { id: 'hub', title: 'ГЛАВНЫЙ\nХАБ', x: 600, y: 425, url: 'index.html', req: null },
                 
-                // Верхний ряд
-                { id: 'uninitialized', title: 'НЕИНИЦИАЛИЗИРОВАН', x: 350, y: 200, url: '#', req: 's9_sector_opened' }, // Теперь слева
+                { id: 'uninitialized', title: 'НЕИНИЦИАЛИЗИРОВАН', x: 350, y: 200, url: '#', req: 's9_sector_opened' },
                 { id: 'tools', title: 'ИНЖЕНЕРНЫЙ\nТЕРМИНАЛ', x: 600, y: 200, url: 'tools.html', req: null },
                 { id: 'res1', title: 'СЕКТОР\n[0x00]', x: 850, y: 200, url: '#', req: 's9_res1' },
 
-                // Средний ряд
                 { id: 'telemetry', title: 'МОДУЛЬ\nТЕЛЕМЕТРИИ', x: 150, y: 425, url: 'observatory.html', req: 's9_observatory' },
                 { id: 'reactor', title: 'ЭНЕРГОЯДРО', x: 350, y: 425, url: 'reactor.html', req: 's9_emergency_reactor' },
                 { id: 'edr', title: 'EDR\nСЕКТОР', x: 850, y: 425, url: 'edr.html', req: 's9_edr_open' },
-                { id: 'hangar', title: 'ТРАНСПОРТНЫЙ\nШЛЮЗ', x: 1050, y: 425, url: 'hangar.html', req: 's9_hangar_open' }, // Теперь справа
+                { id: 'hangar', title: 'ТРАНСПОРТНЫЙ\nШЛЮЗ', x: 1050, y: 425, url: 'hangar.html', req: 's9_hangar_open' },
 
-                // Нижний ряд
                 { id: 'archive', title: 'БАЗА\nДАННЫХ', x: 350, y: 650, url: 'archive.html', req: 's9_access_granted' },
                 { id: 'map', title: 'КАРТА', x: 600, y: 650, url: 'map2.html', req: null },
                 { id: 'res2', title: 'СЕКТОР\n[0xFF]', x: 850, y: 650, url: '#', req: 's9_res2' }
             ],
             links: [
-                // Центральные связи
                 { s: 'hub', t: 'tools' }, { s: 'hub', t: 'map' }, 
                 { s: 'hub', t: 'reactor' }, { s: 'hub', t: 'edr' },
 
-                // Верхние ветки
                 { s: 'tools', t: 'uninitialized' }, { s: 'tools', t: 'res1' },
                 
-                // Левая ветка
                 { s: 'reactor', t: 'telemetry' }, { s: 'reactor', t: 'archive' },
                 
-                // Правая ветка
                 { s: 'edr', t: 'hangar' }, { s: 'edr', t: 'res2' },
                 
-                // Низ (связь карты)
                 { s: 'map', t: 'archive' }, { s: 'map', t: 'res2' }
             ]
         };
@@ -401,6 +392,11 @@
         function buildMap() {
             const svg = document.getElementById('mapLines');
             const nodesContainer = document.getElementById('mapNodes');
+
+            if (!svg || !nodesContainer) {
+                console.error("Не найдены контейнеры для карты!");
+                return;
+            }
 
             MAP_DATA.links.forEach(link => {
                 const source = MAP_DATA.nodes.find(n => n.id === link.s);
@@ -442,7 +438,7 @@
                 const statusText = open ? 'ONLINE' : 'OFFLINE'; 
                 
                 const wordForGlyph = node.title.split('\n')[0].replace(/\[.*?\]/g, '').trim();
-                const glyphSVG = createSVG(getPath(wordForGlyph));
+                const glyphSVG = createMapSVG(getMapPath(wordForGlyph));
 
                 el.innerHTML = `
                     <div class="node-glyph">${glyphSVG}</div>
@@ -461,38 +457,41 @@
         document.addEventListener('keydown', (e) => {
             if (e.key === '`' || e.key === '~' || e.key === 'Ё' || e.key === 'ё') {
                 e.preventDefault();
-                consoleEl.classList.toggle('active');
-                if (consoleEl.classList.contains('active')) consoleInput.focus();
+                if (consoleEl) consoleEl.classList.toggle('active');
+                if (consoleEl && consoleEl.classList.contains('active') && consoleInput) consoleInput.focus();
             }
-            if (e.key === 'Escape' && consoleEl.classList.contains('active')) consoleEl.classList.remove('active');
+            if (e.key === 'Escape' && consoleEl && consoleEl.classList.contains('active')) consoleEl.classList.remove('active');
         });
 
-        consoleInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                const cmd = consoleInput.value.trim().toLowerCase();
-                consoleInput.value = '';
+        if (consoleInput) {
+            consoleInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    const cmd = consoleInput.value.trim().toLowerCase();
+                    consoleInput.value = '';
 
-                const targetNode = MAP_DATA.nodes.find(n => n.id.toLowerCase() === cmd || n.title.toLowerCase().includes(cmd));
+                    const targetNode = MAP_DATA.nodes.find(n => n.id.toLowerCase() === cmd || n.title.toLowerCase().includes(cmd));
 
-                if (!targetNode) {
-                    consoleOutput.innerHTML += `<div class="err">ОШИБКА: Отсек '${cmd}' не найден.</div>`;
-                    return;
+                    if (!targetNode) {
+                        consoleOutput.innerHTML += `<div class="err">ОШИБКА: Отсек '${cmd}' не найден.</div>`;
+                        return;
+                    }
+                    if (targetNode.req && !isUnlocked(targetNode)) {
+                        consoleOutput.innerHTML += `<div class="err">ОТКАЗАНО: Доступ к '${targetNode.title.replace(/\n/g, ' ')}' заблокирован.</div>`;
+                        return;
+                    }
+                    if (targetNode.url === '#') {
+                        consoleOutput.innerHTML += `<div class="err">ОШИБКА: Модуль '${targetNode.id}' в разработке.</div>`;
+                        return;
+                    }
+                    consoleOutput.innerHTML += `<div class="ok">УСПЕХ: Переход в '${targetNode.title.replace(/\n/g, ' ')}'...</div>`;
+                    setTimeout(() => { window.location.href = targetNode.url; }, 500);
                 }
-                if (targetNode.req && !isUnlocked(targetNode)) {
-                    consoleOutput.innerHTML += `<div class="err">ОТКАЗАНО: Доступ к '${targetNode.title.replace(/\n/g, ' ')}' заблокирован.</div>`;
-                    return;
-                }
-                if (targetNode.url === '#') {
-                    consoleOutput.innerHTML += `<div class="err">ОШИБКА: Модуль '${targetNode.id}' в разработке.</div>`;
-                    return;
-                }
-                consoleOutput.innerHTML += `<div class="ok">УСПЕХ: Переход в '${targetNode.title.replace(/\n/g, ' ')}'...</div>`;
-                setTimeout(() => { window.location.href = targetNode.url; }, 500);
-            }
-        });
+            });
+        }
 
         // Инициализация
         buildMap();
+    })();
     </script>
 </body>
 </html>
