@@ -2,14 +2,14 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>СИГНАЛ-9 // КАРТА СТАНЦИИ</title>
+    <title>СИГНАЛ-9 // КАРТА СТАНЦИИ (ТЕСТ)</title>
     <link rel="stylesheet" type="text/css" href="style.css">
     <link rel="stylesheet" type="text/css" href="style-tools.css">
     <link rel="stylesheet" type="text/css" href="style-chat-terminal.css">
     <style>
         /* Изолированные стили для топологии карты */
         body.tools-page {
-            overflow: hidden; /* Убираем скролл для карты */
+            overflow: hidden; 
             height: 100vh;
         }
 
@@ -28,7 +28,7 @@
             margin: 0 auto;
         }
 
-        /* Слой для соединительных линий (Трасситы) */
+        /* Слой для соединительных линий */
         .map-connections {
             position: absolute;
             inset: 0;
@@ -151,10 +151,12 @@
         </div>
     </div>
 
-    <!-- Служебная панель для тестирования (потом удалишь) -->
-    <div style="position: fixed; bottom: 20px; left: 20px; z-index: 1000; display: flex; gap: 10px;">
-        <button onclick="localStorage.setItem('s9_access_granted', 'true'); location.reload();" style="background:#222; color:#00f2ff; border:1px solid #00f2ff; padding:5px; cursor:pointer;">+ ДОСТУП</button>
-        <button onclick="localStorage.clear(); location.reload();" style="background:#222; color:#ff3333; border:1px solid #ff3333; padding:5px; cursor:pointer;">СБРОС</button>
+    <!-- Служебная панель для тестирования -->
+    <div style="position: fixed; bottom: 20px; left: 20px; z-index: 1000; display: flex; gap: 10px; background: rgba(0,0,0,0.5); padding: 10px; border: 1px solid rgba(0,242,255,0.2);">
+        <div style="color:var(--neon); font-family:monospace; font-size:10px; margin-right:10px; align-self:center;">ТЕСТ:</div>
+        <button onclick="localStorage.setItem('s9_access_granted', 'true'); location.reload();" style="background:transparent; color:#00f2ff; border:1px solid #00f2ff; padding:5px; cursor:pointer; font-family:monospace;">+ ДОСТУП АРХИВ</button>
+        <button onclick="localStorage.setItem('s9_emergency_reactor', 'active'); location.reload();" style="background:transparent; color:#ffaa00; border:1px solid #ffaa00; padding:5px; cursor:pointer; font-family:monospace;">+ АВАРИЯ РЕАКТОРА</button>
+        <button onclick="localStorage.clear(); location.reload();" style="background:transparent; color:#ff3333; border:1px solid #ff3333; padding:5px; cursor:pointer; font-family:monospace;">СБРОС</button>
     </div>
 
     <!-- Кнопки терминала и аудио -->
@@ -195,7 +197,7 @@
                 label: 'РЕАКТОРНЫЙ ОТСЕК', 
                 x: 300, y: 500, 
                 url: 'reactor.html', 
-                req: 's9_emergency_reactor', // Требует аварии реактора (появляется после ввода 142)
+                req: 's9_emergency_reactor', // Требует флаг аварии реактора
                 icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>`
             },
             { 
@@ -245,8 +247,8 @@
                 line.setAttribute('y2', targetNode.y);
                 
                 // Проверяем, открыты ли оба узла для анимации линии
-                const isSourceOpen = !sourceNode.req || localStorage.getItem(sourceNode.req) === 'true';
-                const isTargetOpen = !targetNode.req || localStorage.getItem(targetNode.req) === 'true';
+                const isSourceOpen = !sourceNode.req || localStorage.getItem(sourceNode.req) === 'true' || localStorage.getItem(sourceNode.req) === 'active';
+                const isTargetOpen = !targetNode.req || localStorage.getItem(targetNode.req) === 'true' || localStorage.getItem(targetNode.req) === 'active';
                 
                 if (isSourceOpen && isTargetOpen) {
                     line.classList.add('active');
@@ -260,7 +262,7 @@
 
         // 2. Рисуем узлы
         MAP_CONFIG.nodes.forEach(node => {
-            const isUnlocked = !node.req || localStorage.getItem(node.req) === 'true';
+            const isUnlocked = !node.req || localStorage.getItem(node.req) === 'true' || localStorage.getItem(node.req) === 'active';
             
             // Создаем контейнер (ссылку, если открыто, или div, если закрыто)
             const el = document.createElement(isUnlocked ? 'a' : 'div');
