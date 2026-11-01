@@ -4,13 +4,16 @@
     window.TERMINAL_INITIALIZED = true;
 
     const page = window.location.pathname.split('/').pop() || 'index.html';
-
-    // 1. ПРОВЕРКА НА 404 СТРАНИЦУ
-    // Если мы на странице ошибки, консоль не создаем и не показываем
     if (page === '404.html') return;
 
     let currentState = 'IDLE';
 
+    // Создаем затемняющий фон
+    const bgOverlay = document.createElement('div');
+    bgOverlay.id = 'tilde-overlay-bg';
+    document.body.appendChild(bgOverlay);
+
+    // Создаем консоль
     const overlay = document.createElement('div');
     overlay.id = 'tilde-console';
     overlay.innerHTML = `
@@ -49,10 +52,10 @@
         return `${yyyy}${mm}${dd}`;
     }
 
-    // 2. УМНЫЙ HELP
+    // УМНЫЙ HELP (по твоему списку)
     function showHelp(topic) {
         const glyphsCount = Object.keys(localStorage).filter(k => k.startsWith('s9_glyph_')).length;
-        const isCoreBroken = localStorage.getItem('s9_emergency_reactor') === 'active';
+        const isCoreUnlocked = localStorage.getItem('s9_core_unlocked') === 'true';
 
         if (topic) {
             const topics = {
@@ -60,17 +63,17 @@
                 'hub': 'Возврат в Главный Хаб (главная страница).',
                 'map': 'Переход на навигационную карту станции.',
                 'archive': 'Переход в Базу Данных (требуется 3 глифа).',
-                'core': 'Переход в сектор Энергоядра (Реактор).',
-                'telemetry': 'Переход в Модуль Телеметрии (ОФФЛАЙН).',
-                'edr': 'Переход в EDR Сектор (ОФФЛАЙН).',
-                'hangar': 'Переход в Транспортный Шлюз (ОФФЛАЙН).',
-                'scan': 'Запуск глубокого сканирования (Только внутри Энергоядра).',
-                'restore': 'Восстановление системы из точки доступа (Только в Энергоядре).',
+                'core': 'Переход в сектор Энергоядра (требуется сканирование).',
+                'telemetry': 'Модуль телеметрии [OFFLINE].',
+                'edr': 'EDR Сектор [OFFLINE].',
+                'gateway': 'Транспортный шлюз [OFFLINE].',
+                'scan': 'Запуск глубокого сканирования космоса. Вызывает перегрузку ядра.',
+                'restore': 'Восстановление из точки доступа (Только в Энергоядре).',
                 'rebuild': 'Пересборка ядра (Только в Энергоядре).',
-                'include': 'Включить сектор в буфер. Формат: include = 0XF4AD (Только в Энергоядре).',
+                'include': 'Включить сектор. Формат: include = 0XF4AD (Только в Энергоядре).',
                 'check': 'Проверить сектор. Формат: check = 0XF4AD (Только в Энергоядре).',
                 'backup': 'Восстановить из бэкапа. Формат: backup = YYYYMMDD (Только в Энергоядре).',
-                'reset': 'Полный сброс прогресса игры (Удаляет все данные).'
+                'reset': 'Полный сброс прогресса игры. Требует подтверждения (Y/N).'
             };
             if (topics[topic]) {
                 print(`<span class="sys">[${topic.toUpperCase()}]</span> ${topics[topic]}`);
@@ -80,7 +83,7 @@
             return;
         }
 
-        // 3. КРАСИВЫЙ СПИСОК КОМАНД (Только доступные)
+        // Список команд
         print(`<span class="sys">ДОСТУПНЫЕ КОМАНДЫ:</span>`);
         print(`> help [команда] - помощь по команде`);
         print(`> hub - главная консоль`);
@@ -88,22 +91,29 @@
         
         if (glyphsCount >= 3) {
             print(`> archive - архив глифов`);
+        } else {
+            print(`> archive - архив глифов <span class="err">[OFFLINE]</span>`);
         }
 
-        // Отсеки из карты
-        print(`> core - энергоядро (реактор)`);
+        if (isCoreUnlocked || page === 'reactor.html') {
+            print(`> core - энергоядро`);
+        } else {
+            print(`> core - энергоядро <span class="err">[OFFLINE]</span>`);
+        }
+
         print(`> telemetry - модуль телеметрии <span class="err">[OFFLINE]</span>`);
         print(`> edr - EDR сектор <span class="err">[OFFLINE]</span>`);
-        print(`> hangar - транспортный шлюз <span class="err">[OFFLINE]</span>`);
+        print(`> gateway - транспортный шлюз <span class="err">[OFFLINE]</span>`);
         
-        // Если мы внутри Реактора, показываем спец-команды
+        // Если мы в реакторе, показываем спец-команды
         if (page === 'reactor.html') {
             print(`<span class="sys">СПЕЦ-КОМАНДЫ ЭНЕРГОЯДРА:</span>`);
-            if (!isCoreBroken) {
-                print(`> scan - запуск сканирования (вызовет перегрузку)`);
+            const isBroken = localStorage.getItem('s9_emergency_reactor') === 'active';
+            if (!isBroken) {
+                print(`> scan - запустить сканирование`);
             } else {
-                print(`> restore - восстановление из точки доступа`);
-                print(`> rebuild - пересборка ядра`);
+                print(`> restore - восстановить систему`);
+                print(`> rebuild - пересобрать ядро`);
                 print(`> include = 0XF4AD - включить сектор`);
                 print(`> check = 0XF4AD - проверить сектор`);
                 print(`> backup = YYYYMMDD - восстановить из бэкапа`);
@@ -121,38 +131,40 @@
             return;
         }
 
-        if (currentState !== 'IDLE' && (cmd === 'yes' || cmd === 'no')) {
-            handleYesNo(cmd === 'yes');
+        // Обработка состояний ожидания (Yes/No)
+        if (currentState !== 'IDLE' && (cmd === 'y' || cmd === 'n' || cmd === 'yes' || cmd === 'no')) {
+            const isYes = (cmd === 'y' || cmd === 'yes');
+            handleYesNo(isYes);
             return;
         }
 
         const glyphsCount = Object.keys(localStorage).filter(k => k.startsWith('s9_glyph_')).length;
+        const isCoreUnlocked = localStorage.getItem('s9_core_unlocked') === 'true';
 
         switch(cmd) {
             case 'help':
                 showHelp();
                 break;
-            
-            // --- КОМАНДА SCAN (ТЕПЕРЬ ТОЛЬКО В РЕАКТОРЕ) ---
+
             case 'scan':
-                if (page !== 'reactor.html') {
-                    print("ОШИБКА: КОМАНДА SCAN ДОСТУПНА ТОЛЬКО ВНУТРИ ЭНЕРГОЯДРА.", "err");
-                    break;
-                }
                 if (localStorage.getItem('s9_emergency_reactor') === 'active') {
-                    print("ОШИБКА: СКАНИРОВАНИЕ НЕВОЗМОЖНО. ЯДРО УЖЕ ПОВРЕЖДЕНО.", "err");
+                    print("ОШИБКА: СКАНИРОВАНИЕ УЖЕ ЗАПУЩЕНО. ЯДРО ПОВРЕЖДЕНО.", "err");
                 } else {
                     print("ИНИЦИАЛИЗАЦИЯ ГЛУБОКОГО СКАНИРОВАНИЯ...");
                     setTimeout(() => {
                         print("ТРЕБУЕМАЯ МОЩНОСТЬ: 150%");
                         print("КРИТИЧЕСКИЙ ПЕРЕГРУЗ. ВЫБРОС ПЛАЗМЫ В ЭНЕРГОЯДРЕ.", "err");
+                        print("ДОСТУП К СЕКТОРУ 'CORE' РАЗРЕШЕН. ОТПРАВЛЯЙТЕСЬ ТУДА ДЛЯ РЕМОНТА.", "warn");
+                        
                         localStorage.setItem('s9_emergency_reactor', 'active');
+                        localStorage.setItem('s9_core_unlocked', 'true');
+                        
                         if (typeof applyEmergencyStyles === 'function') applyEmergencyStyles();
+                        if (typeof updateQuestion === 'function') window.currentChatStep = 0; // Сброс журнала
                     }, 1000);
                 }
                 break;
 
-            // --- НАВИГАЦИЯ ---
             case 'hub':
                 window.location.href = 'index.html';
                 break;
@@ -160,26 +172,32 @@
                 window.location.href = 'map.html';
                 break;
             case 'core':
-                window.location.href = 'reactor.html';
+                if (isCoreUnlocked || page === 'reactor.html') {
+                    window.location.href = 'reactor.html';
+                } else {
+                    print("ОШИБКА: ЭНЕРГОЯДРО НЕДОСТУПНО. ТРЕБУЕТСЯ СКАНИРОВАНИЕ (КОМАНДА SCAN).", "err");
+                }
                 break;
             case 'archive':
-                if (glyphsCount >= 3) window.location.href = 'archive.html';
-                else print("ОШИБКА: АРХИВ ЗАБЛОКИРОВАН. НУЖНО 3 ГЛИФА.", "err");
+                if (glyphsCount >= 3) {
+                    window.location.href = 'archive.html';
+                } else {
+                    print("ОШИБКА: АРХИВ ЗАБЛОКИРОВАН. НУЖНО 3 ГЛИФА.", "err");
+                }
                 break;
             
-            // Заглушки для будущих отсеков
             case 'telemetry':
             case 'edr':
-            case 'hangar':
+            case 'gateway':
                 print(`МОДУЛЬ '${cmd.toUpperCase()}' ВРЕМЕННО НЕДОСТУПЕН (OFFLINE).`, "err");
                 break;
 
-            // --- КОМАНДЫ ПОЧИНКИ (ТОЛЬКО РЕАКТОР) ---
+            // --- КОМАНДЫ ПОЧИНКИ ЯДРА ---
             case 'restore':
                 if (page !== 'reactor.html') {
                     print("ОШИБКА: КОМАНДА ДОСТУПНА ТОЛЬКО В СЕКТОРЕ ЭНЕРГОЯДРА.", "err");
                 } else {
-                    print("ПОПЫТКА ВОССТАНОВЛЕНИЯ СИСТЕМЫ ИЗ ТОЧКИ ДОСТУПА. ПОДТВЕРДИТЕ ОПЕРАЦИЮ (YES/NO).");
+                    print("ПОПЫТКА ВОССТАНОВЛЕНИЯ СИСТЕМЫ ИЗ ТОЧКИ ДОСТУПА. ПОДТВЕРДИТЕ (Y/N)");
                     currentState = 'RESTORE_CONFIRM';
                 }
                 break;
@@ -206,14 +224,14 @@
 
             case 'check = 0xf4ad':
                 if (page !== 'reactor.html') break;
-                print("ВВЕДЕНО, ПРОВЕРЕНО. ПРИМЕНИТЬ? (YES/NO)");
+                print("ВВЕДЕНО, ПРОВЕРЕНО. ПРИМЕНИТЬ? (Y/N)");
                 currentState = 'APPLY_CONFIRM';
                 break;
 
+            // СБРОС (Требует подтверждения)
             case 'reset':
-                localStorage.clear();
-                print("СИСТЕМА СБРОШЕНА. ПЕРЕЗАГРУЗКА...");
-                setTimeout(() => location.reload(), 1000);
+                print("ВЫ УВЕРЕНЫ? ВЕСЬ ПРОГРЕСС БУДЕТ УДАЛЕН. (Y/N)", "warn");
+                currentState = 'RESET_CONFIRM';
                 break;
                 
             default:
@@ -222,7 +240,7 @@
                     const date = cmd.split('=')[1].trim();
                     const correctDate = getYesterdayDate();
                     if (date === correctDate) {
-                        print("ВЕРСИЯ БЭКАПА ПРИНЯТА. ПЕРЕЗАПИСАТЬ? (YES/NO)");
+                        print("ВЕРСИЯ БЭКАПА ПРИНЯТА. ПЕРЕЗАПИСАТЬ? (Y/N)");
                         currentState = 'BACKUP_CONFIRM';
                     } else {
                         print("ОШИБКА: НЕВЕРНАЯ ВЕРСИЯ. ВВЕДИТЕ ВЕРСИЮ, СОЗДАННУЮ 24 ЗЕМНЫХ ЧАСА НАЗАД.", "err");
@@ -235,7 +253,7 @@
 
     function handleYesNo(isYes) {
         if (!isYes) {
-            print("ОПЕРАЦИЯ ОТМЕНЕНА.");
+            print("ОПЕРАЦИЯ ОТМЕНЕНА.", "err");
             currentState = 'IDLE';
             return;
         }
@@ -257,16 +275,28 @@
                 if (typeof applyEmergencyStyles === 'function') applyEmergencyStyles();
                 currentState = 'IDLE';
                 break;
+            case 'RESET_CONFIRM':
+                localStorage.clear();
+                print("СИСТЕМА ПОЛНОСТЬЮ СБРОШЕНА. ПЕРЕЗАГРУЗКА...", "ok");
+                setTimeout(() => window.location.href = 'login.html', 1000);
+                currentState = 'IDLE';
+                break;
         }
+    }
+
+    function toggleConsole(show) {
+        overlay.classList.toggle('active', show);
+        bgOverlay.classList.toggle('active', show);
+        if (show) input.focus();
     }
 
     document.addEventListener('keydown', (e) => {
         if (e.key === '`' || e.key === '~' || e.key === 'Ё' || e.key === 'ё') {
             e.preventDefault();
-            overlay.classList.toggle('active');
-            if (overlay.classList.contains('active')) input.focus();
+            const isOpening = !overlay.classList.contains('active');
+            toggleConsole(isOpening);
         }
-        if (e.key === 'Escape') overlay.classList.remove('active');
+        if (e.key === 'Escape') toggleConsole(false);
     });
 
     input.addEventListener('keydown', (e) => {
@@ -276,4 +306,7 @@
             input.value = '';
         }
     });
+
+    // Клик по фону закрывает консоль
+    bgOverlay.addEventListener('click', () => toggleConsole(false));
 })();
