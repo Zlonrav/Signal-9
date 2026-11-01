@@ -7,13 +7,12 @@
         "js/audioEngine.js",
         "js/visualEngine.js",
         "js/uiEngine.js",
+        "js/room_chat.js",   // <--- НОВЫЙ
         "js/chatEngine.js",
-		"js/navEngine.js"
+        "js/terminal.js"     // <--- ЗАМЕНА navEngine.js
     ];
-
     scripts.forEach(src => {
         document.write(`<script src="${src}"></script>`);
     });
-    
     console.log("SYSTEM: Все модули ядра загружены.");
 })();
