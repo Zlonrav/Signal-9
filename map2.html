@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> <!-- 11 -->
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -108,13 +108,13 @@
         }
         .map-node.unlocked:hover::before, .map-node.unlocked:hover::after { width: 100%; height: 100%; opacity: 0.3; }
 
-        /* --- ГЛИФЫ (ПОЗИЦИОНИРОВАНИЕ) --- */
+        /* --- ГЛИФЫ --- */
         .node-glyph {
             position: absolute;
-            top: 35%; /* Центр верхней половины */
+            top: 35%; 
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 32px; /* Четверть от 130px */
+            width: 32px; /* Четверть плитки */
             height: 32px;
             display: flex;
             align-items: center;
@@ -130,7 +130,7 @@
         /* Тонкие линии для ONLINE */
         .map-node.unlocked .node-glyph path {
             stroke: var(--neon);
-            stroke-width: 2.5; /* Тонкие линии */
+            stroke-width: 2.5; 
             fill: none;
             stroke-linecap: round;
             stroke-linejoin: round;
@@ -146,7 +146,7 @@
         /* --- ТЕКСТ --- */
         .node-title {
             position: absolute;
-            top: 70%; /* Четко под глифом */
+            top: 70%; 
             left: 50%;
             transform: translate(-50%, -50%);
             width: 100%;
@@ -301,7 +301,7 @@
         <div class="console-header">Терминал быстрого доступа // Введите ID отсека</div>
         <div class="console-output" id="console-output">
             <div>Инициализация протокола ручного перемещения...</div>
-            <div>Доступные отсеки: <span class="sys">HUB, ARCHIVE, REACTOR, TOOLS, OBSERVATORY, HANGAR, MEDBAY, SECTOR, MAP</span></div>
+            <div>Доступные ID: <span class="sys">HUB, TOOLS, MAP, ARCHIVE, REACTOR, EDR, TELEMETRY, HANGAR, SECTOR, UNINITIALIZED</span></div>
         </div>
         <div class="console-input-wrapper">
             <span>></span>
@@ -345,30 +345,44 @@
         return `<svg viewBox="0 0 80 80"><path d="${d}"></path></svg>`;
     }
 
-    // --- КОНФИГУРАЦИЯ КАРТЫ ---
+    // --- КОНФИГУРАЦИЯ КАРТЫ (ТВОЙ МАКЕТ) ---
     const MAP_DATA = {
         nodes: [
+            // Центр
             { id: 'hub', title: 'ГЛАВНЫЙ\nХАБ', x: 600, y: 425, url: 'index.html', req: null },
             
+            // Верхний ряд
+            { id: 'hangar', title: 'ТРАНСПОРТНЫЙ\nШЛЮЗ', x: 350, y: 200, url: 'hangar.html', req: 's9_hangar_open' },
             { id: 'tools', title: 'ИНЖЕНЕРНЫЙ\nТЕРМИНАЛ', x: 600, y: 200, url: 'tools.html', req: null },
-            { id: 'sector', title: 'НЕИЗВЕСТНЫЙ\nСЕКТОР', x: 300, y: 200, url: '#', req: 's9_sector_opened' },
-            { id: 'reserved1', title: 'МОДУЛЬ\n[РЕЗЕРВ]', x: 900, y: 200, url: '#', req: 's9_res1' },
+            { id: 'res1', title: 'СЕКТОР\n[0x00]', x: 850, y: 200, url: '#', req: 's9_res1' },
 
-            { id: 'observatory', title: 'ОБСЕРВАТОРИЯ', x: 150, y: 425, url: 'observatory.html', req: 's9_observatory' },
-            { id: 'map', title: 'КАРТА', x: 350, y: 425, url: 'map2.html', req: null },
-            { id: 'reactor', title: 'РЕАКТОР', x: 850, y: 425, url: 'reactor.html', req: 's9_emergency_reactor' },
-            { id: 'hangar', title: 'АНГАР', x: 1050, y: 425, url: 'hangar.html', req: 's9_hangar_open' },
+            // Средний ряд
+            { id: 'telemetry', title: 'МОДУЛЬ\nТЕЛЕМЕТРИИ', x: 150, y: 425, url: 'observatory.html', req: 's9_observatory' },
+            { id: 'reactor', title: 'ЭНЕРГОЯДРО', x: 350, y: 425, url: 'reactor.html', req: 's9_emergency_reactor' },
+            { id: 'edr', title: 'EDR\nСЕКТОР', x: 850, y: 425, url: 'edr.html', req: 's9_edr_open' },
+            { id: 'sector', title: 'НЕИНИЦИАЛИЗИРОВАН', x: 1050, y: 425, url: '#', req: 's9_sector_opened' },
 
-            { id: 'archive', title: 'АРХИВ', x: 350, y: 650, url: 'archive.html', req: 's9_access_granted' },
-            { id: 'reserved2', title: 'МОДУЛЬ\n[РЕЗЕРВ]', x: 600, y: 650, url: '#', req: 's9_res2' },
-            { id: 'medbay', title: 'МЕДОТСЕК', x: 850, y: 650, url: 'medbay.html', req: 's9_medbay_open' }
+            // Нижний ряд
+            { id: 'archive', title: 'БАЗА\nДАННЫХ', x: 350, y: 650, url: 'archive.html', req: 's9_access_granted' },
+            { id: 'map', title: 'КАРТА', x: 600, y: 650, url: 'map2.html', req: null },
+            { id: 'res2', title: 'СЕКТОР\n[0xFF]', x: 850, y: 650, url: '#', req: 's9_res2' }
         ],
         links: [
-            { s: 'hub', t: 'map' }, { s: 'hub', t: 'tools' }, 
-            { s: 'hub', t: 'reactor' }, { s: 'hub', t: 'reserved2' },
-            { s: 'tools', t: 'sector' }, { s: 'tools', t: 'reserved1' },
-            { s: 'sector', t: 'map' }, { s: 'map', t: 'archive' }, { s: 'observatory', t: 'map' },
-            { s: 'reactor', t: 'hangar' }, { s: 'reactor', t: 'medbay' }
+            // Центральные связи
+            { s: 'hub', t: 'tools' }, { s: 'hub', t: 'map' }, 
+            { s: 'hub', t: 'reactor' }, { s: 'hub', t: 'edr' },
+
+            // Верхние ветки
+            { s: 'tools', t: 'hangar' }, { s: 'tools', t: 'res1' },
+            
+            // Левая ветка
+            { s: 'reactor', t: 'telemetry' }, { s: 'reactor', t: 'archive' },
+            
+            // Правая ветка
+            { s: 'edr', t: 'sector' }, { s: 'edr', t: 'res2' },
+            
+            // Низ (связь карты)
+            { s: 'map', t: 'archive' }, { s: 'map', t: 'res2' }
         ]
     };
 
@@ -417,7 +431,7 @@
             const formattedTitle = node.title.replace(/\n/g, '<br>');
             const statusText = open ? 'ONLINE' : 'OFFLINE'; 
             
-            // Берем первое слово без скобок для генерации глифа
+            // Берем первое слово для генерации глифа
             const wordForGlyph = node.title.split('\n')[0].replace(/\[.*?\]/g, '').trim();
             const glyphSVG = createSVG(getPath(wordForGlyph));
 
