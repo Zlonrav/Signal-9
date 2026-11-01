@@ -95,18 +95,29 @@
             font-weight: bold;
         }
 
+        /* ЖЕСТКИЙ ФИКС ДЛЯ ИНПУТА, ЧТОБЫ STYLE-TOOLS.CSS ЕГО НЕ ЛОМАЛ */
         #tilde-console #terminal-input {
             flex: 1;
             background: transparent !important;
             border: none !important;
+            border-bottom: 1px solid rgba(0, 242, 255, 0.5) !important;
             color: var(--neon) !important;
-            font-family: inherit !important;
+            font-family: 'JetBrains Mono', monospace !important;
             font-size: 14px !important;
+            text-align: left !important; /* <--- ВЫРАВНИВАНИЕ ПО ЛЕВОМУ КРАЮ */
             outline: none !important;
             text-transform: uppercase;
             box-shadow: none !important;
-            position: static !important;
+            position: static !important; /* Убираем абсолютное позиционирование */
             width: 100% !important;
+            padding: 5px 0 !important;
+            margin: 0 !important;
+            display: block !important;
+        }
+
+        #tilde-console #terminal-input:focus {
+            border-bottom-color: var(--neon) !important;
+            box-shadow: 0 5px 10px -5px var(--neon) !important;
         }
 
         #tilde-console .console-hint {
@@ -318,7 +329,6 @@
         overlay.classList.toggle('active', show);
         bgOverlay.classList.toggle('active', show);
         if (show) {
-            // Очищаем поле ввода при открытии, чтобы туда не попадал старый мусор
             input.value = ''; 
             setTimeout(() => input.focus(), 50);
         }
