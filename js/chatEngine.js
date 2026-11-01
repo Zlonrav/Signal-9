@@ -10,18 +10,21 @@
     // Функция получения активной базы сообщений
     function getActiveData() {
         const isEmergency = localStorage.getItem('s9_emergency_flag') === 'active';
-        
-        // СБРОС: Если режим изменился с момента последней проверки
         if (isEmergency !== lastEmergencyState) {
-            window.currentChatStep = 0; // Начинаем диалог заново
+            window.currentChatStep = 0;
             lastEmergencyState = isEmergency;
         }
 
-        const normalChat = window.roomChat || [];
+        let page = window.location.pathname.split('/').pop() || 'index.html';
+        
+        // Берем базу из room_chat.js, если она есть
+        let normalChat = (typeof CHAT_DATABASE !== 'undefined' && CHAT_DATABASE[page]) 
+                         ? CHAT_DATABASE[page] 
+                         : [{ q: "> СИСТЕМА", a: "ИНФОРМАЦИЯ ОТСУТСТВУЕТ." }];
+
         const emergencyChat = [
-            { q: "> ДИАГНОСТИКА СИСТЕМ", a: "КРИТИЧЕСКИЙ УРОВЕНЬ ИОНИЗАЦИИ. КОРПУС ПЕРЕГРЕТ. МАГНИТНЫЕ ЩИТЫ ОТКЛЮЧЕНЫ." },
-            { q: "> КАК ОСТАНОВИТЬ СБОЙ?", a: "НЕОБХОДИМА СТАБИЛИЗАЦИЯ ОРБИТЫ. СЧИТАЙТЕ КОД ИЗ ТЕЛЕМЕТРИИ ВЕКТОРА И ВВЕДИТЕ В ТЕРМИНАЛ." },
-            { q: "> ВРЕМЯ ДО РАЗРУШЕНИЯ?", a: "ДАННЫЕ ПОВРЕЖДЕНЫ. ТРЕБУЕТСЯ НЕМЕДЛЕННАЯ КОРРЕКЦИЯ КУРСА." }
+            { q: "> ДИАГНОСТИКА СИСТЕМ", a: "КРИТИЧЕСКИЙ УРОВЕНЬ ИОНИЗАЦИИ. КОРПУС ПЕРЕГРЕТ." },
+            { q: "> КАК ОСТАНОВИТЬ СБОЙ?", a: "ИСПОЛЬЗУЙТЕ ТЕРМИНАЛ УПРАВЛЕНИЯ (ТИЛЬДА)." }
         ];
         
         return isEmergency ? emergencyChat : normalChat;
@@ -47,7 +50,7 @@
         const container = document.querySelector('.chat-system');
         if (!qField || !aField) return;
 
-        const data = getActiveData();
+        const data = ();
 
         if (window.currentChatStep < data.length) {
             aField.innerText = "";
@@ -66,7 +69,7 @@
     };
 
     window.handleChatClick = function() {
-        const data = getActiveData();
+        const data = ();
         if (isTyping || window.currentChatStep >= data.length) return;
         
         isTyping = true;
