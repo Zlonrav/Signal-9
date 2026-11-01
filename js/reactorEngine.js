@@ -4,16 +4,15 @@
         const patchInterface = document.querySelector('.patch-interface');
         const statusElem = document.getElementById('patchStatus');
         const glyphCont = document.getElementById('core-glyph');
-        const isFixed = localStorage.getItem('s9_reactor_fixed') === 'true'; // На будущее
-        const isEmergency = localStorage.getItem('s9_emergency_reactor') === 'active';
 
         if (glyphCont && typeof getPath === 'function') {
             const indices = getPath("РЕАКТОР");
             glyphCont.innerHTML = createSVG(indices);
         }
 
-        function updateReactorVisuals() {
+        window.updateReactorVisuals = function() {
             const isError = localStorage.getItem('s9_emergency_reactor') === 'active';
+            
             if (isError) {
                 document.documentElement.style.setProperty('--neon', '#ff3200');
                 document.documentElement.style.setProperty('--neon-glow', 'rgba(255, 50, 0, 0.2)');
@@ -27,7 +26,7 @@
                     statusElem.style.color = "#ff3200";
                 }
             } else {
-                // Штатный режим (или восстановлен)
+                // Штатный режим (зеленый)
                 document.documentElement.style.setProperty('--neon', '#00ff44');
                 document.documentElement.style.setProperty('--neon-glow', 'rgba(0, 255, 68, 0.2)');
                 document.body.classList.remove('emergency-mode');
@@ -43,8 +42,11 @@
             }
         }
 
-        // Проверяем при загрузке и при изменении памяти (когда терминал что-то меняет)
+        // Вызываем при загрузке
         updateReactorVisuals();
+        
+        // Слушаем кастомное событие из терминала и изменения в других вкладках
+        window.addEventListener('s9_reactor_updated', updateReactorVisuals);
         window.addEventListener('storage', updateReactorVisuals);
     });
 })();
