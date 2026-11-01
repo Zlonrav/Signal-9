@@ -1,30 +1,31 @@
-// --- УНИВЕРСАЛЬНЫЙ ДВИЖОК ТЕРМИНАЛА (V5.2 - EMERGENCY RESET) ---
+// js/chatEngine.js
 (function() {
     if (window.chatEngineLoaded) return;
     window.chatEngineLoaded = true;
 
     window.currentChatStep = 0;
     let isTyping = false;
-    let lastEmergencyState = null; // Для отслеживания смены режима
+    let lastEmergencyState = null; 
 
-    // Функция получения активной базы сообщений
     function getActiveData() {
         const isEmergency = localStorage.getItem('s9_emergency_flag') === 'active';
+        
         if (isEmergency !== lastEmergencyState) {
             window.currentChatStep = 0;
             lastEmergencyState = isEmergency;
         }
 
+        // Определяем текущую страницу
         let page = window.location.pathname.split('/').pop() || 'index.html';
         
-        // Берем базу из room_chat.js, если она есть
+        // Берем данные из roomChat.js
         let normalChat = (typeof CHAT_DATABASE !== 'undefined' && CHAT_DATABASE[page]) 
                          ? CHAT_DATABASE[page] 
                          : [{ q: "> СИСТЕМА", a: "ИНФОРМАЦИЯ ОТСУТСТВУЕТ." }];
 
         const emergencyChat = [
-            { q: "> ДИАГНОСТИКА СИСТЕМ", a: "КРИТИЧЕСКИЙ УРОВЕНЬ ИОНИЗАЦИИ. КОРПУС ПЕРЕГРЕТ." },
-            { q: "> КАК ОСТАНОВИТЬ СБОЙ?", a: "ИСПОЛЬЗУЙТЕ ТЕРМИНАЛ УПРАВЛЕНИЯ (ТИЛЬДА)." }
+            { q: "> ДИАГНОСТИКА СИСТЕМ", a: "КРИТИЧЕСКИЙ УРОВЕНЬ ИОНИЗАЦИИ. КОРПУС ПЕРЕГРЕТ. МАГНИТНЫЕ ЩИТЫ ОТКЛЮЧЕНЫ." },
+            { q: "> КАК ОСТАНОВИТЬ СБОЙ?", a: "ИСПОЛЬЗУЙТЕ КОНСОЛЬ УПРАВЛЕНИЯ (ТИЛЬДА). НАЙДИТЕ ПОВРЕЖДЕННЫЙ МОДУЛЬ." }
         ];
         
         return isEmergency ? emergencyChat : normalChat;
@@ -50,7 +51,7 @@
         const container = document.querySelector('.chat-system');
         if (!qField || !aField) return;
 
-        const data = ();
+        const data = getActiveData();
 
         if (window.currentChatStep < data.length) {
             aField.innerText = "";
@@ -69,7 +70,7 @@
     };
 
     window.handleChatClick = function() {
-        const data = ();
+        const data = getActiveData();
         if (isTyping || window.currentChatStep >= data.length) return;
         
         isTyping = true;
@@ -99,14 +100,12 @@
         }, 50);
     };
 
-    // ГЛОБАЛЬНЫЙ МОНИТОРИНГ: Следим за localStorage, чтобы чат обновился мгновенно
     window.addEventListener('storage', (e) => {
         if (e.key === 's9_emergency_flag') {
             window.updateQuestion();
         }
     });
 
-    // Периодическая проверка (на случай если storage event не сработал на той же вкладке)
     setInterval(() => {
         const isEmergency = localStorage.getItem('s9_emergency_flag') === 'active';
         if (isEmergency !== lastEmergencyState) {
