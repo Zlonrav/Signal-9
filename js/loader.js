@@ -8,11 +8,10 @@
         "js/visual.js",
         "js/ui.js",
         "js/journal.js",  
-        "js/chat.js",     
-        "js/term.js"      
+        "js/terminal.js"
     ];
     scripts.forEach(src => {
         document.write(`<script src="${src}"></script>`);
     });
-    console.log("SYSTEM: Модули загружены.");
+    console.log("SYSTEM: Все модули ядра загружены.");
 })();
