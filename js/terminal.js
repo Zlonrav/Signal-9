@@ -19,10 +19,27 @@
         #tilde-console .console-output::-webkit-scrollbar { width: 4px; }
         #tilde-console .console-output::-webkit-scrollbar-track { background: #000; }
         #tilde-console .console-output::-webkit-scrollbar-thumb { background: var(--neon); box-shadow: 0 0 10px var(--neon); border-radius: 2px; }
-        #tilde-console .sys { color: var(--neon); font-weight: bold; }
+        
+        /* Стиль для команд: неон и строго строчные буквы */
+        #tilde-console .cmd-text {
+            color: var(--neon) !important; 
+            font-weight: bold;
+            text-transform: lowercase !important;
+            text-shadow: 0 0 5px var(--neon);
+        }
+
+        /* Стиль для заголовков тем (в скобках): неон и заглавные */
+        #tilde-console .topic-header {
+            color: var(--neon) !important; 
+            font-weight: bold;
+            text-transform: uppercase;
+            text-shadow: 0 0 5px var(--neon);
+        }
+        
         #tilde-console .err { color: #ff3333; }
         #tilde-console .ok { color: #00ff44; }
         #tilde-console .warn { color: #ffaa00; }
+        
         #tilde-console .console-input-wrapper { display: flex; align-items: center; gap: 10px; flex-shrink: 0; border-top: 1px solid rgba(0, 242, 255, 0.2); padding-top: 15px; }
         #tilde-console .console-input-wrapper span { color: var(--neon); font-size: 14px; font-weight: bold; }
         #tilde-console #terminal-input { flex: 1; background: transparent !important; border: none !important; border-bottom: 1px solid rgba(0, 242, 255, 0.5) !important; color: var(--neon) !important; font-family: 'JetBrains Mono', monospace !important; font-size: 14px !important; text-align: left !important; outline: none !important; text-transform: uppercase; box-shadow: none !important; position: static !important; width: 100% !important; padding: 5px 0 !important; margin: 0 !important; display: block !important; }
@@ -41,7 +58,7 @@
     overlay.innerHTML = `
         <div class="console-header">Консоль Управления // Введите команду</div>
         <div class="console-output" id="terminal-output">
-            <div>СИСТЕМА ГОТОВА. ВВЕДИТЕ <span class="sys">help</span> ДЛЯ СПИСКА КОМАНД.</div>
+            <div>СИСТЕМА ГОТОВА. ВВЕДИТЕ <span class="cmd-text">help</span> ДЛЯ СПИСКА КОМАНД.</div>
         </div>
         <div class="console-input-wrapper">
             <span>></span>
@@ -75,54 +92,59 @@
         }
     }
 
+    // Вспомогательная функция для вывода команд (делает их строчными и неоновыми)
+    function printCmd(cmdName) {
+        return `<span class="cmd-text">${cmdName}</span>`;
+    }
+
     // 4. ОБРАБОТКА КОМАНД
     function processCommand(cmd) {
-        print(`> ${cmd}`, 'sys');
+        // Выводим введенную команду строчными буквами и неоном
+        print(`> ${printCmd(cmd)}`);
         
         // Обработка Help с аргументами
         if (cmd.startsWith('help ')) {
             const topic = cmd.split(' ')[1];
             
             if (topic === 'login') {
-                print(`<span class="sys">[СИСТЕМА АВТОРИЗАЦИИ]</span>`);
+                print(`<span class="topic-header">[ЛОГИН]</span>`);
                 print(`КЛЮЧ ДОСТУПА (ТРАССИТ) ГЕНЕРИРУЕТСЯ В ИНЖЕНЕРНОМ ТЕРМИНАЛЕ.`);
-                print(`ДЛЯ ПЕРЕХОДА В ТЕРМИНАЛ ВВЕДИТЕ: <span class="sys">terminal</span>`);
+                print(`ДЛЯ ПЕРЕХОДА В ТЕРМИНАЛ ВВЕДИТЕ: ${printCmd('terminal')}`);
                 print(`В ТЕРМИНАЛЕ ВВЕДИТЕ ТЕКСТ «ТРАССИТ», ЧТОБЫ УВИДЕТЬ ЭТАЛОННУЮ ГРАФИЧЕСКУЮ ТРАЕКТОРИЮ.`);
                 
-                // Проверка: показываем команду возврата только если игрок еще не авторизован
                 if (localStorage.getItem('s9_access_granted') !== 'true') {
-                    print(`ДЛЯ ВОЗВРАТА НА СТРАНИЦУ АВТОРИЗАЦИИ ИСПОЛЬЗУЙТЕ КОМАНДУ: <span class="sys">login</span>`);
+                    print(`ДЛЯ ВОЗВРАТА НА СТРАНИЦУ АВТОРИЗАЦИИ ИСПОЛЬЗУЙТЕ КОМАНДУ: ${printCmd('login')}`);
                 }
             } else if (topic === 'trassit') {
-                print(`<span class="sys">[ТРАССИТ]</span>`);
+                print(`<span class="topic-header">[ТРАССИТ]</span>`);
                 print(`ГРАФИЧЕСКИЙ КЛЮЧ ДОСТУПА. КАЖДОЕ СЛОВО ИМЕЕТ УНИКАЛЬНУЮ ГЕОМЕТРИЧЕСКУЮ ТРАЕКТОРИЮ.`);
             } else if (topic === 'console') {
-                print(`<span class="sys">[КОНСОЛЬ]</span>`);
+                print(`<span class="topic-header">[КОНСОЛЬ]</span>`);
                 print(`ИНТЕРФЕЙС УПРАВЛЕНИЯ. ОТКРЫВАЕТСЯ КЛАВИШЕЙ «~» ИЛИ КНОПКОЙ «>_». ВВОДИТЕ КОМАНДЫ И НАЖИМАЙТЕ ENTER.`);
             } else if (topic === 'terminal') {
-                print(`<span class="sys">[ТЕРМИНАЛ]</span>`);
-                print(`ИНЖЕНЕРНЫЙ МОДУЛЬ. ПОЗВОЛЯЕТ ВВОДИТЬ ГЛИФЫ ВРУЧНУЮ. ПЕРЕХОД: КОМАНДА TERMINAL.`);
+                print(`<span class="topic-header">[ТЕРМИНАЛ]</span>`);
+                print(`ИНЖЕНЕРНЫЙ МОДУЛЬ. ПОЗВОЛЯЕТ ВВОДИТЬ ГЛИФЫ ВРУЧНУЮ. ПЕРЕХОД: КОМАНДА ${printCmd('terminal')}.`);
             } else {
-                print(`НЕТ ИНФОРМАЦИИ ПО ТЕМЕ '${topic.toUpperCase()}'.`, 'err');
+                print(`НЕТ ИНФОРМАЦИИ ПО ТЕМЕ '${topic}'.`, 'err');
             }
             return;
         }
         
         switch(cmd) {
             case 'help':
-                print(`<span class="sys">ДОСТУПНЫЕ КОМАНДЫ:</span>`);
-                print(`> help [тема] - справка`);
-                print(`> clear - очистить консоль`);
-                print(`> test - проверить статус системы`);
-                print(`> terminal - перейти в инженерный терминал`);
+                print(`<span class="topic-header">ДОСТУПНЫЕ КОМАНДЫ:</span>`);
+                print(`> ${printCmd('help')} [тема] - справка`);
+                print(`> ${printCmd('clear')} - очистить консоль`);
+                print(`> ${printCmd('test')} - проверить статус системы`);
+                print(`> ${printCmd('terminal')} - перейти в инженерный терминал`);
                 
                 if (localStorage.getItem('s9_access_granted') !== 'true') {
-                    print(`> login - вернуться на страницу авторизации`);
+                    print(`> ${printCmd('login')} - вернуться на страницу авторизации`);
                 } else {
-                    print(`> hub - перейти в главный хаб`);
+                    print(`> ${printCmd('hub')} - перейти в главный хаб`);
                 }
                 
-                print(`<span class="sys">СПЕЦИАЛЬНЫЕ ТЕМЫ:</span> help login, help trassit, help console, help terminal`);
+                print(`<span class="topic-header">СПЕЦИАЛЬНЫЕ ТЕМЫ:</span> ${printCmd('help login')}, ${printCmd('help trassit')}, ${printCmd('help console')}, ${printCmd('help terminal')}`);
                 break;
                 
             case 'clear':
@@ -153,7 +175,7 @@
                 break;
                 
             default:
-                print(`НЕИЗВЕСТНАЯ КОМАНДА. ВВЕДИТЕ HELP.`, 'err');
+                print(`НЕИЗВЕСТНАЯ КОМАНДА. ВВЕДИТЕ ${printCmd('help')}.`, 'err');
         }
     }
 
