@@ -149,6 +149,19 @@ const CHAT_DATABASE = {
                 charIdx++;
             } else {
                 clearInterval(interval);
+                
+                // --- УСТАНОВКА ФЛАГА ПРОСМОТРА КАРТЫ ---
+                let page = window.location.pathname.split('/').pop() || 'index.html';
+                if (page === 'map.html' && window.currentChatStep === data.length - 1) {
+                    localStorage.setItem('s9_map_visited', 'true');
+                    // Перерисовываем карту, чтобы снять блокировку, если нужно
+                    if (typeof buildMap === 'function') {
+                         // Если функция доступна в глобальной области видимости
+                         window.dispatchEvent(new Event('mapVisited'));
+                    }
+                }
+                // --------------------------------------
+
                 setTimeout(() => {
                     window.currentChatStep++;
                     window.updateQuestion();
