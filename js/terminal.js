@@ -75,17 +75,27 @@
         }
     }
 
-    // 4. ОБРАБОТКА КОМАНД (Обучаем логин)
+    // 4. ОБРАБОТКА КОМАНД
     function processCommand(cmd) {
         print(`> ${cmd}`, 'sys');
         
         // Обработка Help с аргументами
         if (cmd.startsWith('help ')) {
             const topic = cmd.split(' ')[1];
-            if (topic === 'trassit') {
+            
+            if (topic === 'login') {
+                print(`<span class="sys">[СИСТЕМА АВТОРИЗАЦИИ]</span>`);
+                print(`КЛЮЧ ДОСТУПА (ТРАССИТ) ГЕНЕРИРУЕТСЯ В ИНЖЕНЕРНОМ ТЕРМИНАЛЕ.`);
+                print(`ДЛЯ ПЕРЕХОДА В ТЕРМИНАЛ ВВЕДИТЕ: <span class="sys">terminal</span>`);
+                print(`В ТЕРМИНАЛЕ ВВЕДИТЕ ТЕКСТ «ТРАССИТ», ЧТОБЫ УВИДЕТЬ ЭТАЛОННУЮ ГРАФИЧЕСКУЮ ТРАЕКТОРИЮ.`);
+                
+                // Проверка: показываем команду возврата только если игрок еще не авторизован
+                if (localStorage.getItem('s9_access_granted') !== 'true') {
+                    print(`ДЛЯ ВОЗВРАТА НА СТРАНИЦУ АВТОРИЗАЦИИ ИСПОЛЬЗУЙТЕ КОМАНДУ: <span class="sys">login</span>`);
+                }
+            } else if (topic === 'trassit') {
                 print(`<span class="sys">[ТРАССИТ]</span>`);
                 print(`ГРАФИЧЕСКИЙ КЛЮЧ ДОСТУПА. КАЖДОЕ СЛОВО ИМЕЕТ УНИКАЛЬНУЮ ГЕОМЕТРИЧЕСКУЮ ТРАЕКТОРИЮ.`);
-                print(`ДЛЯ АВТОРИЗАЦИИ НАРИСУЙТЕ КЛЮЧ «ТРАССИТ» НА СЕТКЕ ПЕРЕД ВАМИ.`);
             } else if (topic === 'console') {
                 print(`<span class="sys">[КОНСОЛЬ]</span>`);
                 print(`ИНТЕРФЕЙС УПРАВЛЕНИЯ. ОТКРЫВАЕТСЯ КЛАВИШЕЙ «~» ИЛИ КНОПКОЙ «>_». ВВОДИТЕ КОМАНДЫ И НАЖИМАЙТЕ ENTER.`);
@@ -104,18 +114,44 @@
                 print(`> help [тема] - справка`);
                 print(`> clear - очистить консоль`);
                 print(`> test - проверить статус системы`);
-                print(`> hub - (В разработке) Переход в Хаб`);
-                print(`<span class="sys">СПЕЦИАЛЬНЫЕ ТЕМЫ:</span> help trassit, help console, help terminal`);
+                print(`> terminal - перейти в инженерный терминал`);
+                
+                if (localStorage.getItem('s9_access_granted') !== 'true') {
+                    print(`> login - вернуться на страницу авторизации`);
+                } else {
+                    print(`> hub - перейти в главный хаб`);
+                }
+                
+                print(`<span class="sys">СПЕЦИАЛЬНЫЕ ТЕМЫ:</span> help login, help trassit, help console, help terminal`);
                 break;
+                
             case 'clear':
                 output.innerHTML = '';
                 print('КОНСОЛЬ ОЧИЩЕНА.');
                 break;
+                
             case 'test':
                 print(`СТАТУС СИСТЕМЫ: <span class="ok">В НОРМЕ</span>`);
                 print(`ТЕКУЩАЯ СТРАНИЦА: ${page}`);
                 print(`ФЛАГ ДОСТУПА: ${localStorage.getItem('s9_access_granted') || 'НЕТ'}`);
                 break;
+                
+            case 'terminal':
+                window.location.href = 'tools.html';
+                break;
+                
+            case 'login':
+                window.location.href = 'login.html';
+                break;
+                
+            case 'hub':
+                if (localStorage.getItem('s9_access_granted') === 'true') {
+                    window.location.href = 'index.html';
+                } else {
+                    print(`ОШИБКА: ДОСТУП ЗАКРЫТ. ТРЕБУЕТСЯ АВТОРИЗАЦИЯ.`, 'err');
+                }
+                break;
+                
             default:
                 print(`НЕИЗВЕСТНАЯ КОМАНДА. ВВЕДИТЕ HELP.`, 'err');
         }
