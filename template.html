@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <script src="js/authGuard.js"></script> 
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <title>СИГНАЛ-9 // ШАБЛОН</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="style-tools.css">
+    <link rel="stylesheet" type="text/css" href="style-chat-terminal.css">
+</head>
+<body class="tools-page">
+
+    <!-- 1. СИСТЕМНЫЙ ЖУРНАЛ (Тексты подтянутся из roomChat.js) -->
+    <div class="chat-system">
+        <div id="quest-field" class="question" onclick="handleChatClick()"></div>
+        <div id="answer-field" class="answer-field"></div>
+    </div>
+
+    <!-- 2. ФОНОВЫЕ СЛОИ -->
+    <canvas id="starfield"></canvas>
+    <div id="scanner-line"></div>
+    <div id="overlay-noise"></div>
+
+    <!-- 3. ОСНОВНОЙ КОНТЕНТ СТРАНИЦЫ -->
+    <div id="display">
+        <div class="room-content" id="roomContent">
+            <div style="opacity: 0.2; letter-spacing: 10px; font-size: 18px; font-family: monospace; color: var(--neon);">
+                [ СИСТЕМА ГОТОВА К РАЗВЕРТЫВАНИЮ ]
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. НИЖНЯЯ ПАНЕЛЬ -->
+    <div class="audio-control-fixed" id="audio-toggle">
+        <span id="audio-status-icon">○</span>
+        <span id="audio-status">АУДИОДАТЧИКИ: ВЫКЛ</span>
+    </div>
+
+    <!-- НОВАЯ КНОПКА ВЫЗОВА КОНСОЛИ (Для ПК и Мобильных) -->
+    <button id="console-toggle-btn" style="
+        position: fixed; 
+        bottom: 25px; 
+        right: 25px; 
+        z-index: 1000; 
+        background: rgba(0, 20, 30, 0.5); 
+        border: 1px solid rgba(0, 242, 255, 0.3); 
+        color: var(--neon); 
+        padding: 8px 12px; 
+        font-family: monospace; 
+        font-size: 14px; 
+        cursor: pointer; 
+        transition: 0.3s;
+    " onmouseover="this.style.background='rgba(0, 242, 255, 0.1)'" onmouseout="this.style.background='rgba(0, 20, 30, 0.5)'">
+        &gt;_
+    </button>
+
+    <!-- 5. ПОДКЛЮЧЕНИЕ РЕСУРСОВ -->
+    <script src="js/loader.js"></script>
+</body>
+</html>
