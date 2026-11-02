@@ -1,12 +1,9 @@
+// js/core.js
 // --- ГЛАВНЫЙ ЦИКЛ УПРАВЛЕНИЯ ---
 function update() {
     if (typeof PHRASES === 'undefined') return;
-
-    // ОБЪЯВЛЯЕМ ПЕРЕМЕННУЮ ТОЛЬКО ОДИН РАЗ
     const now = Date.now();
     
-    // --- ИСПРАВЛЕННЫЙ БЛОК ГЛОБАЛЬНОГО СБОЯ ---
-    // Читаем оба флага — солнце и реактор
     const isSolarEmergency = localStorage.getItem('s9_emergency_flag') === 'active';
     const isReactorEmergency = localStorage.getItem('s9_emergency_reactor') === 'active';
     const isGlobalEmergency = isSolarEmergency || isReactorEmergency;
@@ -16,11 +13,9 @@ function update() {
         const timeSec = Math.floor(now / 1000);
         const timePassed = timeSec % (typeof CYCLE_TIME !== 'undefined' ? CYCLE_TIME : 128);
         updateMetaData(now, true, timePassed, 0);
-        return; // Завершаем выполнение кадра, если активен любой глобальный сбой
+        return;
     }
-    // ----------------------------
 
-    // Продолжаем обычные расчеты (используем уже созданную 'now')
     const timeSec = Math.floor(now / 1000);
     const timeLeft = CYCLE_TIME - (timeSec % CYCLE_TIME);
     const timePassed = timeSec % CYCLE_TIME;
@@ -28,10 +23,9 @@ function update() {
 
     const phraseContainer = document.getElementById('currentPhrase');
 
-    if (timePassed === 0 && isSignalLoss && !testBtn.dataset.manual) triggerSignalLoss(false);
+    if (timePassed === 0 && isSignalLoss) triggerSignalLoss(false);
 
     if (document.getElementById('timer')) document.getElementById('timer').innerText = `ПРИЁМ СИГНАЛА: ${timeLeft} сек`;
-    
     updateMetaData(now, isSignalLoss, timePassed, phraseIndex);
 
     if (isSignalLoss) return;
@@ -53,6 +47,40 @@ function update() {
     const units = document.querySelectorAll('.glyph-unit');
     const words = PHRASES[phraseIndex].split(' ');
     const timePerGlyph = TOTAL_DECRYPT_TIME / words.length;
+
+    // --- АВТОСОХРАНЕНИЕ В АРХИВ ---
+    // Если прошло время дешифровки (110 сек) и Архив починен
+    if (timePassed >= TOTAL_DECRYPT_TIME && timePassed < TOTAL_DECRYPT_TIME + 2) {
+        if (localStorage.getItem('s9_archive_fixed') === 'true') {
+            let glyphs = [];
+            const data = localStorage.getItem('s9_glyphs_data');
+            if (data) glyphs = JSON.parse(data);
+            
+            let changed = false;
+            
+            words.forEach(w => {
+                const cleanWord = w.toUpperCase().replace(/[^А-ЯЁA-Z]/g, '');
+                if (cleanWord.length >= 3) { // Отсекаем короткие слова
+                    // Проверяем, нет ли уже такого глифа в последних 50
+                    const exists = glyphs.some(g => g.word === cleanWord);
+                    if (!exists) {
+                        glyphs.push({ word: cleanWord, timestamp: Date.now() });
+                        changed = true;
+                    }
+                }
+            });
+
+            // Ограничиваем 50 глифами
+            if (glyphs.length > 50) {
+                glyphs = glyphs.slice(glyphs.length - 50);
+            }
+
+            if (changed) {
+                localStorage.setItem('s9_glyphs_data', JSON.stringify(glyphs));
+            }
+        }
+    }
+    // -------------------------------
 
     units.forEach((unit, idx) => {
         const word = unit.dataset.wordActual, label = unit.querySelector('.glyph-label');
