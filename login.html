@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <script src="js/auth.js"></script> 
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <title>СИГНАЛ-9 // АВТОРИЗАЦИЯ</title>
+    
+    <!-- Твои стили -->
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="style-tools.css">
+    <link rel="stylesheet" type="text/css" href="style-chat-terminal.css">
+    
+    <style>
+        /* Изолированные стили для страницы логина */
+        body.tools-page {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .login-title {
+            font-family: 'Michroma', sans-serif;
+            font-size: 12px;
+            letter-spacing: 5px;
+            margin-bottom: 30px;
+            opacity: 0.8;
+            text-shadow: 0 0 10px var(--neon);
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body class="tools-page">
+
+    <!-- 1. СИСТЕМНЫЙ ЖУРНАЛ (Тексты из journal.js) -->
+    <div class="chat-system">
+        <div id="quest-field" class="question" onclick="handleChatClick()"></div>
+        <div id="answer-field" class="answer-field"></div>
+    </div>
+    
+    <!-- 2. ФОНОВЫЕ СЛОИ -->
+    <canvas id="starfield"></canvas>
+    <div id="scanner-line"></div>
+    <div id="overlay-noise"></div>
+    
+    <!-- 3. КОНТЕНТ ЛОГИНА -->
+    <div class="login-title">ВВЕДИТЕ КЛЮЧ ДОСТУПА</div>
+
+    <div class="main-frame">
+        <div id="grid-layer" class="dots-grid"></div>
+        <svg viewBox="0 0 80 80"><path id="readPath" d=""></path></svg>
+    </div>
+
+    <div class="ui-footer">
+        <div id="statusLabel" class="status-label">СОЕДИНИТЕ ТОЧКИ</div>
+    </div>
+
+    <div class="external-controls">
+        <button class="icon-btn" id="resetBtn">×</button>
+        <button class="icon-btn" id="playBtn">▶</button>
+    </div>
+
+    <!-- 4. НИЖНЯЯ ПАНЕЛЬ -->
+    <div class="audio-control-fixed" id="audio-toggle">
+        <span id="audio-status-icon">○</span>
+        <span id="audio-status">АУДИОДАТЧИКИ: ВЫКЛ</span>
+    </div>
+
+    <!-- 5. КНОПКА ВЫЗОВА КОНСОЛИ (Для мобильных и ПК) -->
+    <button id="console-toggle-btn" style="
+        position: fixed; bottom: 25px; right: 25px; z-index: 1000; 
+        background: rgba(0, 20, 30, 0.5); border: 1px solid rgba(0, 242, 255, 0.3); 
+        color: var(--neon); padding: 8px 12px; font-family: monospace; font-size: 14px; 
+        cursor: pointer; transition: 0.3s;
+    " onmouseover="this.style.background='rgba(0, 242, 255, 0.1)'" onmouseout="this.style.background='rgba(0, 20, 30, 0.5)'">
+        &gt;_
+    </button>
+
+    <!-- 6. ПОДКЛЮЧЕНИЕ ВСЕХ СКРИПТОВ -->
+    <script src="js/loader.js"></script>
+
+    <!-- 7. ЛОКАЛЬНЫЙ СКРИПТ АВТОРИЗАЦИИ -->
+    <script>
+        // --- ЛОГИКА АВТОРИЗАЦИИ ---
+        let readIndices = [];
+        const PASS_KEY = "ТРАССИТ"; 
+
+        // Инициализация визуального движка (звезды)
+        if (typeof initStarfield === 'function') initStarfield();
+
+        // Получаем эталонный ключ пароля из движка глифов
+        const targetIndices = typeof getPath === 'function' ? getPath(PASS_KEY).join('-') : '';
+
+        // Вспомогательная функция для получения данных пути (d)
+        function getPathData(indices) {
+            if (!indices || !indices.length || typeof createSVG !== 'function') return '';
+            const svgString = createSVG(indices);
+            const match = svgString.match(/d="([^"]*)"/);
+            return match ? match[1] : ''; 
+        }
+
+        // Отрисовка сетки точек
+        const grid = document.getElementById('grid-layer');
+
+        if (grid && typeof POINTS !== 'undefined') {
+            POINTS.forEach((_, i) => {
+                const d = document.createElement('div');
+                d.className = 'dot';
+                
+                d.onclick = () => {
+                    if(!readIndices.includes(i)) {
+                        readIndices.push(i);
+                        d.classList.add('active');
+
+                        if (typeof window.renderSmoothPath === 'function') {
+                            window.renderSmoothPath('readPath', readIndices, true);
+                        }
+
+                        updateReadStatus();
+
+                        if (typeof playGlyphSound === 'function') {
+                            playGlyphSound([i, i]);
+                        }
+                    }
+                };
+                grid.appendChild(d);
+            });
+        }
+
+        // Проверка вводимой комбинации
+        function updateReadStatus() {
+            const pathData = getPathData(readIndices);
+            const pathElem = document.getElementById('readPath');
+            if (pathElem) pathElem.setAttribute('d', pathData);
+            
+            const label = document.getElementById('statusLabel');
+            const key = readIndices.join('-');
+            
+            if (key === targetIndices && targetIndices !== '') {
+                // ВЫДАЕМ ПРОПУСК
+                localStorage.setItem('s9_access_granted', 'true'); 
+                
+                if (label) {
+                    label.innerText = "ДОСТУП РАЗРЕШЕН";
+                    label.style.color = "#00ff00";
+                    label.classList.remove('error-state');
+                }
+                
+                // Переход на главную
+                setTimeout(() => {
+                    window.location.href = "index.html";
+                }, 1000);
+                
+            } else if (readIndices.length >= 7) { 
+                if (label) {
+                    label.innerText = "НЕ РАСПОЗНАННО";
+                    label.classList.add('error-state');
+                }
+            } else {
+                if (label) {
+                    label.innerText = "СОЕДИНИТЕ ТОЧКИ";
+                    label.classList.remove('error-state');
+                    label.style.color = "";
+                }
+            }
+        }
+
+        // Кнопка СБРОС (Reset)
+        const resetBtn = document.getElementById('resetBtn');
+        if (resetBtn) {
+            resetBtn.onclick = () => {
+                readIndices = [];
+                document.querySelectorAll('.dot').forEach(d => d.classList.remove('active'));
+                const pathElem = document.getElementById('readPath');
+                if (pathElem) pathElem.setAttribute('d', '');
+                const label = document.getElementById('statusLabel');
+                if (label) {
+                    label.innerText = "СОЕДИНИТЕ ТОЧКИ";
+                    label.classList.remove('error-state');
+                    label.style.color = "";
+                }
+            };
+        }
+
+        // Кнопка ИГРАТЬ (Play)
+        const playBtn = document.getElementById('playBtn');
+        if (playBtn) {
+            playBtn.onclick = () => {
+                if (typeof playGlyphSound === 'function' && readIndices.length > 0) {
+                    playGlyphSound(readIndices);
+                }
+            };
+        }
+    </script>
+
+</body>
+</html>
