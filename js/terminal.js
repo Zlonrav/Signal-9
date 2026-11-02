@@ -83,10 +83,39 @@
         return `<span class="cmd-text">${cmdName}</span>`;
     }
 
-    // 4. ОБРАБОТКА КОМАНД
+    // 4. ПРОВЕРКА ДОСТУПА К МОДУЛЯМ (Зависит от флагов localStorage)
+    function isModuleOnline(moduleId) {
+        switch(moduleId) {
+            case 'hub':
+            case 'map':
+            case 'terminal':
+                return true;
+            case 'archive':
+                return localStorage.getItem('s9_access_granted') === 'true'; // Архив доступен после входа
+            case 'os':
+                return localStorage.getItem('s9_archive_fixed') === 'true'; // ОС после починки архива
+            case 'edr':
+                return localStorage.getItem('s9_os_fixed') === 'true'; // EDR после починки ОС
+            case 'telemetry':
+                return localStorage.getItem('s9_edr_ghosts') !== null; // Телеметрия после EDR
+            case 'core':
+                return localStorage.getItem('s9_telemetry_calibrated') === 'true' || localStorage.getItem('s9_core_unlocked') === 'true';
+            case 'gateway':
+                return localStorage.getItem('s9_core_unlocked') === 'true'; // Шлюз после ремонта ядра
+            case 'sector00':
+            case 'sectorff':
+            case 'uninitialized':
+                return false; // Пока закрыты сюжетно
+            default:
+                return false;
+        }
+    }
+
+    // 5. ОБРАБОТКА КОМАНД
     function processCommand(cmd) {
         print(`> ${printCmd(cmd)}`);
         
+        // Обработка Help с аргументами
         if (cmd.startsWith('help ')) {
             const topic = cmd.split(' ')[1];
             
@@ -94,24 +123,15 @@
                 print(`<span class="topic-header">[ЛОГИН]</span>`);
                 print(`КЛЮЧ ДОСТУПА (ТРАССИТ) ГЕНЕРИРУЕТСЯ В ИНЖЕНЕРНОМ ТЕРМИНАЛЕ.`);
                 print(`ВВЕДИТЕ КОМАНДУ ${printCmd('terminal')} ДЛЯ ПЕРЕХОДА В ТЕРМИНАЛ.`);
-                print(`ВВЕДИТЕ ТЕКСТ «ТРАССИТ» В ТЕРМИНАЛЕ, ЧТОБЫ УВИДЕТЬ ЭТАЛОННУЮ ГРАФИЧЕСКУЮ ТРАЕКТОРИЮ.`);
-                
                 if (localStorage.getItem('s9_access_granted') !== 'true') {
                     print(`ВВЕДИТЕ КОМАНДУ ${printCmd('login')} ДЛЯ ВОЗВРАТА НА СТРАНИЦУ АВТОРИЗАЦИИ.`);
                 }
-            } else if (topic === 'trassit') {
-                print(`<span class="topic-header">[ТРАССИТ]</span>`);
-                print(`ГРАФИЧЕСКИЙ КЛЮЧ ДОСТУПА. КАЖДОЕ СЛОВО ИМЕЕТ УНИКАЛЬНУЮ ГЕОМЕТРИЧЕСКУЮ ТРАЕКТОРИЮ.`);
-                print(`НАРИСУЙТЕ КЛЮЧ НА СЕТКЕ ПЕРЕД ВАМИ.`);
-            } else if (topic === 'console') {
-                print(`<span class="topic-header">[КОНСОЛЬ]</span>`);
-                print(`ИНТЕРФЕЙС УПРАВЛЕНИЯ И ПЕРЕХОДА МЕЖДУ МОДУЛЯМИ.`);
-                print(`ОТКРОЙТЕ КОНСОЛЬ КЛАВИШЕЙ «~» ИЛИ КНОПКОЙ «>_».`);
-                print(`ВВЕДИТЕ КОМАНДУ И НАЖМИТЕ ENTER.`);
+            } else if (topic === 'map') {
+                print(`<span class="topic-header">[КАРТА]</span>`);
+                print(`МОДУЛЬ НАВИГАЦИИ. ПОКАЗЫВАЕТ ТОПОЛОГИЮ СТАНЦИИ И СТАТУС ВСЕХ ОТСЕКОВ.`);
             } else if (topic === 'terminal') {
                 print(`<span class="topic-header">[ТЕРМИНАЛ]</span>`);
                 print(`ИНЖЕНЕРНЫЙ МОДУЛЬ. ПОЗВОЛЯЕТ ВВОДИТЬ ГЛИФЫ ВРУЧНУЮ.`);
-                print(`ВВЕДИТЕ КОМАНДУ ${printCmd('terminal')} ДЛЯ ПЕРЕХОДА.`);
             } else {
                 print(`НЕТ ИНФОРМАЦИИ ПО ТЕМЕ '${topic}'.`, 'err');
             }
@@ -120,20 +140,37 @@
         
         switch(cmd) {
             case 'help':
-                print(`<span class="topic-header">ДОСТУПНЫЕ КОМАНДЫ:</span>`);
-                print(`> ${printCmd('help')} [тема] - справка`);
-                print(`> ${printCmd('clear')} - очистить консоль`);
-                print(`> ${printCmd('test')} - проверить статус системы`);
-                print(`> ${printCmd('map')} - перейти на карту станции`);
-                print(`> ${printCmd('terminal')} - перейти в инженерный терминал`);
+                print(`<span class="topic-header">[ПРОТОКОЛЫ ПЕРЕМЕЩЕНИЯ]</span>`);
+                print(`> ${printCmd('hub')} - Переход в Главный Хаб`);
+                print(`> ${printCmd('map')} - Переход на Карту`);
+                print(`> ${printCmd('terminal')} - Переход в Терминал`);
                 
-                if (localStorage.getItem('s9_access_granted') !== 'true') {
-                    print(`> ${printCmd('login')} - вернуться на страницу авторизации`);
-                } else {
-                    print(`> ${printCmd('hub')} - перейти в главный хаб`);
-                }
+                if (isModuleOnline('archive')) print(`> ${printCmd('archive')} - Переход в Базу Данных`);
+                else print(`> ${printCmd('archive')} - <span class="err">[OFFLINE]</span>`);
+
+                if (isModuleOnline('os')) print(`> ${printCmd('os')} - Переход в Операционную Систему`);
+                else print(`> ${printCmd('os')} - <span class="err">[OFFLINE]</span>`);
+
+                if (isModuleOnline('edr')) print(`> ${printCmd('edr')} - Переход в EDR Сектор`);
+                else print(`> ${printCmd('edr')} - <span class="err">[OFFLINE]</span>`);
+
+                if (isModuleOnline('telemetry')) print(`> ${printCmd('telemetry')} - Переход в Модуль Телеметрии`);
+                else print(`> ${printCmd('telemetry')} - <span class="err">[OFFLINE]</span>`);
+
+                if (isModuleOnline('core')) print(`> ${printCmd('core')} - Переход в Энергоядро`);
+                else print(`> ${printCmd('core')} - <span class="err">[OFFLINE]</span>`);
+
+                if (isModuleOnline('gateway')) print(`> ${printCmd('gateway')} - Переход к Транспортному Шлюзу`);
+                else print(`> ${printCmd('gateway')} - <span class="err">[OFFLINE]</span>`);
                 
-                print(`<span class="topic-header">СПЕЦИАЛЬНЫЕ ТЕМЫ:</span> ${printCmd('help login')}, ${printCmd('help trassit')}, ${printCmd('help console')}, ${printCmd('help terminal')}`);
+                print(``); // Пустая строка для красоты
+                print(`<span class="topic-header">[СПРАВОЧНЫЙ МОДУЛЬ]</span>`);
+                print(`> ${printCmd('help [тема]')} - Информация о модуле или команде`);
+                
+                print(``);
+                print(`<span class="topic-header">[СИСТЕМНЫЕ УТИЛИТЫ]</span>`);
+                print(`> ${printCmd('test')} - Диагностика системы`);
+                print(`> ${printCmd('clear')} - Очистка консоли`);
                 break;
                 
             case 'clear':
@@ -147,24 +184,45 @@
                 print(`ФЛАГ ДОСТУПА: ${localStorage.getItem('s9_access_granted') || 'НЕТ'}`);
                 break;
                 
-            case 'map':
-                window.location.href = 'map.html'; // Переход на карту
+            // --- НАВИГАЦИЯ ---
+            case 'hub': window.location.href = 'index.html'; break;
+            case 'map': window.location.href = 'map.html'; break;
+            case 'terminal': window.location.href = 'tools.html'; break;
+            case 'login': window.location.href = 'login.html'; break;
+            
+            case 'archive':
+                if (isModuleOnline('archive')) window.location.href = 'archive.html';
+                else print(`ОШИБКА: МОДУЛЬ [АРХИВ] НЕДОСТУПЕН.`, 'err');
                 break;
                 
-            case 'terminal':
-                window.location.href = 'tools.html';
+            case 'os':
+                if (isModuleOnline('os')) window.location.href = 'os.html';
+                else print(`ОШИБКА: МОДУЛЬ [ОС] НЕДОСТУПЕН.`, 'err');
                 break;
                 
-            case 'login':
-                window.location.href = 'login.html';
+            case 'edr':
+                if (isModuleOnline('edr')) window.location.href = 'edr.html';
+                else print(`ОШИБКА: МОДУЛЬ [EDR] НЕДОСТУПЕН.`, 'err');
+                break;
+
+            case 'telemetry':
+                if (isModuleOnline('telemetry')) window.location.href = 'telemetry.html';
+                else print(`ОШИБКА: МОДУЛЬ [ТЕЛЕМЕТРИЯ] НЕДОСТУПЕН.`, 'err');
+                break;
+
+            case 'core':
+                if (isModuleOnline('core')) window.location.href = 'reactor.html';
+                else print(`ОШИБКА: МОДУЛЬ [ЭНЕРГОЯДРО] НЕДОСТУПЕН.`, 'err');
                 break;
                 
-            case 'hub':
-                if (localStorage.getItem('s9_access_granted') === 'true') {
-                    window.location.href = 'index.html';
-                } else {
-                    print(`ОШИБКА: ДОСТУП ЗАКРЫТ. ТРЕБУЕТСЯ АВТОРИЗАЦИЯ.`, 'err');
-                }
+            case 'gateway':
+                if (isModuleOnline('gateway')) window.location.href = 'gateway.html';
+                else print(`ОШИБКА: МОДУЛЬ [ШЛЮЗ] НЕДОСТУПЕН.`, 'err');
+                break;
+                
+            case 'sector00':
+            case 'sectorff':
+                print(`ОШИБКА: МОДУЛЬ НЕДОСТУПЕН (OFFLINE).`, 'err');
                 break;
                 
             default:
@@ -172,7 +230,7 @@
         }
     }
 
-    // 5. СОБЫТИЯ
+    // 6. СОБЫТИЯ
     document.addEventListener('keydown', (e) => {
         if (e.key === '`' || e.key === '~' || e.key === 'Ё' || e.key === 'ё') {
             e.preventDefault();
