@@ -124,6 +124,7 @@
                 print(`> ${printCmd('help')} [тема] - справка`);
                 print(`> ${printCmd('clear')} - очистить консоль`);
                 print(`> ${printCmd('test')} - проверить статус системы`);
+                print(`> ${printCmd('map')} - перейти на карту станции`);
                 print(`> ${printCmd('terminal')} - перейти в инженерный терминал`);
                 
                 if (localStorage.getItem('s9_access_granted') !== 'true') {
@@ -144,6 +145,10 @@
                 print(`СТАТУС СИСТЕМЫ: <span class="ok">В НОРМЕ</span>`);
                 print(`ТЕКУЩАЯ СТРАНИЦА: ${page}`);
                 print(`ФЛАГ ДОСТУПА: ${localStorage.getItem('s9_access_granted') || 'НЕТ'}`);
+                break;
+                
+            case 'map':
+                window.location.href = 'map.html'; // Переход на карту
                 break;
                 
             case 'terminal':
