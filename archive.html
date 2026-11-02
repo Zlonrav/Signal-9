@@ -2,150 +2,73 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-	<script src="js/auth.js"></script> 
+    <script src="js/auth.js"></script> 
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <title>СИГНАЛ-9 // АРХИВ</title>
     <link rel="stylesheet" type="text/css" href="style.css">
     <link rel="stylesheet" type="text/css" href="style-tools.css">
     <link rel="stylesheet" type="text/css" href="style-chat-terminal.css">
-	<link rel="stylesheet" type="text/css" href="style-terminal.css">
     <style>
-/* --- СИСТЕМА АРХИВА: ВИЗУАЛИЗАЦИЯ ГЛИФОВ --- */
+        /* Стили для Архива */
+        body.tools-page { overflow-y: auto !important; height: auto !important; min-height: 100vh; }
+        #display { display: flex !important; flex-direction: column; align-items: center; padding: 80px 0 40px 0; height: auto; }
+        
+        .archive-header {
+            display: flex; gap: 20px; margin-bottom: 30px; z-index: 100;
+        }
+        
+        .page-tab {
+            background: transparent; border: 1px solid rgba(0, 242, 255, 0.3);
+            color: var(--neon); padding: 10px 20px; cursor: pointer;
+            font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 2px;
+            text-transform: uppercase; transition: 0.3s;
+        }
+        .page-tab.active { background: rgba(0, 242, 255, 0.1); border-color: var(--neon); box-shadow: 0 0 15px rgba(0, 242, 255, 0.2); }
 
-/* Настройка страницы и скролла */
-body.tools-page {
-    overflow-y: auto !important;
-    height: auto !important;
-    min-height: 100vh;
-}
+        .archive-grid {
+            display: grid; grid-template-columns: repeat(5, 80px); gap: 15px;
+            justify-content: center; width: 100%; max-width: 600px; margin-bottom: 30px;
+            position: relative; min-height: 400px;
+        }
 
-#display {
-    display: block !important;
-    height: auto;
-    padding: 100px 0;
-}
+        .glyph-cell {
+            width: 80px; height: 80px; background: rgba(2, 10, 15, 0.85);
+            border: 1px solid rgba(0, 242, 255, 0.2); border-radius: 8px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            position: relative; transition: all 0.5s ease;
+        }
+        
+        /* Анимация исчезновения для верификации */
+        .glyph-cell.dissolving { opacity: 0; transform: scale(0.5) rotate(45deg); filter: blur(5px); }
 
-/* Сетка карточек */
-.archive-grid {
-    display: grid;
-    /* Устанавливаем фиксированный размер колонок как на главной */
-    grid-template-columns: repeat(auto-fill, 141.6px);
-    justify-content: center;
-    gap: 35px;
-    width: 95%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-    overflow: visible;
-}
+        .glyph-svg { width: 40px; height: 40px; filter: drop-shadow(0 0 5px var(--neon)); }
+        .glyph-label { font-size: 7px; color: var(--neon); margin-top: 5px; font-family: monospace; letter-spacing: 1px; }
 
-/* Карточка ячейки (141.6 x 141.6) */
-.archive-cell {
-    width: 141.6px;
-    height: 141.6px;
-    border: 1px solid rgba(0, 242, 255, 0.15); /* Цвет рамки как на главной */
-    border-radius: 12px; /* Скругленные края */
-    background: radial-gradient(circle at center, rgba(0, 242, 255, 0.04) 0%, transparent 80%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.4s cubic-bezier(0.2, 1, 0.3, 1);
-    position: relative;
-    box-sizing: border-box;
-    animation: cellAppear 0.5s ease backwards;
-}
+        .empty-slot { border: 1px dashed rgba(255, 255, 255, 0.05); background: transparent; }
+        .empty-slot::after { content: 'EMPTY'; font-size: 6px; color: rgba(255,255,255,0.1); }
 
-/* Анимация появления */
-.archive-cell:nth-child(n) { 
-    animation-delay: calc(var(--i, 0) * 0.04s); 
-}
+        /* Пагинация (для будущего, если понадобится > 25 глифов на странице) */
+        .pagination { display: flex; gap: 20px; z-index: 100; margin-top: 20px; }
+        .pagination button {
+            background: transparent; border: 1px solid rgba(0,242,255,0.3); color: var(--neon);
+            padding: 5px 15px; font-family: monospace; cursor: pointer; transition: 0.3s;
+        }
+        .pagination button:hover { background: rgba(0,242,255,0.1); border-color: var(--neon); }
+        .pagination button:disabled { opacity: 0.2; cursor: not-allowed; }
 
-@keyframes cellAppear {
-    from { opacity: 0; transform: scale(0.9) translateY(15px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
-}
-
-/* Состояния карточки */
-.archive-cell.unlocked {
-    border-color: rgba(0, 242, 255, 0.25);
-}
-
-.archive-cell.unlocked:hover {
-    background: rgba(0, 242, 255, 0.08);
-    border-color: var(--neon);
-    transform: translateY(-5px);
-    box-shadow: 0 5px 20px rgba(0, 242, 255, 0.1);
-}
-
-.archive-cell.locked {
-    opacity: 0.15;
-    filter: grayscale(1);
-    border-style: dashed;
-}
-
-/* Контейнер глифа */
-.glyph-container {
-    width: 95px;
-    height: 95px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-top: -20px; /* Еще немного вверх */
-}
-
-.glyph-container svg {
-    width: 100%;
-    height: 100%;
-    stroke: var(--neon);
-    stroke-width: 1.8;
-    fill: none;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    filter: drop-shadow(0 0 50px var(--neon)) 
-            drop-shadow(0 0 12px rgba(0, 242, 255, 0.2));
-}
-
-/* Надпись под глифом */
-.cell-label {
-    position: absolute;
-    bottom: 8px; /* Опустили ближе к нижнему краю */
-    width: 100%;
-    text-align: center;
-    font-size: 10px; /* Увеличили на 2px (было 8px) */
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--neon);
-    font-family: 'JetBrains Mono', monospace;
-    opacity: 0.6;
-    transition: all 0.3s ease;
-}
-
-/* Эффект при наведении на ячейку */
-.archive-cell.unlocked:hover .cell-label {
-    opacity: 1;
-    letter-spacing: 3px; /* Слегка расширяем текст при наведении */
-    transform: translateY(-2px);
-}
-
-/* Красивый скроллбар */
-::-webkit-scrollbar {
-    width: 4px;
-}
-::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.2);
-}
-::-webkit-scrollbar-thumb {
-    background: var(--neon);
-    box-shadow: 0 0 10px var(--neon);
-    border-radius: 2px;
-}
-
+        /* Ошибка в архиве */
+        .error-screen {
+            position: absolute; inset: 0; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; background: rgba(0,0,0,0.8);
+            border: 1px solid #ff3333; z-index: 50; box-shadow: 0 0 30px rgba(255,51,51,0.3);
+        }
+        .error-text { color: #ff3333; font-family: 'JetBrains Mono', monospace; font-size: 14px; letter-spacing: 2px; text-align: center; line-height: 1.5; }
+        
+        @keyframes pulseRed { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .error-text { animation: pulseRed 2s infinite; }
     </style>
 </head>
 <body class="tools-page">
-
-	<script src="js/archiveEngine.js"></script>
 
     <div class="chat-system">
         <div id="quest-field" class="question" onclick="handleChatClick()"></div>
@@ -157,8 +80,24 @@ body.tools-page {
     <div id="overlay-noise"></div>
 
     <div id="display">
+        <!-- Вкладки -->
+        <div class="archive-header" id="archiveTabs" style="display: none;">
+            <button class="page-tab active" onclick="switchArchivePage(1)">БУФЕР ДЕКОДИРОВАНИЯ</button>
+            <button class="page-tab" onclick="switchArchivePage(2)">СЕКТОР ВЕРИФИКАЦИИ</button>
+        </div>
+
+        <!-- Сетка -->
         <div class="archive-grid" id="archiveGrid">
-            <!-- Сюда archiveEngine.js вставит ячейки -->
+            <!-- Сюда JS вставит ячейки -->
+        </div>
+        
+        <!-- Кнопка ошибки (если Архив не починен) -->
+        <div id="archiveErrorScreen" class="error-screen" style="display: none;">
+            <div class="error-text">
+                ОШИБКА БУФЕРА<br>
+                АВТОСОХРАНЕНИЕ ОТКЛЮЧЕНО<br>
+                <span style="font-size: 10px; opacity: 0.7;">ТРЕБУЕТСЯ РУЧНАЯ КАЛИБРОВКА (СМ. ЖУРНАЛ)</span>
+            </div>
         </div>
     </div>
 
@@ -167,12 +106,16 @@ body.tools-page {
         <span id="audio-status">АУДИОДАТЧИКИ: ВЫКЛ</span>
     </div>
 
-    <a href="tools.html" class="terminal-link-fixed">
-        <span>□</span> ИНЖЕНЕРНЫЙ ТЕРМИНАЛ
-    </a>
+    <button id="console-toggle-btn" style="
+        position: fixed; bottom: 25px; right: 25px; z-index: 1000; 
+        background: rgba(0, 20, 30, 0.5); border: 1px solid rgba(0, 242, 255, 0.3); 
+        color: var(--neon); padding: 8px 12px; font-family: monospace; font-size: 14px; 
+        cursor: pointer; transition: 0.3s;
+    " onmouseover="this.style.background='rgba(0, 242, 255, 0.1)'" onmouseout="this.style.background='rgba(0, 20, 30, 0.5)'">
+        &gt;_
+    </button>
 
     <script src="js/loader.js"></script>
-    <!-- Подключаем новый движок -->
-    <script src="js/archiveEngine.js"></script>
+    <script src="js/archive.js"></script>
 </body>
 </html>
