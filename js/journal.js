@@ -93,16 +93,22 @@ const CHAT_DATABASE = {
 
         if (window.currentChatStep < data.length) {
             aField.innerText = "";
-            qField.innerText = data[window.currentChatStep].q;
+            qField.innerHTML = data[window.currentChatStep].q; // Используем innerHTML на случай форматирования
             qField.style.opacity = "1";
             qField.style.cursor = "pointer";
             if (container) container.classList.remove('chat-fade-out');
             isTyping = false;
         } else {
-            // ЖУРНАЛ ПРОЧИТАН - ПОКАЗЫВАЕМ КНОПКУ ПОВТОРА
-            qField.innerText = "> ЖУРНАЛ ПРОЧИТАН";
-            aField.innerHTML = `<span style="color: var(--neon); cursor: pointer; text-decoration: underline; text-shadow: 0 0 5px var(--neon);" onclick="resetChat()">[ ПОВТОРИТЬ ]</span>`;
-            qField.style.opacity = "0.4";
+            // ЖУРНАЛ ПРОЧИТАН - ПОКАЗЫВАЕМ ИКОНКУ ПОВТОРА СПРАВА
+            qField.innerHTML = `
+                > ЖУРНАЛ ПРОЧИТАН 
+                <svg onclick="resetChat()" style="display: inline-block; vertical-align: middle; margin-left: 10px; width: 16px; height: 16px; cursor: pointer; fill: none; stroke: var(--neon); stroke-width: 2; filter: drop-shadow(0 0 5px var(--neon)); transition: transform 0.4s ease;" onmouseover="this.style.transform='rotate(180deg)'" onmouseout="this.style.transform='rotate(0deg)'" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M23 4v6h-6"></path>
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                </svg>
+            `;
+            aField.innerHTML = ""; // Очищаем поле ответа
+            qField.style.opacity = "0.5"; // Чуть тускнеет, так как это уже не активный квест
             qField.style.cursor = "default";
         }
     };
