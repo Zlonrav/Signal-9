@@ -20,21 +20,8 @@
         #tilde-console .console-output::-webkit-scrollbar-track { background: #000; }
         #tilde-console .console-output::-webkit-scrollbar-thumb { background: var(--neon); box-shadow: 0 0 10px var(--neon); border-radius: 2px; }
         
-        /* Стиль для команд: неон и строго строчные буквы */
-        #tilde-console .cmd-text {
-            color: var(--neon) !important; 
-            font-weight: bold;
-            text-transform: lowercase !important;
-            text-shadow: 0 0 5px var(--neon);
-        }
-
-        /* Стиль для заголовков тем (в скобках): неон и заглавные */
-        #tilde-console .topic-header {
-            color: var(--neon) !important; 
-            font-weight: bold;
-            text-transform: uppercase;
-            text-shadow: 0 0 5px var(--neon);
-        }
+        #tilde-console .cmd-text { color: var(--neon) !important; font-weight: bold; text-transform: lowercase !important; text-shadow: 0 0 5px var(--neon); }
+        #tilde-console .topic-header { color: var(--neon) !important; font-weight: bold; text-transform: uppercase; text-shadow: 0 0 5px var(--neon); }
         
         #tilde-console .err { color: #ff3333; }
         #tilde-console .ok { color: #00ff44; }
@@ -92,38 +79,39 @@
         }
     }
 
-    // Вспомогательная функция для вывода команд (делает их строчными и неоновыми)
     function printCmd(cmdName) {
         return `<span class="cmd-text">${cmdName}</span>`;
     }
 
     // 4. ОБРАБОТКА КОМАНД
     function processCommand(cmd) {
-        // Выводим введенную команду строчными буквами и неоном
         print(`> ${printCmd(cmd)}`);
         
-        // Обработка Help с аргументами
         if (cmd.startsWith('help ')) {
             const topic = cmd.split(' ')[1];
             
             if (topic === 'login') {
                 print(`<span class="topic-header">[ЛОГИН]</span>`);
                 print(`КЛЮЧ ДОСТУПА (ТРАССИТ) ГЕНЕРИРУЕТСЯ В ИНЖЕНЕРНОМ ТЕРМИНАЛЕ.`);
-                print(`ДЛЯ ПЕРЕХОДА В ТЕРМИНАЛ ВВЕДИТЕ: ${printCmd('terminal')}`);
-                print(`В ТЕРМИНАЛЕ ВВЕДИТЕ ТЕКСТ «ТРАССИТ», ЧТОБЫ УВИДЕТЬ ЭТАЛОННУЮ ГРАФИЧЕСКУЮ ТРАЕКТОРИЮ.`);
+                print(`ВВЕДИТЕ КОМАНДУ ${printCmd('terminal')} ДЛЯ ПЕРЕХОДА В ТЕРМИНАЛ.`);
+                print(`ВВЕДИТЕ ТЕКСТ «ТРАССИТ» В ТЕРМИНАЛЕ, ЧТОБЫ УВИДЕТЬ ЭТАЛОННУЮ ГРАФИЧЕСКУЮ ТРАЕКТОРИЮ.`);
                 
                 if (localStorage.getItem('s9_access_granted') !== 'true') {
-                    print(`ДЛЯ ВОЗВРАТА НА СТРАНИЦУ АВТОРИЗАЦИИ ИСПОЛЬЗУЙТЕ КОМАНДУ: ${printCmd('login')}`);
+                    print(`ВВЕДИТЕ КОМАНДУ ${printCmd('login')} ДЛЯ ВОЗВРАТА НА СТРАНИЦУ АВТОРИЗАЦИИ.`);
                 }
             } else if (topic === 'trassit') {
                 print(`<span class="topic-header">[ТРАССИТ]</span>`);
                 print(`ГРАФИЧЕСКИЙ КЛЮЧ ДОСТУПА. КАЖДОЕ СЛОВО ИМЕЕТ УНИКАЛЬНУЮ ГЕОМЕТРИЧЕСКУЮ ТРАЕКТОРИЮ.`);
+                print(`НАРИСУЙТЕ КЛЮЧ НА СЕТКЕ ПЕРЕД ВАМИ.`);
             } else if (topic === 'console') {
                 print(`<span class="topic-header">[КОНСОЛЬ]</span>`);
-                print(`ИНТЕРФЕЙС УПРАВЛЕНИЯ. ОТКРЫВАЕТСЯ КЛАВИШЕЙ «~» ИЛИ КНОПКОЙ «>_». ВВОДИТЕ КОМАНДЫ И НАЖИМАЙТЕ ENTER.`);
+                print(`ИНТЕРФЕЙС УПРАВЛЕНИЯ И ПЕРЕХОДА МЕЖДУ МОДУЛЯМИ.`);
+                print(`ОТКРОЙТЕ КОНСОЛЬ КЛАВИШЕЙ «~» ИЛИ КНОПКОЙ «>_».`);
+                print(`ВВЕДИТЕ КОМАНДУ И НАЖМИТЕ ENTER.`);
             } else if (topic === 'terminal') {
                 print(`<span class="topic-header">[ТЕРМИНАЛ]</span>`);
-                print(`ИНЖЕНЕРНЫЙ МОДУЛЬ. ПОЗВОЛЯЕТ ВВОДИТЬ ГЛИФЫ ВРУЧНУЮ. ПЕРЕХОД: КОМАНДА ${printCmd('terminal')}.`);
+                print(`ИНЖЕНЕРНЫЙ МОДУЛЬ. ПОЗВОЛЯЕТ ВВОДИТЬ ГЛИФЫ ВРУЧНУЮ.`);
+                print(`ВВЕДИТЕ КОМАНДУ ${printCmd('terminal')} ДЛЯ ПЕРЕХОДА.`);
             } else {
                 print(`НЕТ ИНФОРМАЦИИ ПО ТЕМЕ '${topic}'.`, 'err');
             }
