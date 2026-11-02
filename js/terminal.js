@@ -86,26 +86,21 @@
     // 4. ПРОВЕРКА ДОСТУПА К МОДУЛЯМ (Зависит от флагов localStorage)
     function isModuleOnline(moduleId) {
         switch(moduleId) {
-            case 'hub':
-            case 'map':
-            case 'terminal':
+            case 'hub': case 'map': case 'terminal':
                 return true;
             case 'archive':
-                return localStorage.getItem('s9_access_granted') === 'true'; // Архив доступен после входа
+                // Архив доступен только если мы просмотрели карту
+                return localStorage.getItem('s9_map_visited') === 'true';
             case 'os':
-                return localStorage.getItem('s9_archive_fixed') === 'true'; // ОС после починки архива
+                return localStorage.getItem('s9_archive_fixed') === 'true';
             case 'edr':
-                return localStorage.getItem('s9_os_fixed') === 'true'; // EDR после починки ОС
+                return localStorage.getItem('s9_os_fixed') === 'true';
             case 'telemetry':
-                return localStorage.getItem('s9_edr_ghosts') !== null; // Телеметрия после EDR
+                return localStorage.getItem('s9_edr_ghosts') !== null;
             case 'core':
                 return localStorage.getItem('s9_telemetry_calibrated') === 'true' || localStorage.getItem('s9_core_unlocked') === 'true';
             case 'gateway':
-                return localStorage.getItem('s9_core_unlocked') === 'true'; // Шлюз после ремонта ядра
-            case 'sector00':
-            case 'sectorff':
-            case 'uninitialized':
-                return false; // Пока закрыты сюжетно
+                return localStorage.getItem('s9_core_unlocked') === 'true';
             default:
                 return false;
         }
