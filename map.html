@@ -8,284 +8,93 @@
     <link rel="stylesheet" type="text/css" href="style.css">
     <link rel="stylesheet" type="text/css" href="style-tools.css">
     <link rel="stylesheet" type="text/css" href="style-chat-terminal.css">
-    <link rel="stylesheet" type="text/css" href="style-terminal.css">
     <style>
         /* --- СПЕЦИФИЧНЫЕ СТИЛИ ДЛЯ КАРТЫ --- */
-        body.tools-page {
-            overflow: hidden; 
-            height: 100vh;
-            background-color: #010306;
-        }
-
-        #display {
-            display: flex !important;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            overflow: hidden;
-        }
+        body.tools-page { overflow: hidden; height: 100vh; background-color: #010306; }
+        #display { display: flex !important; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
 
         .map-header {
-            position: absolute;
-            top: 25px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-family: 'Michroma', sans-serif;
-            font-size: 14px;
-            letter-spacing: 8px;
-            color: var(--neon);
-            text-transform: uppercase;
-            opacity: 0.6;
-            text-shadow: 0 0 20px var(--neon);
-            z-index: 100;
-            pointer-events: none;
+            position: absolute; top: 25px; left: 50%; transform: translateX(-50%);
+            font-family: 'Michroma', sans-serif; font-size: 14px; letter-spacing: 8px;
+            color: var(--neon); text-transform: uppercase; opacity: 0.6;
+            text-shadow: 0 0 20px var(--neon); z-index: 100; pointer-events: none;
         }
 
-        .map-container {
-            position: relative;
-            width: 1200px; 
-            height: 850px;
-        }
-
-        /* Сетка на фоне */
+        .map-container { position: relative; width: 1200px; height: 850px; }
         .map-container::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background-image: 
-                linear-gradient(rgba(0, 242, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 242, 255, 0.03) 1px, transparent 1px);
-            background-size: 40px 40px;
-            background-position: center center;
+            content: ''; position: absolute; inset: 0;
+            background-image: linear-gradient(rgba(0, 242, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 242, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px; background-position: center center;
             mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
             -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
             pointer-events: none;
         }
 
-        /* --- СЛОЙ СВЯЗЕЙ --- */
-        .connections-layer {
-            position: absolute;
-            inset: 0;
-            z-index: 1;
-            pointer-events: none;
-        }
-        
+        .connections-layer { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
         .link-bg { stroke: rgba(0, 242, 255, 0.05); stroke-width: 2px; transition: 0.3s; }
         .link-flow { stroke: var(--neon); stroke-width: 2px; stroke-dasharray: 8 16; filter: drop-shadow(0 0 5px var(--neon)); animation: flow 20s linear infinite; transition: 0.3s;}
-        
         .link-locked .link-bg { stroke: rgba(255, 255, 255, 0.05); stroke-dasharray: 4 4; }
         .link-locked .link-flow { stroke: none; }
-
         @keyframes flow { to { stroke-dashoffset: -1000; } }
 
         /* --- УЗЛЫ --- */
         .map-node {
-            position: absolute;
-            width: 130px;
-            height: 130px;
-            background: rgba(2, 10, 15, 0.85);
-            border: 1px solid rgba(0, 242, 255, 0.15);
-            text-decoration: none;
-            z-index: 10;
-            transform: translate(-50%, -50%);
-            transition: all 0.4s cubic-bezier(0.2, 1, 0.3, 1);
-            backdrop-filter: blur(8px);
-            box-sizing: border-box;
+            position: absolute; width: 130px; height: 130px;
+            background: rgba(2, 10, 15, 0.85); border: 1px solid rgba(0, 242, 255, 0.15);
+            text-decoration: none; z-index: 10; transform: translate(-50%, -50%);
+            transition: all 0.4s cubic-bezier(0.2, 1, 0.3, 1); backdrop-filter: blur(8px); box-sizing: border-box;
         }
 
-        /* Уголки */
-        .map-node::before, .map-node::after {
-            content: ''; position: absolute; width: 10px; height: 10px; pointer-events: none; transition: 0.3s;
-        }
+        .map-node::before, .map-node::after { content: ''; position: absolute; width: 10px; height: 10px; pointer-events: none; transition: 0.3s; }
         .map-node.unlocked::before { top: -1px; left: -1px; border-top: 2px solid var(--neon); border-left: 2px solid var(--neon); }
         .map-node.unlocked::after { bottom: -1px; right: -1px; border-bottom: 2px solid var(--neon); border-right: 2px solid var(--neon); }
-
-        /* Наведение на ONLINE */
-        .map-node.unlocked:hover {
-            background: rgba(0, 242, 255, 0.1);
-            box-shadow: 0 0 30px rgba(0, 242, 255, 0.2), inset 0 0 20px rgba(0, 242, 255, 0.1);
-            transform: translate(-50%, -50%) scale(1.05);
-        }
+        .map-node.unlocked:hover { background: rgba(0, 242, 255, 0.1); box-shadow: 0 0 30px rgba(0, 242, 255, 0.2), inset 0 0 20px rgba(0, 242, 255, 0.1); transform: translate(-50%, -50%) scale(1.05); }
         .map-node.unlocked:hover::before, .map-node.unlocked:hover::after { width: 100%; height: 100%; opacity: 0.3; }
 
-        /* --- ГЛИФЫ --- */
-        .node-glyph {
-            position: absolute;
-            top: 35%; 
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+        .node-glyph { position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
+        .node-glyph svg { width: 100%; height: 100%; overflow: visible; }
+        .map-node.unlocked .node-glyph path { stroke: var(--neon); stroke-width: 2.5; fill: none; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 4px var(--neon)) drop-shadow(0 0 1px #fff); transition: 0.3s; }
+        .map-node.unlocked:hover .node-glyph path { stroke-width: 3; filter: drop-shadow(0 0 8px var(--neon)) drop-shadow(0 0 2px #fff); }
 
-        .node-glyph svg {
-            width: 100%;
-            height: 100%;
-            overflow: visible;
-        }
-
-        /* Тонкие линии для ONLINE */
-        .map-node.unlocked .node-glyph path {
-            stroke: var(--neon);
-            stroke-width: 2.5; 
-            fill: none;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            filter: drop-shadow(0 0 4px var(--neon)) drop-shadow(0 0 1px #fff);
-            transition: 0.3s;
-        }
-
-        .map-node.unlocked:hover .node-glyph path {
-            stroke-width: 3;
-            filter: drop-shadow(0 0 8px var(--neon)) drop-shadow(0 0 2px #fff);
-        }
-
-        /* --- ТЕКСТ --- */
-        .node-title {
-            position: absolute;
-            top: 70%; 
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 100%;
-            font-size: 9px;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            color: var(--neon);
-            font-family: 'JetBrains Mono', monospace;
-            text-align: center;
-            font-weight: bold;
-            line-height: 1.3;
-            pointer-events: none;
-            transition: 0.3s;
-            text-shadow: 0 0 8px rgba(0, 242, 255, 0.5);
-        }
-
-        .node-status {
-            position: absolute;
-            bottom: 8px;
-            width: 100%;
-            text-align: center;
-            font-size: 8px;
-            font-family: monospace;
-            letter-spacing: 2px;
-            font-weight: bold;
-        }
+        .node-title { position: absolute; top: 70%; left: 50%; transform: translate(-50%, -50%); width: 100%; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--neon); font-family: 'JetBrains Mono', monospace; text-align: center; font-weight: bold; line-height: 1.3; pointer-events: none; transition: 0.3s; text-shadow: 0 0 8px rgba(0, 242, 255, 0.5); }
+        .node-status { position: absolute; bottom: 8px; width: 100%; text-align: center; font-size: 8px; font-family: monospace; letter-spacing: 2px; font-weight: bold; }
 
         /* --- OFFLINE УЗЛЫ --- */
-        .map-node.locked {
-            border-color: rgba(150, 150, 150, 0.2);
-            cursor: not-allowed;
-            background: rgba(10, 10, 10, 0.85);
-        }
-
+        .map-node.locked { border-color: rgba(150, 150, 150, 0.2); cursor: not-allowed; background: rgba(10, 10, 10, 0.85); }
         .map-node.locked::before { top: -1px; left: -1px; border-top: 2px solid #666; border-left: 2px solid #666; }
         .map-node.locked::after { bottom: -1px; right: -1px; border-bottom: 2px solid #666; border-right: 2px solid #666; }
-
-        .map-node.locked .node-glyph path {
-            stroke: #555;
-            stroke-width: 2.5;
-            fill: none;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            filter: none;
-        }
-
+        .map-node.locked .node-glyph path { stroke: #555; stroke-width: 2.5; fill: none; stroke-linecap: round; stroke-linejoin: round; filter: none; }
         .map-node.locked .node-title { color: #888; text-shadow: none; }
         .map-node.locked .node-status { color: #ff3333; text-shadow: 0 0 5px rgba(255, 51, 51, 0.5); }
         .map-node.unlocked .node-status { color: #00ff44; text-shadow: 0 0 5px rgba(0, 255, 68, 0.5); }
 
-        /* Центральный хаб */
-        .map-node[data-id="hub"] {
-            width: 150px; height: 150px;
-            border-color: rgba(0, 242, 255, 0.4);
-            box-shadow: 0 0 40px rgba(0, 242, 255, 0.1);
-        }
+        /* --- УЗЕЛ С ОШИБКОЙ (АРХИВ) --- */
+        .map-node.error-node { border-color: rgba(255, 51, 51, 0.5); background: rgba(15, 2, 2, 0.85); cursor: pointer; }
+        .map-node.error-node::before { top: -1px; left: -1px; border-top: 2px solid #ff3333; border-left: 2px solid #ff3333; }
+        .map-node.error-node::after { bottom: -1px; right: -1px; border-bottom: 2px solid #ff3333; border-right: 2px solid #ff3333; }
+        .map-node.error-node .node-glyph path { stroke: #ff3333; filter: drop-shadow(0 0 5px #ff3333); }
+        .map-node.error-node .node-title { color: #ff6666; text-shadow: 0 0 5px #ff3333; }
+        .map-node.error-node .node-status { color: #ff3333; animation: blink 1s infinite; }
+
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        .map-node[data-id="hub"] { width: 150px; height: 150px; border-color: rgba(0, 242, 255, 0.4); box-shadow: 0 0 40px rgba(0, 242, 255, 0.1); }
         .map-node[data-id="hub"] .node-glyph { width: 38px; height: 38px; }
-        .map-node[data-id="hub"].locked { border-color: rgba(150, 150, 150, 0.3); box-shadow: none; }
-
-        .map-node[data-id="tools"] .node-glyph { width: 38px; height: 38px; }
-
-        /* --- КОНСОЛЬ (ТИЛЬДА) --- */
-        #tilde-console {
-            display: none;
-            position: fixed;
-            top: 0; left: 50%;
-            transform: translateX(-50%);
-            width: 800px;
-            background: rgba(2, 5, 8, 0.95);
-            border: 1px solid var(--neon);
-            border-top: none;
-            box-shadow: 0 10px 50px rgba(0, 242, 255, 0.2);
-            z-index: 99999;
-            font-family: 'JetBrains Mono', monospace;
-            backdrop-filter: blur(10px);
-            flex-direction: column;
-            padding: 20px;
-        }
-
-        #tilde-console.active { display: flex; }
-
-        .console-header {
-            color: var(--neon);
-            font-size: 12px;
-            letter-spacing: 2px;
-            margin-bottom: 15px;
-            border-bottom: 1px solid rgba(0, 242, 255, 0.3);
-            padding-bottom: 10px;
-            text-transform: uppercase;
-        }
-
-        .console-output {
-            color: #aaa;
-            font-size: 11px;
-            margin-bottom: 15px;
-            line-height: 1.5;
-            height: 80px;
-            overflow-y: auto;
-        }
-        .console-output .sys { color: var(--neon); }
-        .console-output .err { color: #ff3333; }
-        .console-output .ok { color: #00ff44; }
-
-        .console-input-wrapper { display: flex; align-items: center; gap: 10px; }
-        .console-input-wrapper span { color: var(--neon); font-size: 14px; font-weight: bold; }
-        
-        #console-input {
-            flex: 1; background: transparent; border: none;
-            border-bottom: 1px solid rgba(0, 242, 255, 0.5);
-            color: var(--neon); font-family: inherit; font-size: 14px;
-            outline: none; padding: 5px 0; text-transform: uppercase;
-        }
-        #console-input:focus { border-bottom-color: var(--neon); box-shadow: 0 5px 10px -5px var(--neon); }
-
-        .console-hint {
-            margin-top: 15px; font-size: 9px; color: #555;
-            display: flex; justify-content: space-between;
-        }
     </style>
 </head>
 <body class="tools-page">
 
-    <!-- 1. СИСТЕМНЫЙ ТЕРМИНАЛ (ИЗ ШАБЛОНА) -->
     <div class="chat-system">
         <div id="quest-field" class="question" onclick="handleChatClick()"></div>
         <div id="answer-field" class="answer-field"></div>
     </div>
 
-    <!-- КОНЕЦ ТЕРМИНАЛА -->
-
-    <!-- 2. ФОНОВЫЕ СЛОИ (ИЗ ШАБЛОНА) -->
     <canvas id="starfield"></canvas>
     <div id="scanner-line"></div>
     <div id="overlay-noise"></div>
 
-    <!-- 3. ЗАГОЛОВОК КАРТЫ -->
     <div class="map-header">СИСТЕМА ТОПОЛОГИИ // СЕКТОР 07</div>
 
-    <!-- 4. ОСНОВНОЙ КОНТЕНТ (КАРТА) -->
     <div id="display">
         <div class="map-container" id="mapContainer">
             <svg class="connections-layer" id="mapLines"></svg>
@@ -293,201 +102,21 @@
         </div>
     </div>
 
-    <!-- 5. КОНСОЛЬ (ТИЛЬДА) -->
-    <div id="tilde-console">
-        <div class="console-header">Терминал быстрого доступа // Введите ID отсека</div>
-        <div class="console-output" id="console-output">
-            <div>Инициализация протокола ручного перемещения...</div>
-            <div>Доступные ID: <span class="sys">HUB, TOOLS, MAP, ARCHIVE, REACTOR, EDR, TELEMETRY, HANGAR, UNINITIALIZED</span></div>
-        </div>
-        <div class="console-input-wrapper">
-            <span>></span>
-            <input type="text" id="console-input" autocomplete="off" spellcheck="false" placeholder="Введите ID...">
-        </div>
-        <div class="console-hint">
-            <span>[ESC] - закрыть</span>
-            <span>[ENTER] - перейти</span>
-        </div>
-    </div>
-
-    <!-- 6. НИЖНИЕ КНОПКИ (ИЗ ШАБЛОНА) -->
     <div class="audio-control-fixed" id="audio-toggle">
         <span id="audio-status-icon">○</span>
         <span id="audio-status">АУДИОДАТЧИКИ: ВЫКЛ</span>
     </div>
 
-    <a href="tools.html" class="terminal-link-fixed">
-        <span>□</span> ИНЖЕНЕРНЫЙ ТЕРМИНАЛ
-    </a>
+    <button id="console-toggle-btn" style="
+        position: fixed; bottom: 25px; right: 25px; z-index: 1000; 
+        background: rgba(0, 20, 30, 0.5); border: 1px solid rgba(0, 242, 255, 0.3); 
+        color: var(--neon); padding: 8px 12px; font-family: monospace; font-size: 14px; 
+        cursor: pointer; transition: 0.3s;
+    " onmouseover="this.style.background='rgba(0, 242, 255, 0.1)'" onmouseout="this.style.background='rgba(0, 20, 30, 0.5)'">
+        &gt;_
+    </button>
 
-    <!-- 7. ПОДКЛЮЧЕНИЕ РЕСУРСОВ (ИЗ ШАБЛОНА) -->
     <script src="js/loader.js"></script>
-
-    <!-- 8. СКРИПТ КАРТЫ (В ИЗОЛИРОВАННОЙ ОБЛАСТИ ВИДИМОСТИ) -->
-    <script>
-    (function() {
-        // Уникальные имена, чтобы не конфликтовать с твоими скриптами
-        const MAP_POINTS = [{x:15,y:15},{x:40,y:15},{x:65,y:15},{x:15,y:40},{x:40,y:40},{x:65,y:40},{x:15,y:65},{x:40,y:65},{x:65,y:65}];
-        
-        function getMapPath(word) {
-            let hash = 5381;
-            for (let i = 0; i < word.length; i++) hash = ((hash << 5) + hash) + word.charCodeAt(i);
-            let seed = Math.abs(hash), path = [], used = new Set();
-            const len = (seed % 3) + 5;
-            while(path.length < len && used.size < 9) {
-                seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-                let n = seed % 9; if(!used.has(n)) { path.push(n); used.add(n); }
-            }
-            return path;
-        }
-
-        function createMapSVG(path) {
-            if (!path || !path.length) return '';
-            const start = MAP_POINTS[path[0]];
-            let d = `M ${start.x} ${start.y}`;
-            for(let i=0; i<path.length-1; i++) {
-                const c = MAP_POINTS[path[i]], n = MAP_POINTS[path[i+1]];
-                d += ` C ${c.x+(n.x-c.x)*0.5} ${c.y}, ${c.x+(n.x-c.x)*0.5} ${n.y}, ${n.x} ${n.y}`;
-            }
-            return `<svg viewBox="0 0 80 80"><path d="${d}"></path></svg>`;
-        }
-
-        const MAP_DATA = {
-            nodes: [
-                { id: 'hub', title: 'ГЛАВНЫЙ\nХАБ', x: 600, y: 425, url: 'index.html', req: null },
-                
-                { id: 'uninitialized', title: 'НЕИНИЦИАЛИЗИРОВАН', x: 350, y: 200, url: '#', req: 's9_sector_opened' },
-                { id: 'tools', title: 'ИНЖЕНЕРНЫЙ\nТЕРМИНАЛ', x: 600, y: 200, url: 'tools.html', req: null },
-                { id: 'res1', title: 'СЕКТОР\n[0x00]', x: 850, y: 200, url: '#', req: 's9_res1' },
-
-                { id: 'telemetry', title: 'МОДУЛЬ\nТЕЛЕМЕТРИИ', x: 150, y: 425, url: 'observatory.html', req: 's9_observatory' },
-                { id: 'reactor', title: 'ЭНЕРГОЯДРО', x: 350, y: 425, url: 'reactor.html', req: 's9_emergency_reactor' },
-                { id: 'edr', title: 'EDR\nСЕКТОР', x: 850, y: 425, url: 'edr.html', req: 's9_edr_open' },
-                { id: 'hangar', title: 'ТРАНСПОРТНЫЙ\nШЛЮЗ', x: 1050, y: 425, url: 'hangar.html', req: 's9_hangar_open' },
-
-                { id: 'archive', title: 'БАЗА\nДАННЫХ', x: 350, y: 650, url: 'archive.html', req: 's9_access_granted' },
-                { id: 'map', title: 'КАРТА', x: 600, y: 650, url: 'map2.html', req: null },
-                { id: 'res2', title: 'СЕКТОР\n[0xFF]', x: 850, y: 650, url: '#', req: 's9_res2' }
-            ],
-            links: [
-                { s: 'hub', t: 'tools' }, { s: 'hub', t: 'map' }, 
-                { s: 'hub', t: 'reactor' }, { s: 'hub', t: 'edr' },
-
-                { s: 'tools', t: 'uninitialized' }, { s: 'tools', t: 'res1' },
-                
-                { s: 'reactor', t: 'telemetry' }, { s: 'reactor', t: 'archive' },
-                
-                { s: 'edr', t: 'hangar' }, { s: 'edr', t: 'res2' },
-                
-                { s: 'map', t: 'archive' }, { s: 'map', t: 'res2' }
-            ]
-        };
-
-        const isUnlocked = (node) => !node.req || localStorage.getItem(node.req) === 'true' || localStorage.getItem(node.req) === 'active';
-
-        function buildMap() {
-            const svg = document.getElementById('mapLines');
-            const nodesContainer = document.getElementById('mapNodes');
-
-            if (!svg || !nodesContainer) {
-                console.error("Не найдены контейнеры для карты!");
-                return;
-            }
-
-            MAP_DATA.links.forEach(link => {
-                const source = MAP_DATA.nodes.find(n => n.id === link.s);
-                const target = MAP_DATA.nodes.find(n => n.id === link.t);
-                if (!source || !target) return;
-
-                const active = isUnlocked(source) && isUnlocked(target);
-                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-                g.setAttribute('class', active ? 'link-active' : 'link-locked');
-
-                const bgLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                bgLine.setAttribute('x1', source.x); bgLine.setAttribute('y1', source.y);
-                bgLine.setAttribute('x2', target.x); bgLine.setAttribute('y2', target.y);
-                bgLine.setAttribute('class', 'link-bg');
-                g.appendChild(bgLine);
-
-                if (active) {
-                    const flowLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                    flowLine.setAttribute('x1', source.x); flowLine.setAttribute('y1', source.y);
-                    flowLine.setAttribute('x2', target.x); flowLine.setAttribute('y2', target.y);
-                    flowLine.setAttribute('class', 'link-flow');
-                    flowLine.style.animationDelay = `${Math.random() * -20}s`;
-                    g.appendChild(flowLine);
-                }
-                svg.appendChild(g);
-            });
-
-            MAP_DATA.nodes.forEach(node => {
-                const open = isUnlocked(node);
-                const el = document.createElement(open ? 'a' : 'div');
-                
-                if (open) el.href = node.url;
-                el.className = `map-node ${open ? 'unlocked' : 'locked'}`;
-                el.setAttribute('data-id', node.id);
-                el.style.left = `${node.x}px`;
-                el.style.top = `${node.y}px`;
-
-                const formattedTitle = node.title.replace(/\n/g, '<br>');
-                const statusText = open ? 'ONLINE' : 'OFFLINE'; 
-                
-                const wordForGlyph = node.title.split('\n')[0].replace(/\[.*?\]/g, '').trim();
-                const glyphSVG = createMapSVG(getMapPath(wordForGlyph));
-
-                el.innerHTML = `
-                    <div class="node-glyph">${glyphSVG}</div>
-                    <div class="node-title">${formattedTitle}</div>
-                    <div class="node-status">${statusText}</div>
-                `;
-                nodesContainer.appendChild(el);
-            });
-        }
-
-        // --- ТИЛЬДА ---
-        const consoleEl = document.getElementById('tilde-console');
-        const consoleInput = document.getElementById('console-input');
-        const consoleOutput = document.getElementById('console-output');
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === '`' || e.key === '~' || e.key === 'Ё' || e.key === 'ё') {
-                e.preventDefault();
-                if (consoleEl) consoleEl.classList.toggle('active');
-                if (consoleEl && consoleEl.classList.contains('active') && consoleInput) consoleInput.focus();
-            }
-            if (e.key === 'Escape' && consoleEl && consoleEl.classList.contains('active')) consoleEl.classList.remove('active');
-        });
-
-        if (consoleInput) {
-            consoleInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    const cmd = consoleInput.value.trim().toLowerCase();
-                    consoleInput.value = '';
-
-                    const targetNode = MAP_DATA.nodes.find(n => n.id.toLowerCase() === cmd || n.title.toLowerCase().includes(cmd));
-
-                    if (!targetNode) {
-                        consoleOutput.innerHTML += `<div class="err">ОШИБКА: Отсек '${cmd}' не найден.</div>`;
-                        return;
-                    }
-                    if (targetNode.req && !isUnlocked(targetNode)) {
-                        consoleOutput.innerHTML += `<div class="err">ОТКАЗАНО: Доступ к '${targetNode.title.replace(/\n/g, ' ')}' заблокирован.</div>`;
-                        return;
-                    }
-                    if (targetNode.url === '#') {
-                        consoleOutput.innerHTML += `<div class="err">ОШИБКА: Модуль '${targetNode.id}' в разработке.</div>`;
-                        return;
-                    }
-                    consoleOutput.innerHTML += `<div class="ok">УСПЕХ: Переход в '${targetNode.title.replace(/\n/g, ' ')}'...</div>`;
-                    setTimeout(() => { window.location.href = targetNode.url; }, 500);
-                }
-            });
-        }
-
-        // Инициализация
-        buildMap();
-    })();
-    </script>
+    <script src="js/map.js"></script>
 </body>
 </html>
