@@ -3,16 +3,16 @@
     const scripts = [
         "js/phrases.js",
         "js/config.js",
-        "js/glyphEngine.js",
-        "js/audioEngine.js",
-        "js/visualEngine.js",
-        "js/uiEngine.js",
-        "js/roomChat.js",   
-        "js/chatEngine.js",
-        "js/terminal.js"    
+        "js/glyph.js",
+        "js/audio.js",
+        "js/visual.js",
+        "js/ui.js",
+        "js/journal.js",  
+        "js/chat.js",     
+        "js/term.js"      
     ];
     scripts.forEach(src => {
         document.write(`<script src="${src}"></script>`);
     });
-    console.log("SYSTEM: Все модули ядра загружены.");
+    console.log("SYSTEM: Модули загружены.");
 })();
