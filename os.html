@@ -84,10 +84,23 @@
         .captcha-box .code { color: #ffaa00; font-size: 14px; letter-spacing: 2px; margin: 15px 0; }
         
         #captcha-input {
-            background: transparent; border: none; border-bottom: 2px solid var(--neon);
-            color: var(--neon); font-family: 'JetBrains Mono', monospace; font-size: 20px;
-            text-align: center; outline: none; padding: 10px; width: 300px; margin-top: 10px;
-            text-transform: uppercase; letter-spacing: 5px;
+            background: transparent !important; 
+            border: none !important; 
+            border-bottom: 2px solid var(--neon) !important;
+            color: var(--neon) !important; 
+            font-family: 'JetBrains Mono', monospace !important; 
+            font-size: 20px !important;
+            text-align: center !important; 
+            outline: none !important; 
+            padding: 10px !important; 
+            width: 300px !important; 
+            text-transform: uppercase !important; 
+            letter-spacing: 5px !important;
+            
+            /* ФИКС ВЕРСТКИ: Возвращаем в поток и центрируем */
+            position: static !important; 
+            margin: 15px auto 0 auto !important;
+            display: block !important;
         }
     </style>
 </head>
