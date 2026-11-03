@@ -72,7 +72,11 @@ path {
     font-size: 10px !important;
 }
 
-.char-fixed { color: #fff; text-shadow: 0 0 10px var(--neon); opacity: 1; }
+.char-fixed { 
+    color: var(--neon) !important; /* Неоновый цвет вместо белого */
+    text-shadow: 0 0 5px var(--neon), 0 0 10px var(--neon), 0 0 20px var(--neon); /* Мощное свечение */
+    opacity: 1; 
+}
 .char-noise { opacity: 0.25; color: var(--neon); }
 
 /* 3. НИЖНИЙ СТАТУС-БАР */
