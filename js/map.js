@@ -118,9 +118,6 @@
         MAP_DATA.nodes.forEach(node => {
             const status = getNodeStatus(node);
             
-            // --- ФИКС БАГА С КЛИКОМ ПО АРХИВУ ---
-            // Если это Архив и мы не читали журнал (нет s9_map_visited), 
-            // то мы не делаем его ссылкой, даже если он в статусе ERROR.
             let isClickable = (status !== 'OFFLINE');
             if (node.id === 'archive' && localStorage.getItem('s9_map_visited') !== 'true') {
                 isClickable = false;
@@ -128,14 +125,17 @@
             
             const el = document.createElement(isClickable ? 'a' : 'div');
             if (isClickable) el.href = node.url;
-            // ------------------------------------
-
+            
+            // ДОБАВЛЯЕМ КЛАСС, ЕСЛИ УЗЕЛ НЕКЛИКАБЕЛЕН
             let cssClass = 'map-node ';
             if (status === 'ONLINE') cssClass += 'unlocked';
             else if (status === 'ERROR') cssClass += 'error-node';
             else cssClass += 'locked';
+            
+            if (!isClickable) cssClass += ' no-pointer'; // <--- ВОТ ЭТА СТРОКА
 
             el.className = cssClass;
+            // ... дальше идет el.innerHTML ...
             el.setAttribute('data-id', node.id);
             el.style.left = `${node.x}px`;
             el.style.top = `${node.y}px`;
