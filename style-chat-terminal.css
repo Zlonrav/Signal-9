@@ -45,7 +45,6 @@
 		    /* Визуальное выделение ответа */
 		    padding-left: 12px; 
 		    margin-top: 5px;
-		    border-left: 1px solid rgba(0, 242, 255, 0.2); /* Тонкая линия слева для красоты */
 		    
 		    /* Сглаживание текста */
 		    -webkit-font-smoothing: antialiased;
