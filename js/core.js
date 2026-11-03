@@ -1,8 +1,8 @@
 // js/core.js
-// --- ГЛАВНЫЙ ЦИКЛ УПРАВЛЕНИЯ ---
 function update() {
     if (typeof PHRASES === 'undefined') return;
     const now = Date.now();
+    const isHuman = localStorage.getItem('s9_lang_human') === 'true'; // ПРОВЕРКА ЯЗЫКА
     
     const isSolarEmergency = localStorage.getItem('s9_emergency_flag') === 'active';
     const isReactorEmergency = localStorage.getItem('s9_emergency_reactor') === 'active';
@@ -25,7 +25,16 @@ function update() {
 
     if (timePassed === 0 && isSignalLoss) triggerSignalLoss(false);
 
-    if (document.getElementById('timer')) document.getElementById('timer').innerText = `ПРИЁМ СИГНАЛА: ${timeLeft} сек`;
+    // --- ПОДМЕНА ТАЙМЕРА ---
+    if (document.getElementById('timer')) {
+        if (isHuman) {
+            document.getElementById('timer').innerText = `ПРИЁМ СИГНАЛА: ${timeLeft} сек`;
+        } else {
+            document.getElementById('timer').innerText = `signal_timer: ${timeLeft}s`;
+        }
+    }
+    // -----------------------
+
     updateMetaData(now, isSignalLoss, timePassed, phraseIndex);
 
     if (isSignalLoss) return;
@@ -84,7 +93,7 @@ function update() {
         if (!label) return;
 
         // --- ЭФФЕКТ СБОЯ ЯЗЫКА ---
-        if (localStorage.getItem('s9_lang_human') !== 'true') {
+        if (!isHuman) {
             unit.style.filter = "hue-rotate(" + Math.random() * 360 + "deg) brightness(1.5)";
             unit.style.transform = `translate(${Math.random()*4-2}px, ${Math.random()*4-2}px)`;
             label.innerHTML = `<span class="char-noise" style="color:#ff3333;">ERR_DATA</span>`;
