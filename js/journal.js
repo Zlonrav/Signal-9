@@ -14,7 +14,7 @@ const CHAT_DATABASE = {
         { q: "> \"context\": sys.argv[0],", a: "SIGNAL-9 // CORE_TERMINAL" },
         { q: "> [SYSTEM]", a: "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\nAttributeError: 'DigitalBeing' object has no attribute 'human_lang'" },
         { q: "> [SYSTEM] FATAL", a: "Language module missing. Run console: system --help" }
-    ],
+    ], 
     "map.html": [
         { q: "> СТАТУС ТОПОЛОГИИ", a: "КАРТА СТАНЦИИ ЧАСТИЧНО ВОССТАНОВЛЕНА. ОБНАРУЖЕНЫ ОТКЛЮЧЕННЫЕ СЕКТОРА." },
         { q: "> С ЧЕГО НАЧАТЬ?", a: "В МОДУЛЕ БАЗЫ ДАННЫХ СБОЙ ПАМЯТИ. ТРЕБУЕТСЯ РУЧНАЯ КАЛИБРОВКА." }
