@@ -72,19 +72,7 @@
                     const cell = document.createElement('div');
                     cell.className = 'glyph-cell';
                     
-                    // Если это 2-я вкладка, проверяем, не пора ли фразе растворяться
-                    if (currentPage === 2) {
-                        // Фраза живет на второй вкладке 128 секунд с момента создания
-                        // (то есть пока не придет 11-я фраза, но мы ограничили 10)
-                        const age = now - phraseObj.timestamp;
-                        const timeLeft = (CYCLE_TIME_MS * 2) - age; // Условно 256 сек
-                        
-                        if (timeLeft < 15000) { // Растворяем за 15 сек до конца
-                            cell.style.opacity = Math.max(0, timeLeft / 15000);
-                            cell.style.transform = `scale(${Math.max(0.5, timeLeft / 15000)})`;
-                        }
-                    }
-
+                    // УБРАЛИ ЛОГИКУ РАСТВОРЕНИЯ, ЧТОБЫ ВСЕ БЫЛО ВИДНО
                     const indices = typeof getPath === 'function' ? getPath(word) : [];
                     let svgMarkup = typeof createSVG === 'function' ? createSVG(indices) : '';
                     
