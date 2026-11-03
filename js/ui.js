@@ -6,6 +6,7 @@
     if (window.UI_ENGINE_INITIALIZED) return;
     window.UI_ENGINE_INITIALIZED = true;
 
+    // --- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ МЕТАДАННЫХ ---
     window.lastStatusText = "";
     window.signalTarget = 98;
     window.signalDisplay = 98;
@@ -17,7 +18,7 @@
     window.nextPacketAction = 0;
     window.isSignalLoss = false;
 
-    // --- 1. ЛОГИКА ТЕЛЕМЕТРИИ И КОДА СПАСЕНИЯ ---
+    // --- 1. ЛОГИКА ТЕЛЕМЕТРИИ ---
     window.startStationTelemetry = function() {
         const coordsElem = document.getElementById('station-coords');
         const statusElem = document.getElementById('orbit-status');
@@ -33,6 +34,7 @@
             const isHuman = localStorage.getItem('s9_lang_human') === 'true';
 
             if (isHintTime) {
+                // БЕЗОПАСНАЯ ОРБИТА (Зеленый режим)
                 coordsElem.innerText = "142.0458.13.70"; 
                 if (statusElem) {
                     if (isHuman) {
@@ -43,10 +45,10 @@
                 }
                 if (panel) panel.classList.add('safe-orbit-active');
             } else {
+                // ОБЫЧНЫЙ РЕЖИМ
                 const driftA = (149.6000 + Math.sin(now / 2000) * 0.005).toFixed(4);
                 const driftB = (18.04 + Math.cos(now / 1500) * 0.02).toFixed(2);
                 
-                // Форматируем вектор как массив, если язык не загружен
                 if (isHuman) {
                     coordsElem.innerText = `${driftA}.${driftB}`;
                 } else {
@@ -94,7 +96,7 @@
         window.triggerSignalLoss(false);
     };
 
-    // --- 3. ОБРАБОТКА МЕТАДАННЫХ (для core.js) ---
+    // --- 3. ОБРАБОТКА МЕТАДАННЫХ ---
     window.updateMetaData = function(now, error, timePassed, phraseIndex) {
         const isHuman = localStorage.getItem('s9_lang_human') === 'true';
 
@@ -132,8 +134,14 @@
                 }
             } else {
                 // СЫРОЙ РЕЖИМ
-                currentText = error ? "decrypt_process: ERROR" : "decrypt_process: RUNNING";
-                if (!error && timePassed >= 110) currentText = "decrypt_process: DONE";
+                if (error) {
+                    currentText = "decrypt_process: ERROR";
+                } else if (timePassed >= 128) {
+                    currentText = "decrypt_process: DONE";
+                } else {
+                    const rawStatuses = ["stream_sync", "packet_id", "decrypting_data", "data_analysis"];
+                    currentText = rawStatuses[Math.floor(timePassed / 10) % rawStatuses.length];
+                }
             }
 
             if(progressBar) {
@@ -172,7 +180,16 @@
 
     // --- 5. ИНИЦИАЛИЗАЦИЯ И ОБРАБОТЧИКИ ---
     document.addEventListener('DOMContentLoaded', () => {
+        const isHuman = localStorage.getItem('s9_lang_human') === 'true';
+        
+        // Инициализация аудио-кнопки
         const audioBtn = document.getElementById('audio-toggle');
+        const audioStatusLabel = document.getElementById('audio-status');
+        
+        if (audioStatusLabel && !isHuman) {
+            audioStatusLabel.innerText = "audio_sensors: false";
+        }
+
         if (audioBtn) {
             audioBtn.onclick = function() {
                 if (typeof toggleAudio === 'function') {
@@ -181,18 +198,17 @@
                     }
                     toggleAudio();
                     const isActive = !window.isMuted;
-                    const isHuman = localStorage.getItem('s9_lang_human') === 'true';
                     
                     this.classList.toggle('active', isActive);
                     const icon = document.getElementById('audio-status-icon');
-                    const status = document.getElementById('audio-status');
                     
                     if (icon) icon.innerText = isActive ? "●" : "○";
-                    if (status) {
+                    
+                    if (audioStatusLabel) {
                         if (isHuman) {
-                            status.innerText = isActive ? "АУДИОДАТЧИКИ: ВКЛ" : "АУДИОДАТЧИКИ: ВЫКЛ";
+                            audioStatusLabel.innerText = isActive ? "АУДИОДАТЧИКИ: ВКЛ" : "АУДИОДАТЧИКИ: ВЫКЛ";
                         } else {
-                            status.innerText = isActive ? "audio_sensors: true" : "audio_sensors: false";
+                            audioStatusLabel.innerText = isActive ? "audio_sensors: true" : "audio_sensors: false";
                         }
                     }
                 }
