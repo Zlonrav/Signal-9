@@ -117,10 +117,19 @@
         // Рисуем узлы
         MAP_DATA.nodes.forEach(node => {
             const status = getNodeStatus(node);
-            const el = document.createElement(status !== 'OFFLINE' ? 'a' : 'div');
             
-            if (status !== 'OFFLINE') el.href = node.url;
+            // --- ФИКС БАГА С КЛИКОМ ПО АРХИВУ ---
+            // Если это Архив и мы не читали журнал (нет s9_map_visited), 
+            // то мы не делаем его ссылкой, даже если он в статусе ERROR.
+            let isClickable = (status !== 'OFFLINE');
+            if (node.id === 'archive' && localStorage.getItem('s9_map_visited') !== 'true') {
+                isClickable = false;
+            }
             
+            const el = document.createElement(isClickable ? 'a' : 'div');
+            if (isClickable) el.href = node.url;
+            // ------------------------------------
+
             let cssClass = 'map-node ';
             if (status === 'ONLINE') cssClass += 'unlocked';
             else if (status === 'ERROR') cssClass += 'error-node';
