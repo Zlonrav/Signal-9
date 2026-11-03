@@ -1,6 +1,6 @@
 // js/archive.js
 (function() {
-    const CYCLE_TIME_MS = 128000; // 128 секунд
+    const CYCLE_TIME_MS = 128000; 
     
     let currentPage = 1;
     let archiveInterval = null;
@@ -44,29 +44,21 @@
         let phrases = getPhraseData();
         const now = Date.now();
 
-        let buffer1 = []; // Свежие (0 - 128 сек)
-        let buffer2 = []; // Старые (128 - 256 сек)
-        let toDelete = []; // Очень старые (> 256 сек)
+        // 1. Сортируем все фразы по времени (новые вверху)
+        phrases.sort((a, b) => b.timestamp - a.timestamp);
 
-        phrases.forEach(p => {
-            const age = now - p.timestamp;
-            if (age < CYCLE_TIME_MS) {
-                buffer1.push(p);
-            } else if (age < CYCLE_TIME_MS * 2) {
-                buffer2.push(p);
-            } else {
-                toDelete.push(p);
-            }
-        });
+        // 2. Делим на буферы по 5 штук
+        let buffer1 = phrases.slice(0, 5); // 5 самых новых
+        let buffer2 = phrases.slice(5, 10); // 5 следующих за ними
+        let toDelete = phrases.slice(10); // Все, что старше 10 фраз
 
-        // Если есть фразы на удаление, чистим память
+        // 3. Если есть фразы на удаление, чистим память
         if (toDelete.length > 0) {
-            phrases = phrases.filter(p => (now - p.timestamp) < CYCLE_TIME_MS * 2);
-            savePhraseData(phrases);
+            savePhraseData(phrases.slice(0, 10));
         }
 
-        // Сортируем (новые вверху)
-        let currentList = (currentPage === 1) ? buffer1.reverse() : buffer2.reverse();
+        // 4. Выбираем, что рисовать
+        let currentList = (currentPage === 1) ? buffer1 : buffer2;
 
         grid.innerHTML = '';
         
@@ -80,11 +72,14 @@
                     const cell = document.createElement('div');
                     cell.className = 'glyph-cell';
                     
-                    // Если это 2-я вкладка и фраза старая — готовим к растворению
+                    // Если это 2-я вкладка, проверяем, не пора ли фразе растворяться
                     if (currentPage === 2) {
+                        // Фраза живет на второй вкладке 128 секунд с момента создания
+                        // (то есть пока не придет 11-я фраза, но мы ограничили 10)
                         const age = now - phraseObj.timestamp;
-                        const timeLeft = (CYCLE_TIME_MS * 2) - age;
-                        if (timeLeft < 15000) {
+                        const timeLeft = (CYCLE_TIME_MS * 2) - age; // Условно 256 сек
+                        
+                        if (timeLeft < 15000) { // Растворяем за 15 сек до конца
                             cell.style.opacity = Math.max(0, timeLeft / 15000);
                             cell.style.transform = `scale(${Math.max(0.5, timeLeft / 15000)})`;
                         }
