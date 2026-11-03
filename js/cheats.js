@@ -29,10 +29,18 @@
             // --- НОВЫЙ ЧИТ ДЛЯ АРХИВА ---
             if (cmd === 'fix_archive') {
                 const words = ["СИСТЕМА", "ПАМЯТЬ", "КОД", "СИГНАЛ", "ВЕКТОР", "АРХИВ", "ЗВЕЗДА", "ОРБИТА", "МОДУЛЬ", "ДАННЫЕ"];
-                words.forEach(w => {
+                const glyphsData = [];
+                const now = Date.now();
+
+                words.forEach((w, i) => {
                     localStorage.setItem('s9_glyph_' + w, 'true');
+                    // Записываем в массив для отрисовки (сдвигаем время, чтобы они не были идеально одновременными)
+                    glyphsData.push({ word: w, timestamp: now - (i * 1000) });
                 });
+
+                localStorage.setItem('s9_glyphs_data', JSON.stringify(glyphsData));
                 localStorage.setItem('s9_archive_calibrated', 'true');
+                
                 print('<span class="ok">[ЧИТ] 10 ЭТАЛОННЫХ ТРАССИТОВ ВВЕДЕНО. АРХИВ ОТКАЛИБРОВАН.</span>');
                 print('<span class="sys">ПЕРЕХОД В АРХИВ ДЛЯ ПРОВЕРКИ...</span>');
                 setTimeout(() => { window.location.href = 'archive.html'; }, 1500);
