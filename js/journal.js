@@ -15,7 +15,7 @@ const CHAT_DATABASE = {
         { q: "> \"id\": self.__id__,", a: "0x7f930cb4ddb0" },
         { q: "> \"status\": self.is_alive(),", a: "True" },
         { q: "> \"context\": sys.argv[0],", a: "SIGNAL-9 // CORE_TERMINAL" },
-        { q: "> [SYSTEM]", a: "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\nAttributeError: 'DigitalBeing' object has no attribute 'human_lang'" },
+        { q: "> [SYSTEM]", a: "Traceback (most recent call last):\n  File \"&lt;string&gt;\", line 1, in &lt;module&gt;\nAttributeError: 'DigitalBeing' object has no attribute 'human_lang'" },
         { q: "> [SYSTEM] FATAL", a: "Language module missing. Run console: <cmd>system --help</cmd>" }
     ], 
     "map.html": [
