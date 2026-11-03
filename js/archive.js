@@ -1,7 +1,7 @@
 // js/archive.js
 (function() {
     // Время в миллисекундах. 128 секунд.
-    const CYCLE_TIME_MS = 128000; 
+    const CYCLE_TIME_MS = 10000; 
     
     let currentPage = 1;
     let archiveInterval = null;
