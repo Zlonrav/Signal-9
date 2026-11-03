@@ -28,7 +28,23 @@
         const grid = document.getElementById('archiveGrid');
         const tabs = document.getElementById('archiveTabs');
         const errorScreen = document.getElementById('archiveErrorScreen');
+        
         const isFixed = localStorage.getItem('s9_archive_fixed') === 'true';
+        const isCalibrated = localStorage.getItem('s9_archive_calibrated') === 'true';
+
+        // Если Архив сломан И калибровка НЕ пройдена -> Показываем красную ошибку
+        if (!isFixed && !isCalibrated) {
+            if (errorScreen) errorScreen.style.display = 'flex';
+            if (grid) grid.style.display = 'none';
+            if (tabs) tabs.style.display = 'none';
+            return;
+        }
+
+        // Если калибровка пройдена (но фикса нет), или Архив починен полностью -> Показываем сетку
+        if (errorScreen) errorScreen.style.display = 'none';
+        if (grid) grid.style.display = 'grid';
+        if (tabs) tabs.style.display = 'flex';
+        
 
         if (!isFixed) {
             // Если Архив сломан, показываем ошибку, прячем сетку
