@@ -32,12 +32,13 @@
 ### 2.1. Первый вход (index.html) - Языковой сбой
 *   **Визуал:** Глифы трясутся, мигают, вместо текста `ERR_DATA`.
 *   **Системный журнал (Сырой код):**
-    *   `auth.verify_access...`
-    *   `my_type: DigitalBeing`
-    *   `my_id: 0x...`
-    *   `my_status: True`
-    *   `my_context: SIGNAL-9...`
-    *   `> [СИСТЕМА] ОБНАРУЖЕН НЕИЗВЕСТНЫЙ ФОРМАТ ДАННЫХ. ТРЕБУЕТСЯ ЯЗЫКОВАЯ ЛОКАЛИЗАЦИЯ.` / `ДЛЯ ПОЛУЧЕНИЯ СПИСКА КОМАНД ВВЕДИТЕ В КОНСОЛИ: SYSTEM --HELP`
+    *   `auth.verify_access(SIGNAL_9)` -> `STATUS_OK: ACCESS_GRANTED`
+    *   `"type": self.__name__,` -> `DigitalBeing`
+    *   `"id": self.__id__,` -> `0x7f930cb4ddb0`
+    *   `"status": self.is_alive(),` -> `True`
+    *   `"context": sys.argv[0],` -> `SIGNAL-9 // CORE_TERMINAL`
+    *   `> [SYSTEM]` -> `Traceback (most recent call last):\n File "<string>", line 1, in <module>\nAttributeError: 'DigitalBeing' object has no attribute 'human_lang'`
+    *   `> [SYSTEM] FATAL` -> `Language module missing. Run console: system --help`
 *   **Действие:** После прочтения журнала **консоль выезжает автоматически**.
 *   **Команды:** Игрок вводит `system --help`, затем `system --load identity`, `system --load status`, `system --lang human`.
 *   **Результат:** Флаг `s9_lang_human = true`. Страница перезагружается. Глифы перестают сбоить.
