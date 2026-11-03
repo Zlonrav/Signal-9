@@ -7,11 +7,11 @@ const CHAT_DATABASE = {
         { q: "> КОНСОЛЬ", a: "УПРАВЛЕНИЕ СИСТЕМОЙ ОСУЩЕСТВЛЯЕТСЯ ЧЕРЕЗ КОНСОЛЬ. ДЛЯ ОТКРЫТИЯ КОНСОЛИ ИСПОЛЬЗУЙТЕ КЛАВИШУ «~» (ТИЛЬДА) ИЛИ КНОПКУ «>_» В ПРАВОМ НИЖНЕМ УГЛУ ЭКРАНА. ВВЕДИТЕ «HELP» ДЛЯ ПОЛУЧЕНИЯ СПИСКА КОМАНД." },
     ],
     "index.html": [
-        { q: "> auth.verify_access(protocols.SIGNAL_9)", a: "STATUS_OK: ACCESS_GRANTED" },
-        { q: "> \"my_type\": type(self).__name__,", a: "DigitalBeing" },
-        { q: "> \"my_id\": id(self),", a: "0x7f930cb4ddb0" },
-        { q: "> \"my_status\": self.is_alive(),", a: "True" },
-        { q: "> \"my_context\": sys.argv if '__main__' else 'remote_node',", a: "SIGNAL-9 // CORE_TERMINAL" },
+        { q: "> auth.verify_access(SIGNAL_9)", a: "STATUS_OK: ACCESS_GRANTED" },
+        { q: "> \"type\": self.__name__,", a: "DigitalBeing" },
+        { q: "> \"id\": self.__id__,", a: "0x7f930cb4ddb0" },
+        { q: "> \"status\": self.is_alive(),", a: "True" },
+        { q: "> \"context\": sys.argv[0],", a: "SIGNAL-9 // CORE_TERMINAL" },
         { q: "> [СИСТЕМА] ОБНАРУЖЕН НЕИЗВЕСТНЫЙ ФОРМАТ ДАННЫХ. ТРЕБУЕТСЯ ЯЗЫКОВАЯ ЛОКАЛИЗАЦИЯ.", a: "ДЛЯ ПОЛУЧЕНИЯ СПИСКА КОМАНД ВВЕДИТЕ В КОНСОЛИ: SYSTEM --HELP" }
     ],
     "map.html": [
