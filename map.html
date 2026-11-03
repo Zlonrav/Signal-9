@@ -80,6 +80,10 @@
 
         .map-node[data-id="hub"] { width: 150px; height: 150px; border-color: rgba(0, 242, 255, 0.4); box-shadow: 0 0 40px rgba(0, 242, 255, 0.1); }
         .map-node[data-id="hub"] .node-glyph { width: 38px; height: 38px; }
+        /* Запрещаем курсор-руку для заблокированных, даже если они ERROR */
+        .map-node.no-pointer {
+            cursor: not-allowed !important;
+        }
     </style>
 </head>
 <body class="tools-page">
