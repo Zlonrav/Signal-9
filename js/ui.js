@@ -1,14 +1,11 @@
 /**
- * UI ENGINE - СИСТЕМА УПРАВЛЕНИЯ ИНТЕРФЕЙСОМ СТАНЦИИ (V6.0)
- * Синхронизирована с глобальным режимом ЧС и навигационной телеметрией
+ * UI ENGINE - СИСТЕМА УПРАВЛЕНИЯ ИНТЕРФЕЙСОМ СТАНЦИИ (V6.1 - RAW MODE)
  */
 
 (function() {
-    // Защита от повторной инициализации при двойной загрузке
     if (window.UI_ENGINE_INITIALIZED) return;
     window.UI_ENGINE_INITIALIZED = true;
 
-    // --- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ МЕТАДАННЫХ ---
     window.lastStatusText = "";
     window.signalTarget = 98;
     window.signalDisplay = 98;
@@ -33,24 +30,35 @@
             const cycle = 25000; 
             const isHintTime = (now % cycle) > 20000;
             const isEmergency = localStorage.getItem('s9_emergency_flag') === 'active';
+            const isHuman = localStorage.getItem('s9_lang_human') === 'true';
 
             if (isHintTime) {
-                // БЕЗОПАСНАЯ ОРБИТА (Зеленый режим)
                 coordsElem.innerText = "142.0458.13.70"; 
                 if (statusElem) {
-                    statusElem.innerHTML = "СТАТУС: SAFE VECTOR DETECTED<br>" + 
-                    "<span style='font-size:8px; opacity:0.8; display:block; margin-top:2px;'>[SMA:142 | ECC:0.0458 | INC:13.7]</span>";
+                    if (isHuman) {
+                        statusElem.innerHTML = "СТАТУС: SAFE VECTOR DETECTED<br><span style='font-size:8px; opacity:0.8; display:block; margin-top:2px;'>[SMA:142 | ECC:0.0458 | INC:13.7]</span>";
+                    } else {
+                        statusElem.innerHTML = "status: SAFE_VECTOR<br><span style='font-size:8px; opacity:0.8; display:block; margin-top:2px;'>[SMA:142 | ECC:0.0458 | INC:13.7]</span>";
+                    }
                 }
-                // Зеленый цвет подсказки пробивается даже сквозь красный режим
                 if (panel) panel.classList.add('safe-orbit-active');
             } else {
-                // ОБЫЧНЫЙ РЕЖИМ (Синий или Красный)
                 const driftA = (149.6000 + Math.sin(now / 2000) * 0.005).toFixed(4);
                 const driftB = (18.04 + Math.cos(now / 1500) * 0.02).toFixed(2);
                 
-                coordsElem.innerText = `${driftA}.${driftB}`;
+                // Форматируем вектор как массив, если язык не загружен
+                if (isHuman) {
+                    coordsElem.innerText = `${driftA}.${driftB}`;
+                } else {
+                    coordsElem.innerText = `[${driftA}, ${driftB}]`;
+                }
+
                 if (statusElem) {
-                    statusElem.innerText = isEmergency ? "ВНИМАНИЕ: КРИТИЧЕСКИЙ ВЫБРОС" : "СТАТУС: ГЕОСТАЦИОНАР";
+                    if (isHuman) {
+                        statusElem.innerText = isEmergency ? "ВНИМАНИЕ: КРИТИЧЕСКИЙ ВЫБРОС" : "СТАТУС: ГЕОСТАЦИОНАР";
+                    } else {
+                        statusElem.innerText = isEmergency ? "status: CRITICAL" : "status: GEO_STATIONARY";
+                    }
                 }
                 if (panel) panel.classList.remove('safe-orbit-active');
             }
@@ -66,7 +74,6 @@
             localStorage.setItem('s9_emergency_flag', 'active');
             document.body.classList.add('emergency-mode');
             
-            // Визуал ERROR на главной
             if (phraseContainer) {
                 phraseContainer.innerHTML = '';
                 for (let i = 0; i < 5; i++) {
@@ -79,18 +86,18 @@
         } else {
             localStorage.removeItem('s9_emergency_flag');
             document.body.classList.remove('emergency-mode');
-            // Перезагрузка для полного восстановления систем
             location.reload(); 
         }
     };
 
-    // Функция для вызова из терминала (лекарство)
     window.resolveEmergency = function() {
         window.triggerSignalLoss(false);
     };
 
     // --- 3. ОБРАБОТКА МЕТАДАННЫХ (для core.js) ---
     window.updateMetaData = function(now, error, timePassed, phraseIndex) {
+        const isHuman = localStorage.getItem('s9_lang_human') === 'true';
+
         const statusMeta = document.getElementById('status-meta');
         if (statusMeta) {
             if (now > window.nextSignalUpdate) {
@@ -98,23 +105,42 @@
                 window.nextSignalUpdate = now + 1500 + Math.random() * 2500;
             }
             window.signalDisplay += (window.signalTarget - window.signalDisplay) * 0.02;
-            let receptionText = window.signalDisplay < 94 ? '<span style="color:#ff3333; font-weight:bold;">НЕСТАБИЛЬНЫЙ</span>' : 'АКТИВНЫЙ';
-            if (error) receptionText = '<span style="color:#ff3333; font-weight:bold;">ОБРЫВ СВЯЗИ</span>';
-            statusMeta.innerHTML = `УРОВЕНЬ СИГНАЛА: ${window.signalDisplay.toFixed(1)}% | ПРИЁМ: ${receptionText}`;
+            
+            if (isHuman) {
+                let receptionText = window.signalDisplay < 94 ? '<span style="color:#ff3333; font-weight:bold;">НЕСТАБИЛЬНЫЙ</span>' : 'АКТИВНЫЙ';
+                if (error) receptionText = '<span style="color:#ff3333; font-weight:bold;">ОБРЫВ СВЯЗИ</span>';
+                statusMeta.innerHTML = `УРОВЕНЬ СИГНАЛА: ${window.signalDisplay.toFixed(1)}% | ПРИЁМ: ${receptionText}`;
+            } else {
+                let rawRecv = window.signalDisplay < 94 ? 'FALSE' : 'TRUE';
+                if (error) rawRecv = 'FALSE (ERR)';
+                statusMeta.innerHTML = `signal_amp: ${window.signalDisplay.toFixed(1)}% | recv: ${rawRecv}`;
+            }
         }
 
         const statusTextElem = document.getElementById('status-text');
         const progressBar = document.getElementById('status-progress-bar');
         if (statusTextElem) {
-            let currentText = error ? "КРИТИЧЕСКАЯ ОШИБКА ПЕРЕДАЧИ" : "ПОЛУЧЕНИЕ СИГНАЛА";
-            if (!error && timePassed < 128) {
-                const statuses = ["СИНХРОНИЗАЦИЯ ПОТОКА", "ИДЕНТИФИКАЦИЯ ПАКЕТОВ", "ДЕШИФРОВКА МАССИВА ДАННЫХ", "АНАЛИЗ ДАННЫХ"];
-                currentText = statuses[Math.floor(timePassed / 10) % statuses.length];
-                if(progressBar) progressBar.style.width = `${(timePassed / 128) * 100}%`;
-            } else if (!error) {
-                currentText = "РАБОТА ЗАВЕРШЕНА / 100%";
-                if(progressBar) { progressBar.style.width = "100%"; progressBar.style.background = "#00ff00"; }
+            let currentText = "";
+            
+            if (isHuman) {
+                currentText = error ? "КРИТИЧЕСКАЯ ОШИБКА ПЕРЕДАЧИ" : "ПОЛУЧЕНИЕ СИГНАЛА";
+                if (!error && timePassed < 128) {
+                    const statuses = ["СИНХРОНИЗАЦИЯ ПОТОКА", "ИДЕНТИФИКАЦИЯ ПАКЕТОВ", "ДЕШИФРОВКА МАССИВА ДАННЫХ", "АНАЛИЗ ДАННЫХ"];
+                    currentText = statuses[Math.floor(timePassed / 10) % statuses.length];
+                } else if (!error) {
+                    currentText = "РАБОТА ЗАВЕРШЕНА / 100%";
+                }
+            } else {
+                // СЫРОЙ РЕЖИМ
+                currentText = error ? "decrypt_process: ERROR" : "decrypt_process: RUNNING";
+                if (!error && timePassed >= 110) currentText = "decrypt_process: DONE";
             }
+
+            if(progressBar) {
+                if (!error && timePassed < 128) progressBar.style.width = `${(timePassed / 128) * 100}%`;
+                else if (!error) { progressBar.style.width = "100%"; progressBar.style.background = "#00ff00"; }
+            }
+            
             if (window.lastStatusText !== currentText) window.lastStatusText = currentText;
 
             let content = "";
@@ -146,45 +172,51 @@
 
     // --- 5. ИНИЦИАЛИЗАЦИЯ И ОБРАБОТЧИКИ ---
     document.addEventListener('DOMContentLoaded', () => {
-        // Кнопка аудиодатчиков
         const audioBtn = document.getElementById('audio-toggle');
         if (audioBtn) {
             audioBtn.onclick = function() {
                 if (typeof toggleAudio === 'function') {
-                    // Разблокировка аудио-контекста для браузера
                     if (window.audioCtx && window.audioCtx.state === 'suspended') {
                         window.audioCtx.resume();
                     }
                     toggleAudio();
                     const isActive = !window.isMuted;
+                    const isHuman = localStorage.getItem('s9_lang_human') === 'true';
+                    
                     this.classList.toggle('active', isActive);
                     const icon = document.getElementById('audio-status-icon');
+                    const status = document.getElementById('audio-status');
+                    
                     if (icon) icon.innerText = isActive ? "●" : "○";
+                    if (status) {
+                        if (isHuman) {
+                            status.innerText = isActive ? "АУДИОДАТЧИКИ: ВКЛ" : "АУДИОДАТЧИКИ: ВЫКЛ";
+                        } else {
+                            status.innerText = isActive ? "audio_sensors: true" : "audio_sensors: false";
+                        }
+                    }
                 }
             };
         }
 
-        // Запуск телеметрии
         window.startStationTelemetry();
 
-        // Проверка режима ЧС при загрузке (вызываем нашу умную систему стилей)
         if (typeof applyEmergencyStyles === 'function') {
             applyEmergencyStyles();
         }
     });
 
-})(); // <--- ЗДЕСЬ ЗАКРЫВАЕТСЯ АНОНИМНАЯ ФУНКЦИЯ UI_ENGINE
+})(); 
 
 // --- ЦЕНТРАЛЬНАЯ СИСТЕМА МОНИТОРИНГА ЧС И ИНТЕРФЕЙСА ---
 window.applyEmergencyStyles = function() {
     const isSolar = localStorage.getItem('s9_emergency_flag') === 'active';
     const isReactor = localStorage.getItem('s9_emergency_reactor') === 'active';
+    const isHuman = localStorage.getItem('s9_lang_human') === 'true';
 
-    // 1. УПРАВЛЕНИЕ КРАСНЫМ РЕЖИМОМ СТАНЦИИ
     if (isSolar || isReactor) {
         document.body.classList.add('emergency-mode');
         
-        // 2. ДИНАМИЧЕСКОЕ СОЗДАНИЕ И ОБНОВЛЕНИЕ ПЛАШКИ ПРЕДУПРЕЖДЕНИЯ
         let bar = document.getElementById('emergency-bar');
         if (!bar) {
             bar = document.createElement('div');
@@ -193,17 +225,19 @@ window.applyEmergencyStyles = function() {
             document.body.appendChild(bar);
         }
         
-        // Подменяем текст плашки в зависимости от типа активной угрозы
-        bar.innerText = isReactor ? "ВНИМАНИЕ! КРИТИЧЕСКИЙ СБОЙ ПО РЕАКТОРА!" : "ВНИМАНИЕ! СОЛНЕЧНАЯ АКТИВНОСТЬ!";
+        if (isHuman) {
+            bar.innerText = isReactor ? "ВНИМАНИЕ! КРИТИЧЕСКИЙ СБОЙ ПО РЕАКТОРА!" : "ВНИМАНИЕ! СОЛНЕЧНАЯ АКТИВНОСТЬ!";
+        } else {
+            bar.innerText = isReactor ? "WARNING: REACTOR_CRITICAL_FAILURE" : "WARNING: SOLAR_ACTIVITY";
+        }
+        
     } else {
-        // 3. ВОЗВРАЩАЕМ ШТАТНЫЙ РЕЖИМ (СИНИЙ НЕОН), КОГДА ВСЁ ЧИСТО
         document.body.classList.remove('emergency-mode');
         const bar = document.getElementById('emergency-bar');
         if (bar) bar.remove();
     }
 };
 
-// НАЗНАЧАЕМ ЕДИНЫЕ ОБРАБОТЧИКИ СОБЫТИЙ ДЛЯ СИНХРОНИЗАЦИИ ВКЛАДОК
 document.addEventListener('DOMContentLoaded', window.applyEmergencyStyles);
 window.addEventListener('load', window.applyEmergencyStyles);
 window.addEventListener('storage', window.applyEmergencyStyles);
