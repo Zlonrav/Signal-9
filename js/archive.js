@@ -72,7 +72,21 @@
                     const cell = document.createElement('div');
                     cell.className = 'glyph-cell';
                     
-                    // УБРАЛИ ЛОГИКУ РАСТВОРЕНИЯ, ЧТОБЫ ВСЕ БЫЛО ВИДНО
+                    // --- ЛОГИКА ПЛАВНОГО ИСЧЕЗНОВЕНИЯ ---
+                    if (currentPage === 2) {
+                        const age = now - phraseObj.timestamp;
+                        const timeLeft = (CYCLE_TIME_MS * 2) - age;
+                        // Если фраза старая (5-я строка) или время подходит к концу — тускнеем
+                        if (timeLeft < 15000) {
+                            cell.style.opacity = Math.max(0, timeLeft / 15000);
+                            cell.style.transform = `scale(${Math.max(0.5, timeLeft / 15000)})`;
+                        } else if (row === 4) {
+                            // Самая нижняя фраза всегда чуть тусклее, показывая, что она на выходе
+                            cell.style.opacity = 0.5;
+                        }
+                    }
+                    // -----------------------------------
+
                     const indices = typeof getPath === 'function' ? getPath(word) : [];
                     let svgMarkup = typeof createSVG === 'function' ? createSVG(indices) : '';
                     
