@@ -21,6 +21,7 @@
         #tilde-console .console-output::-webkit-scrollbar-thumb { background: var(--neon); box-shadow: 0 0 10px var(--neon); border-radius: 2px; }
         
         #tilde-console .cmd-text { color: var(--neon) !important; font-weight: bold; text-transform: lowercase !important; text-shadow: 0 0 5px var(--neon); }
+        .cmd-text { color: var(--neon) !important; font-weight: bold; text-transform: lowercase !important; text-shadow: 0 0 5px var(--neon); }
         #tilde-console .topic-header { color: var(--neon) !important; font-weight: bold; text-transform: uppercase; text-shadow: 0 0 5px var(--neon); }
         
         #tilde-console .err { color: #ff3333; }
