@@ -259,6 +259,15 @@ const CHAT_DATABASE = {
                     localStorage.setItem('s9_map_visited', 'true');
                 }
                 // --------------------------------------
+                                // --- НОВЫЙ БЛОК: ЗАВЕРШЕНИЕ ТЕСТА АРХИВА ---
+                if (page === 'archive.html' && window.currentChatStep === data.length) {
+                    if (localStorage.getItem('s9_archive_calibrated') === 'true') {
+                        localStorage.setItem('s9_archive_fixed', 'true');
+                        // Перезагружаем страницу, чтобы Архив увидел новый флаг и обновил журнал
+                        setTimeout(() => { location.reload(); }, 1000); 
+                    }
+                }
+                // --------------------------------------------
 
             }, 2000);
         });
