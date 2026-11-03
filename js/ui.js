@@ -179,9 +179,25 @@
     };
 
     // --- 5. ИНИЦИАЛИЗАЦИЯ И ОБРАБОТЧИКИ ---
+    // --- 5. ИНИЦИАЛИЗАЦИЯ И ОБРАБОТЧИКИ ---
     document.addEventListener('DOMContentLoaded', () => {
         const isHuman = localStorage.getItem('s9_lang_human') === 'true';
         
+        // --- ПЕРЕВОД ИНТЕРФЕЙСА В СЫРОЙ РЕЖИМ ---
+        if (!isHuman) {
+            // 1. Меняем слово "ВЕКТОР:" в телеметрии
+            const vectorLabel = document.getElementById('vector-label');
+            if (vectorLabel) vectorLabel.innerText = "vector:";
+
+            // 2. Меняем заголовок "СИСТЕМНЫЙ ТЕРМИНАЛ" в журнале через внедрение CSS
+            const style = document.createElement('style');
+            style.innerHTML = `
+                .chat-system::before { content: "sys_terminal"; }
+            `;
+            document.head.appendChild(style);
+        }
+        // -----------------------------------------
+
         // Инициализация аудио-кнопки
         const audioBtn = document.getElementById('audio-toggle');
         const audioStatusLabel = document.getElementById('audio-status');
