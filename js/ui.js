@@ -180,7 +180,11 @@
 
     // --- 5. ИНИЦИАЛИЗАЦИЯ И ОБРАБОТЧИКИ ---
     document.addEventListener('DOMContentLoaded', () => {
-        const isHuman = localStorage.getItem('s9_lang_human') === 'true';
+        const page = window.location.pathname.split('/').pop() || 'index.html';
+        const isLoginPage = page === 'login.html';
+        
+        // На логине всегда человеческий язык
+        const isHuman = isLoginPage || localStorage.getItem('s9_lang_human') === 'true';
         
         // --- ПЕРЕВОД ИНТЕРФЕЙСА В СЫРОЙ РЕЖИМ ---
         if (!isHuman) {
@@ -198,7 +202,7 @@
         const audioStatusLabel = document.getElementById('audio-status');
         const icon = document.getElementById('audio-status-icon');
         
-        // Установка текста при загрузке (с учетом языка)
+        // Установка текста при загрузке
         if (audioStatusLabel) {
             if (isHuman) {
                 audioStatusLabel.innerText = "АУДИОДАТЧИКИ: ВЫКЛ"; 
@@ -209,14 +213,14 @@
 
         if (audioBtn) {
             audioBtn.onclick = function() {
-                if (typeof toggleAudio === 'function') {
+                if (typeof window.toggleAudio === 'function') {
                     if (window.audioCtx && window.audioCtx.state === 'suspended') {
                         window.audioCtx.resume();
                     }
                     
-                    toggleAudio(); 
+                    window.toggleAudio(); 
                     
-                    const isActive = !window.isMuted; // Читаем глобальную переменную
+                    const isActive = !window.isMuted; 
                     
                     this.classList.toggle('active', isActive);
                     if (icon) icon.innerText = isActive ? "●" : "○";
