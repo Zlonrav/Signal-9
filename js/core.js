@@ -59,7 +59,12 @@ function update() {
 
     // --- АВТОСОХРАНЕНИЕ В АРХИВ ---
     if (timePassed >= TOTAL_DECRYPT_TIME && timePassed < TOTAL_DECRYPT_TIME + 2) {
-        if (localStorage.getItem('s9_archive_calibrated') === 'true') {
+    // --- АВТОСОХРАНЕНИЕ В АРХИВ (УМНОЕ) ---
+    if (localStorage.getItem('s9_archive_calibrated') === 'true') {
+        // Проверяем, не сохранили ли мы уже эту конкретную фразу
+        if (window.lastSavedPhrase !== phraseIndex && timePassed >= TOTAL_DECRYPT_TIME) {
+            window.lastSavedPhrase = phraseIndex; // Запоминаем, что эту фразу сохранили
+            
             let glyphs = [];
             const data = localStorage.getItem('s9_glyphs_data');
             if (data) glyphs = JSON.parse(data);
@@ -68,7 +73,7 @@ function update() {
             
             words.forEach(w => {
                 const cleanWord = w.toUpperCase().replace(/[^А-ЯЁA-Z]/g, '');
-                if (cleanWord.length >= 3) {
+                if (cleanWord.length >= 3) { // Отсекаем короткие слова
                     const exists = glyphs.some(g => g.word === cleanWord);
                     if (!exists) {
                         glyphs.push({ word: cleanWord, timestamp: Date.now() });
@@ -77,6 +82,7 @@ function update() {
                 }
             });
 
+            // Ограничиваем 50 глифами
             if (glyphs.length > 50) {
                 glyphs = glyphs.slice(glyphs.length - 50);
             }
@@ -85,6 +91,7 @@ function update() {
                 localStorage.setItem('s9_glyphs_data', JSON.stringify(glyphs));
             }
         }
+    }
     }
     // -------------------------------
 
