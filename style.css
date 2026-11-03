@@ -62,14 +62,13 @@ path {
     bottom: -40px;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 10px;
     letter-spacing: 4px;
     text-transform: uppercase;
     white-space: nowrap;
     min-width: 160px;
     text-align: center;
 	font-family: 'Michroma', sans-serif;
-    font-size: 10px !important;
+    font-size: 9px !important;
 }
 
 .char-fixed { color: var(--neon); text-shadow: 0 0 10px var(--neon); opacity: 1; }
