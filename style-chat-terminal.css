@@ -79,7 +79,3 @@
             background: rgba(0, 242, 255, 0.1);
             border-color: var(--neon);
         }
-		.question, .answer-field {
-		    word-break: break-all;     /* Разрешает перенос длинных слов/кода */
-		    overflow-wrap: break-word; /* Дополнительная страховка для переноса */
-		}
