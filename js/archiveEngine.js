@@ -1,86 +1,70 @@
-// js/audioEngine.js
+// --- ARCHIVE ENGINE (V1.2 - ЭТАЛОННАЯ ОТРИСОВКА) ---
+function initArchive() {
+    const grid = document.getElementById('archiveGrid');
+    if (!grid) return;
 
-let audioCtx, masterGain, noiseSource, glyphGainNode;
-window.isMuted = false; // Сделали глобальной
-
-const toggleAudio = () => {
-    // 1. Если контекста нет — создаем его
-    if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        masterGain = audioCtx.createGain();
-        masterGain.connect(audioCtx.destination);
-        
-        // Генерация шума
-        const bufferSize = 2 * audioCtx.sampleRate;
-        const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-        const output = noiseBuffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) output[i] = Math.random() * 2 - 1;
-        
-        noiseSource = audioCtx.createBufferSource();
-        noiseSource.buffer = noiseBuffer;
-        noiseSource.loop = true;
-        
-        const filter = audioCtx.createBiquadFilter();
-        filter.type = 'lowpass'; 
-        filter.frequency.value = 60;
-        
-        const noiseGain = audioCtx.createGain();
-        noiseGain.gain.value = 0.05; 
-        
-        noiseSource.connect(filter).connect(noiseGain).connect(masterGain);
-        noiseSource.start();
-
-        // При создании звук включен
-        window.isMuted = false; 
-        masterGain.gain.setValueAtTime(1.0, audioCtx.currentTime);
-        
-    } else {
-        // 2. Если контекст уже есть — переключаем
-        window.isMuted = !window.isMuted;
-        
-        const targetVolume = window.isMuted ? 0 : 1.0;
-        masterGain.gain.setTargetAtTime(targetVolume, audioCtx.currentTime, 0.1);
-    }
-};
-
-const playGlyphSound = async (pathIndices) => {
-    // Используем window.isMuted
-    if (!audioCtx || window.isMuted || isSignalLoss) return; 
+    // Собираем все слова из библиотеки (фразы и словарь)
+    const allWords = [
+        ...(typeof PHRASES !== 'undefined' ? PHRASES.flatMap(p => p.split(' ')) : []), 
+        ...(typeof VOCABULARY !== 'undefined' ? VOCABULARY : [])
+    ];
     
-    if (glyphGainNode) {
-        const prevGain = glyphGainNode;
-        prevGain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.05);
-        setTimeout(() => prevGain.disconnect(), 60);
-    }
-    glyphGainNode = audioCtx.createGain();
-    glyphGainNode.connect(masterGain);
-    let currentTime = audioCtx.currentTime;
-    
-    for (let i = 0; i < pathIndices.length - 1; i++) {
-        const p1 = POINTS[pathIndices[i]], p2 = POINTS[pathIndices[i+1]];
-        if (!p1 || !p2) continue;
-        const dx = Math.abs(p2.x - p1.x), dy = Math.abs(p2.y - p1.y);
-        const length = Math.sqrt(dx*dx + dy*dy) / 25;
-        let baseFreq = dx === 0 ? 260 : (dy !== 0 ? 220 : 180);
-        const step = (length * 0.14) / Math.floor(length * 15 || 1);
-        
-        for (let g = 0; g < Math.floor(length * 15); g++) {
-            const osc = audioCtx.createOscillator(), gNode = audioCtx.createGain(), filter = audioCtx.createBiquadFilter();
-            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(baseFreq + (Math.random() * 10), currentTime);
-            filter.type = 'bandpass'; filter.frequency.setValueAtTime(baseFreq * 2, currentTime); filter.Q.value = 10;
-            gNode.gain.setValueAtTime(0, currentTime);
-            gNode.gain.linearRampToValueAtTime(0.1, currentTime + 0.005);
-            gNode.gain.exponentialRampToValueAtTime(0.0001, currentTime + step * 0.8);
-            osc.connect(filter).connect(gNode).connect(glyphGainNode);
-            osc.start(currentTime); osc.stop(currentTime + step);
-            currentTime += step;
+	// 1. Получаем уникальные слова
+	let uniqueWords = [...new Set(allWords.map(w => w.toUpperCase().replace(/[^А-ЯЁA-Z]/g, '')))].filter(w => w.length > 0);
+
+	// 2. СОРТИРОВКА: сначала те, что есть в localStorage
+	uniqueWords.sort((a, b) => {
+		const aUnlocked = localStorage.getItem('s9_glyph_' + a) === 'true';
+		const bUnlocked = localStorage.getItem('s9_glyph_' + b) === 'true';
+		if (aUnlocked && !bUnlocked) return -1;
+		if (!aUnlocked && bUnlocked) return 1;
+		return a.localeCompare(b); // Остальные по алфавиту
+	});
+
+    grid.innerHTML = '';
+
+    uniqueWords.forEach(word => {
+        const isUnlocked = localStorage.getItem('s9_glyph_' + word) === 'true';
+        const cell = document.createElement('div');
+        cell.className = `archive-cell ${isUnlocked ? 'unlocked' : 'locked'}`;
+
+        if (isUnlocked) {
+            // БЕРЕМ ЭТАЛОННЫЙ ПУТЬ ИЗ СЛОВАРЯ
+            const indices = typeof getPath === 'function' ? getPath(word) : [];
+            
+            // Генерируем SVG. ВАЖНО: проверяем наличие функции createSVG
+            let svgMarkup = "";
+            if (typeof createSVG === 'function') {
+                svgMarkup = createSVG(indices);
+                // Если в createSVG нет viewBox, добавляем его принудительно через замену
+                if (!svgMarkup.includes('viewBox')) {
+                    svgMarkup = svgMarkup.replace('<svg', '<svg viewBox="0 0 80 80"');
+                }
+            }
+            
+            cell.innerHTML = `
+                <div class="glyph-container">${svgMarkup}</div>
+                <div class="cell-label">${word}</div>
+            `;
+
+            cell.onmouseenter = () => {
+                if (typeof playGlyphSound === 'function') playGlyphSound(indices);
+            };
+        } else {
+            // Ячейка заблокирована
+            cell.innerHTML = `
+                <div class="glyph-container">
+                    <svg viewBox="0 0 80 80">
+                        <circle cx="40" cy="40" r="2" fill="var(--neon)" opacity="0.15" />
+                    </svg>
+                </div>
+                <div class="cell-label">LOCKED</div>
+            `;
         }
-        
-        const chime = audioCtx.createOscillator(), chimeGain = audioCtx.createGain();
-        chime.type = 'sine'; chime.frequency.setValueAtTime(baseFreq * 4, currentTime);
-        chimeGain.gain.setValueAtTime(0.05, currentTime);
-        chimeGain.gain.exponentialRampToValueAtTime(0.0001, currentTime + 0.05);
-        chime.connect(chimeGain).connect(glyphGainNode);
-        chime.start(currentTime); chime.stop(currentTime + 0.05);
-    }
-};
+
+        grid.appendChild(cell);
+    });
+}
+
+// Запуск при загрузке
+document.addEventListener('DOMContentLoaded', initArchive);
