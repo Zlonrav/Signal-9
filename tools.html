@@ -250,6 +250,13 @@
                             statusLabel.innerText = "КАЛИБРОВКА ЗАВЕРШЕНА";
                             statusLabel.style.color = "#00ff44"; 
                             localStorage.setItem('s9_archive_calibrated', 'true');
+
+                            const glyphsData = [];
+                            const now = Date.now();
+                            TARGET_WORDS.forEach((w, i) => {
+                                glyphsData.push({ word: w, timestamp: now - (i * 1000) });
+                            });
+                            localStorage.setItem('s9_glyphs_data', JSON.stringify(glyphsData));
                             
                             setTimeout(() => {
                                 window.location.href = 'archive.html';
