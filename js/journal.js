@@ -90,10 +90,9 @@ const CHAT_DATABASE = {
             let isFixed = localStorage.getItem('s9_archive_fixed') === 'true';
 
             if (isCalibrated && !isFixed) {
-                const glyphs = JSON.parse(localStorage.getItem('s9_glyphs_data') || '[]');
-                
-                // Если в Архиве больше 10 глифов, значит тест пройден
-                if (glyphs.length > 10) {
+                const phrases = JSON.parse(localStorage.getItem('s9_phrases_data') || '[]');
+                // Если в Архиве больше 5 фраз, значит Хаб уже скинул новые (тест пройден)
+                if (phrases.length > 5) {
                     localStorage.setItem('s9_archive_fixed', 'true');
                     isFixed = true; 
                 } else {
