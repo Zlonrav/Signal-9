@@ -117,6 +117,11 @@
     function processCommand(cmd) {
         print(`> ${printCmd(cmd)}`);
 
+        // --- ХУК ДЛЯ ЧИТОВ (ДОБАВИТЬ СЮДА) ---
+        if (window.CheatManager && window.CheatManager.handleCommand(cmd, print)) {
+            return; // Если читы обработали команду, терминал останавливается
+        }
+
         // Определяем страницу и проверяем, не логин ли это
         const currentPage = window.location.pathname.split('/').pop() || 'index.html';
         const isLoginPage = currentPage === 'login.html';
