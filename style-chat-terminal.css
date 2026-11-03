@@ -35,26 +35,31 @@
 		}
 
 		.answer-field {
-			font-size: 10px;
-			/* Вместо opacity: 0.7 используем цвет с примесью серого для "тусклости" */
-			color: var(--neon); 
-			line-height: 1.4;
-			text-transform: uppercase;
-			min-height: 20px;
-			white-space: pre-wrap;
-			
-			/* Эти свойства убирают расплывчатость: */
-			-webkit-font-smoothing: antialiased;
-			-moz-osx-font-smoothing: grayscale;
-			text-rendering: optimizeLegibility;
-			
-			/* Ослабляем свечение для мелкого шрифта, чтобы оно не "съедало" буквы */
-			text-shadow: 0 0 2px rgba(0, 242, 255, 0.3);
-			font-smooth: never;
-			-webkit-font-smoothing: none;
-			letter-spacing: 0.5px; /* Небольшой разлет букв тоже добавит четкости */
+		    font-size: 11px;
+		    color: #a0b0b5; /* Приглушенный серо-бирюзовый цвет для вывода */
+		    line-height: 1.5;
+		    text-transform: uppercase;
+		    min-height: 20px;
+		    white-space: pre-wrap;
+		    
+		    /* Визуальное выделение ответа */
+		    padding-left: 12px; 
+		    margin-top: 5px;
+		    border-left: 1px solid rgba(0, 242, 255, 0.2); /* Тонкая линия слева для красоты */
+		    
+		    /* Сглаживание текста */
+		    -webkit-font-smoothing: antialiased;
+		    -moz-osx-font-smoothing: grayscale;
+		    text-rendering: optimizeLegibility;
+		    
+		    /* Убираем свечение, чтобы текст не "плыл" */
+		    text-shadow: none; 
+		    letter-spacing: 0.5px;
+		    
+		    /* Защита от обрезки */
+		    word-break: break-word;
+		    overflow-wrap: break-word;
 		}
-
 
         /* ИНЖЕНЕРНЫЙ ТЕРМИНАЛ - НИЖНИЙ ПРАВЫЙ УГОЛ */
         .terminal-link-fixed {
