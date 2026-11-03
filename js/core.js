@@ -49,7 +49,6 @@ function update() {
     const timePerGlyph = TOTAL_DECRYPT_TIME / words.length;
 
     // --- АВТОСОХРАНЕНИЕ В АРХИВ ---
-    // Если прошло время дешифровки (110 сек) и Архив починен
     if (timePassed >= TOTAL_DECRYPT_TIME && timePassed < TOTAL_DECRYPT_TIME + 2) {
         if (localStorage.getItem('s9_archive_fixed') === 'true') {
             let glyphs = [];
@@ -60,8 +59,7 @@ function update() {
             
             words.forEach(w => {
                 const cleanWord = w.toUpperCase().replace(/[^А-ЯЁA-Z]/g, '');
-                if (cleanWord.length >= 3) { // Отсекаем короткие слова
-                    // Проверяем, нет ли уже такого глифа в последних 50
+                if (cleanWord.length >= 3) {
                     const exists = glyphs.some(g => g.word === cleanWord);
                     if (!exists) {
                         glyphs.push({ word: cleanWord, timestamp: Date.now() });
@@ -70,7 +68,6 @@ function update() {
                 }
             });
 
-            // Ограничиваем 50 глифами
             if (glyphs.length > 50) {
                 glyphs = glyphs.slice(glyphs.length - 50);
             }
@@ -85,6 +82,19 @@ function update() {
     units.forEach((unit, idx) => {
         const word = unit.dataset.wordActual, label = unit.querySelector('.glyph-label');
         if (!label) return;
+
+        // --- ЭФФЕКТ СБОЯ ЯЗЫКА ---
+        if (localStorage.getItem('s9_lang_human') !== 'true') {
+            unit.style.filter = "hue-rotate(" + Math.random() * 360 + "deg) brightness(1.5)";
+            unit.style.transform = `translate(${Math.random()*4-2}px, ${Math.random()*4-2}px)`;
+            label.innerHTML = `<span class="char-noise" style="color:#ff3333;">ERR_DATA</span>`;
+            return; 
+        } else {
+            unit.style.filter = "none";
+            unit.style.transform = "none";
+        }
+        // -------------------------
+
         const revealStart = idx * timePerGlyph;
         let html = "";
         if (timePassed < revealStart) {
