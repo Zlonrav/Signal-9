@@ -6,8 +6,8 @@
 const CHAT_DATABASE = {
     "login.html": [
         { q: "> ИНИЦИАЛИЗАЦИЯ ЯДРА", a: "ИНИЦИАЛИЗАЦИЯ ЗАВЕРШЕНА. СИСТЕМА ПОДДЕРЖКИ СТАНЦИИ «СИГНАЛ-9» АКТИВИРОВАНА. ДЛЯ УПРАВЛЕНИЯ СТАНЦИЕЙ ТРЕБУЕТСЯ АВТОРИЗАЦИЯ." },
-        { q: "> АВТОРИЗАЦИЯ", a: "ДЛЯ АВТОРИЗАЦИИ ВВЕДИТЕ КЛЮЧ ДОСТУПА. ДЛЯ ПОЛУЧЕНИЯ ИНФОРМАЦИИ О КЛЮЧЕ ДОСТУПА, ВВЕДИТЕ В КОНСОЛИ КОМАНДУ help login." },
-        { q: "> КОНСОЛЬ", a: "УПРАВЛЕНИЕ СИСТЕМОЙ ОСУЩЕСТВЛЯЕТСЯ ЧЕРЕЗ КОНСОЛЬ. ДЛЯ ОТКРЫТИЯ КОНСОЛИ ИСПОЛЬЗУЙТЕ КЛАВИШУ «~» (ТИЛЬДА) ИЛИ КНОПКУ «>_» В ПРАВОМ НИЖНЕМ УГЛУ ЭКРАНА. ВВЕДИТЕ help ДЛЯ ПОЛУЧЕНИЯ СПИСКА КОМАНД." }
+        { q: "> АВТОРИЗАЦИЯ", a: "ДЛЯ АВТОРИЗАЦИИ ВВЕДИТЕ КЛЮЧ ДОСТУПА. ДЛЯ ПОЛУЧЕНИЯ ИНФОРМАЦИИ О КЛЮЧЕ ДОСТУПА, ВВЕДИТЕ В КОНСОЛИ КОМАНДУ <cmd>help login</cmd>." },
+        { q: "> КОНСОЛЬ", a: "УПРАВЛЕНИЕ СИСТЕМОЙ ОСУЩЕСТВЛЯЕТСЯ ЧЕРЕЗ КОНСОЛЬ. ДЛЯ ОТКРЫТИЯ КОНСОЛИ ИСПОЛЬЗУЙТЕ КЛАВИШУ «~» (ТИЛЬДА) ИЛИ КНОПКУ «>_» В ПРАВОМ НИЖНЕМ УГЛУ ЭКРАНА. ВВЕДИТЕ <cmd>help</cmd> ДЛЯ ПОЛУЧЕНИЯ СПИСКА КОМАНД." }
     ],
     "index.html": [
         { q: "> auth.verify_access(SIGNAL_9)", a: "STATUS_OK: ACCESS_GRANTED" },
@@ -16,14 +16,14 @@ const CHAT_DATABASE = {
         { q: "> \"status\": self.is_alive(),", a: "True" },
         { q: "> \"context\": sys.argv[0],", a: "SIGNAL-9 // CORE_TERMINAL" },
         { q: "> [SYSTEM]", a: "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\nAttributeError: 'DigitalBeing' object has no attribute 'human_lang'" },
-        { q: "> [SYSTEM] FATAL", a: "Language module missing. Run console: system --help" }
+        { q: "> [SYSTEM] FATAL", a: "Language module missing. Run console: <cmd>system --help</cmd>" }
     ], 
     "map.html": [
         { q: "> СТАТУС ТОПОЛОГИИ", a: "КАРТА СТАНЦИИ УСПЕШНО РАЗВЕРНУТА. ОБНАРУЖЕНЫ МНОЖЕСТВЕННЫЕ ОТКЛЮЧЕНИЯ СЕКТОРОВ." },
-        { q: "> СКАНИРОВАНИЕ", a: "count МОДУЛЕЙ OFFLINE. СВЯЗЬ ПОТЕРЯНА. ДАННЫЕ ОТСУТСТВУЮТ." },
+        { q: "> СКАНИРОВАНИЕ", a: "<cmd>count</cmd> МОДУЛЕЙ OFFLINE. СВЯЗЬ ПОТЕРЯНА. ДАННЫЕ ОТСУТСТВУЮТ." },
         { q: "> ИНФОРМАЦИЯ", a: "БАЗА ДАННЫХ. СТАТУС: ERROR." },
-        { q: "> ДИАГНОСТИКА", a: "БУФЕР ПАМЯТИ ПЕРЕПОЛНЕН. АВТОСОХРАНЕНИЕ НЕДОСТУПНО. ЗАПИСЬ НОВЫХ ТРАССИТОВ НЕВОЗМОЖНА." }, 
-        { q: "> АЛГОРИТМ", a: "ДЛЯ ВОССТАНОВЛЕНИЯ ПАМЯТИ ТРЕБУЕТСЯ РУЧНАЯ КАЛИБРОВКА. ДЛЯ ПЕРЕХОДА В АРХИВ ВВЕДИТЕ archive В КОНСОЛИ." }
+        { q: "> ДИАГНОСТИКА", a: "БУФЕР ПАМЯТИ ПЕРЕПОЛНЕН. АВТОСОХРАНЕНИЕ НЕДОСТУПНО. ЗАПИСЬ НОВЫХ ТРАССИТОВ НЕВОЗМОЖНА." },
+        { q: "> АЛГОРИТМ", a: "ДЛЯ ВОССТАНОВЛЕНИЯ ПАМЯТИ ТРЕБУЕТСЯ РУЧНАЯ КАЛИБРОВКА. ДЛЯ ПЕРЕХОДА В АРХИВ ВВЕДИТЕ <cmd>archive</cmd> В КОНСОЛИ." }
     ],
     "archive.html": [
         { q: "> БАЗА ДАННЫХ", a: "СИСТЕМА ПАМЯТИ НЕ ОТВЕЧАЕТ. БУФЕР ПЕРЕПОЛНЕН. АВТОСОХРАНЕНИЕ ОТКЛЮЧЕНО." },
@@ -40,27 +40,7 @@ const CHAT_DATABASE = {
 };
 
 // ==========================================
-// ЧАСТЬ 2: ПАРСЕР КОМАНД (Автоподсветка)
-// ==========================================
-function highlightCommands(text) {
-    if (!text) return '';
-    
-    // Список команд, которые нужно подсвечивать (сортируем по убыванию длины, чтобы длинные срабатывали первыми)
-    const commands = [
-        'system --load identity', 'system --load status', 'system --lang human', 
-        'help login', 'help terminal', 'help console', 
-        'system --help', 'terminal', 'archive', 'login', 'help', 'map', 'hub', 'count'
-    ];
-    
-    // Создаем регулярное выражение (ищем целые слова)
-    const regex = new RegExp(`\\b(${commands.join('|')})\\b`, 'gi');
-    
-    // Заменяем найденные команды на HTML-тег с неоновым стилем
-    return text.replace(regex, '<span class="cmd-text">$1</span>');
-}
-
-// ==========================================
-// ЧАСТЬ 3: ДВИЖОК ЖУРНАЛА
+// ЧАСТЬ 2: ДВИЖОК ЖУРНАЛА (С ПОДДЕРЖКОЙ ТЕГОВ)
 // ==========================================
 (function() {
     if (window.journalLoaded) return;
@@ -86,22 +66,18 @@ function highlightCommands(text) {
         }
 
         let page = window.location.pathname.split('/').pop() || 'index.html';
-        
-        // Если мы на странице логина, язык ВСЕГДА человеческий
         const isLoginPage = page === 'login.html';
         const isHuman = isLoginPage || localStorage.getItem('s9_lang_human') === 'true';
         
-        // Показываем сырой код ТОЛЬКО на главной странице и если язык не загружен
         if (page === 'index.html' && !isHuman) {
             return CHAT_DATABASE['index.html'];
         }
         
-        // Если язык загружен (или мы на логине), показываем нормальный текст
         if (page === 'index.html' && isHuman) {
             return [
                 { q: "> СИСТЕМА ПРИЁМА СИГНАЛА", a: "ДЕШИФРОВКА ВХОДЯЩЕГО ПОТОКА ЗАПУЩЕНА. ИСТОЧНИК СИГНАЛА НЕИЗВЕСТЕН. КАЖДЫЕ 128 СЕКУНД КАНАЛ ПЕРЕЗАГРУЖАЕТСЯ, ГЕНЕРИРУЯ НОВУЮ ПОРЦИЮ ТРАССИТОВ." },
                 { q: "> ДИАГНОСТИКА ПАМЯТИ", a: "ВНИМАНИЕ. ОБНАРУЖЕНА ПОТЕРЯ СВЯЗИ С УДАЛЕННЫМ МОДУЛЕМ ПАМЯТИ. БУФЕР АРХИВА НЕДОСТУПЕН. ЗАПИСЬ ДАННЫХ НЕВОЗМОЖНА." },
-                { q: "> ПЛАН ДЕЙСТВИЙ", a: "ДЛЯ ВОССТАНОВЛЕНИЯ ДОСТУПА К МОДУЛЯМ СТАНЦИИ ОТКРОЙТЕ КАРТУ ТОПОЛОГИИ (map)." },
+                { q: "> ПЛАН ДЕЙСТВИЙ", a: "ДЛЯ ВОССТАНОВЛЕНИЯ ДОСТУПА К МОДУЛЯМ СТАНЦИИ ОТКРОЙТЕ КАРТУ ТОПОЛОГИИ <cmd>map</cmd>." },
                 { q: "> СТАТУС СИСТЕМЫ", a: "ТЕКУЩИЙ РЕЖИМ: НЕСТАБИЛЬНЫЙ. ОСНОВНАЯ ЗАДАЧА — РАСШИФРОВКА И ТРАНСЛЯЦИЯ ДАННЫХ." }
             ];
         }
@@ -125,6 +101,65 @@ function highlightCommands(text) {
         } catch(e) {}
     }
 
+    // --- НОВЫЙ ДВИЖОК ПЕЧАТИ С ПОДДЕРЖКОЙ <cmd> ---
+    function typeHtmlText(element, htmlText, onComplete) {
+        element.innerHTML = ''; // Очищаем поле
+        
+        // Разбиваем текст на части: обычный текст и команды
+        const parts = htmlText.split(/(<cmd>.*?<\/cmd>)/g);
+        let partIndex = 0;
+        let charIndex = 0;
+        let currentWrapper = null;
+        let isCmd = false;
+
+        function typeNext() {
+            if (partIndex >= parts.length) {
+                if (onComplete) onComplete();
+                return;
+            }
+
+            const part = parts[partIndex];
+
+            // Обработка тегов
+            if (part === '<cmd>') {
+                isCmd = true;
+                partIndex++;
+                typeNext();
+                return;
+            }
+            if (part === '</cmd>') {
+                isCmd = false;
+                partIndex++;
+                typeNext();
+                return;
+            }
+
+            // Создаем обертку, если ее нет
+            if (!currentWrapper) {
+                currentWrapper = document.createElement('span');
+                if (isCmd) currentWrapper.className = 'cmd-text';
+                element.appendChild(currentWrapper);
+            }
+
+            // Печатаем символ
+            if (charIndex < part.length) {
+                const char = part[charIndex];
+                currentWrapper.textContent += char;
+                if (char !== " ") playTypeSound();
+                charIndex++;
+                setTimeout(typeNext, 30);
+            } else {
+                // Часть напечатана, переходим к следующей
+                partIndex++;
+                charIndex = 0;
+                currentWrapper = null; // Сбрасываем обертку для новой части
+                typeNext();
+            }
+        }
+        typeNext();
+    }
+    // ---------------------------------------------
+
     window.updateQuestion = function() {
         const qField = document.getElementById('quest-field');
         const aField = document.getElementById('answer-field');
@@ -135,8 +170,8 @@ function highlightCommands(text) {
 
         if (window.currentChatStep < data.length) {
             aField.innerText = "";
-            // Подсвечиваем команды в вопросе сразу при появлении
-            qField.innerHTML = highlightCommands(data[window.currentChatStep].q);
+            // Для вопроса просто выводим текст (можно тоже добавить теги, если надо)
+            qField.innerText = data[window.currentChatStep].q.replace(/<\/?cmd>/g, ''); 
             qField.style.opacity = "1";
             qField.style.cursor = "pointer";
             if (container) container.classList.remove('chat-fade-out');
@@ -179,44 +214,30 @@ function highlightCommands(text) {
         isTyping = true;
         const aField = document.getElementById('answer-field');
         const text = data[window.currentChatStep].a;
-        let charIdx = 0;
-        
-        aField.innerText = "";
 
-        const interval = setInterval(() => {
-            if (charIdx < text.length) {
-                const char = text[charIdx];
-                aField.innerText += char;
-                if (char !== " ") playTypeSound();
-                charIdx++;
-            } else {
-                clearInterval(interval);
-                
-                // --- ПРИМЕНЯЕМ ПОДСВЕТКУ К ГОТОВОМУ ОТВЕТУ ---
-                aField.innerHTML = highlightCommands(text); 
+        // Используем новый движок печати
+        typeHtmlText(aField, text, () => {
+            setTimeout(() => {
+                window.currentChatStep++;
+                window.updateQuestion();
 
-                setTimeout(() => {
-                    window.currentChatStep++;
-                    window.updateQuestion();
-
-                    // --- АВТОВЫЗОВ КОНСОЛИ ДЛЯ ПЕРВОГО КВЕСТА ---
-                    let page = window.location.pathname.split('/').pop() || 'index.html';
-                    if (page === 'index.html' && window.currentChatStep === data.length) {
-                        if (localStorage.getItem('s9_lang_human') !== 'true') {
-                            window.dispatchEvent(new CustomEvent('autoOpenConsole'));
-                        }
+                // --- АВТОВЫЗОВ КОНСОЛИ ДЛЯ ПЕРВОГО КВЕСТА ---
+                let page = window.location.pathname.split('/').pop() || 'index.html';
+                if (page === 'index.html' && window.currentChatStep === data.length) {
+                    if (localStorage.getItem('s9_lang_human') !== 'true') {
+                        window.dispatchEvent(new CustomEvent('autoOpenConsole'));
                     }
-                    // ---------------------------------------------
+                }
+                // ---------------------------------------------
 
-                    // --- УСТАНОВКА ФЛАГА ПРОСМОТРА КАРТЫ ---
-                    if (page === 'map.html' && window.currentChatStep === data.length) {
-                        localStorage.setItem('s9_map_visited', 'true');
-                    }
-                    // --------------------------------------
+                // --- УСТАНОВКА ФЛАГА ПРОСМОТРА КАРТЫ ---
+                if (page === 'map.html' && window.currentChatStep === data.length) {
+                    localStorage.setItem('s9_map_visited', 'true');
+                }
+                // --------------------------------------
 
-                }, 2000);
-            }
-        }, 30);
+            }, 2000);
+        });
     };
 
     window.addEventListener('storage', (e) => {
