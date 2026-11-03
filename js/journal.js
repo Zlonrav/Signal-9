@@ -69,10 +69,12 @@ const CHAT_DATABASE = {
         const isLoginPage = page === 'login.html';
         const isHuman = isLoginPage || localStorage.getItem('s9_lang_human') === 'true';
         
+        // 1. ХАБ (СЫРОЙ РЕЖИМ)
         if (page === 'index.html' && !isHuman) {
             return CHAT_DATABASE['index.html'];
         }
         
+        // 2. ХАБ (ОБЫЧНЫЙ РЕЖИМ)
         if (page === 'index.html' && isHuman) {
             return [
                 { q: "> СИСТЕМА ПРИЁМА СИГНАЛА", a: "ДЕШИФРОВКА ВХОДЯЩЕГО ПОТОКА ЗАПУЩЕНА. ИСТОЧНИК СИГНАЛА НЕИЗВЕСТЕН. КАЖДЫЕ 128 СЕКУНД КАНАЛ ПЕРЕЗАГРУЖАЕТСЯ, ГЕНЕРИРУЯ НОВУЮ ПОРЦИЮ ТРАССИТОВ." },
@@ -82,18 +84,29 @@ const CHAT_DATABASE = {
             ];
         }
 
-        // --- ЛОГИКА ДЛЯ АРХИВА ---
+        // 3. АРХИВ (НОВАЯ ЛОГИКА)
         if (page === 'archive.html') {
             const isCalibrated = localStorage.getItem('s9_archive_calibrated') === 'true';
-            const isFixed = localStorage.getItem('s9_archive_fixed') === 'true';
+            let isFixed = localStorage.getItem('s9_archive_fixed') === 'true';
 
             if (isCalibrated && !isFixed) {
-                return [
-                    { q: "> КАЛИБРОВКА ЗАВЕРШЕНА", a: "РУЧНАЯ КАЛИБРОВКА ПАМЯТИ ПРОЙДЕНА УСПЕШНО. БУФЕР ГОТОВ К ТЕСТУ АВТОЗАПИСИ." },
-                    { q: "> ТЕСТ АВТОЗАПИСИ", a: "ДЛЯ ПОДТВЕРЖДЕНИЯ СТАБИЛЬНОСТИ ПЕРЕЙДИТЕ В ГЛАВНЫЙ ХАБ И ДОЖДИТЕСЬ ДВУХ ПОЛНЫХ ЦИКЛОВ ДЕШИФРОВКИ СИГНАЛА." },
-                    { q: "> СТАТУС ТЕСТА", a: "ОЖИДАНИЕ НОВЫХ ТРАССИТОВ ИЗ ЭФИРА. ПОСЛЕ ЗАВЕРШЕНИЯ ЦИКЛОВ ВЕРНИТЕСЬ СЮДА ДЛЯ ПРОВЕРКИ." }
-                ];
+                const glyphs = JSON.parse(localStorage.getItem('s9_glyphs_data') || '[]');
+                
+                // Если в Архиве больше 10 глифов, значит тест пройден
+                if (glyphs.length > 10) {
+                    localStorage.setItem('s9_archive_fixed', 'true');
+                    isFixed = true; 
+                } else {
+                    // Если глифов всё еще 10, ждем
+                    return [
+                        { q: "> КАЛИБРОВКА ЗАВЕРШЕНА", a: "РУЧНАЯ КАЛИБРОВКА ПАМЯТИ ПРОЙДЕНА УСПЕШНО. БУФЕР ГОТОВ К ТЕСТУ АВТОЗАПИСИ." },
+                        { q: "> ТЕСТ АВТОЗАПИСИ", a: "ДЛЯ ПОДТВЕРЖДЕНИЯ СТАБИЛЬНОСТИ ПЕРЕЙДИТЕ В ГЛАВНЫЙ ХАБ И ДОЖДИТЕСЬ ДВУХ ПОЛНЫХ ЦИКЛОВ ДЕШИФРОВКИ СИГНАЛА." },
+                        { q: "> СТАТУС ТЕСТА", a: "ОЖИДАНИЕ НОВЫХ ТРАССИТОВ ИЗ ЭФИРА. ПОСЛЕ ЗАВЕРШЕНИЯ ЦИКЛОВ ВЕРНИТЕСЬ СЮДА ДЛЯ ПРОВЕРКИ." }
+                    ];
+                }
             }
+            
+            // Если фикс есть, показываем угрозу ОС
             if (isFixed) {
                 return [
                     { q: "> СТАТУС БАЗЫ ДАННЫХ", a: "ПАМЯТЬ СТАБИЛЬНА. АВТОСОХРАНЕНИЕ ТРАССИТОВ АКТИВИРОВАНО." },
@@ -101,8 +114,8 @@ const CHAT_DATABASE = {
                 ];
             }
         }
-        // --------------------------
 
+        // Стандартный вывод для других страниц
         return (typeof CHAT_DATABASE !== 'undefined' && CHAT_DATABASE[page]) 
                ? CHAT_DATABASE[page] 
                : [{ q: "> СИСТЕМА", a: "ИНФОРМАЦИЯ ДЛЯ ЭТОЙ СТРАНИЦЫ ОТСУТСТВУЕТ." }];
