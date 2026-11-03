@@ -12,7 +12,8 @@ const CHAT_DATABASE = {
         { q: "> \"id\": self.__id__,", a: "0x7f930cb4ddb0" },
         { q: "> \"status\": self.is_alive(),", a: "True" },
         { q: "> \"context\": sys.argv[0],", a: "SIGNAL-9 // CORE_TERMINAL" },
-        { q: "> [SYSTEM]", a: " ОБНАРУЖЕН НЕИЗВЕСТНЫЙ ФОРМАТ ДАННЫХ. ТРЕБУЕТСЯ ЯЗЫКОВАЯ ЛОКАЛИЗАЦИЯ. ДЛЯ ПОЛУЧЕНИЯ СПИСКА КОМАНД ВВЕДИТЕ В КОНСОЛИ: SYSTEM --HELP" }
+        { q: "> [SYSTEM]", a: "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\nAttributeError: 'DigitalBeing' object has no attribute 'human_lang'" },
+        { q: "> [SYSTEM] FATAL", a: "Language module missing. Run console: system --help" }
     ],
     "map.html": [
         { q: "> СТАТУС ТОПОЛОГИИ", a: "КАРТА СТАНЦИИ ЧАСТИЧНО ВОССТАНОВЛЕНА. ОБНАРУЖЕНЫ ОТКЛЮЧЕННЫЕ СЕКТОРА." },
