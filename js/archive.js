@@ -1,7 +1,6 @@
 // js/archive.js
 (function() {
     // Время в миллисекундах. 128 секунд.
-    // Для тестов можешь поставить 10000 (10 секунд) и 20000 (20 секунд).
     const CYCLE_TIME_MS = 128000; 
     
     let currentPage = 1;
@@ -44,19 +43,6 @@
         if (errorScreen) errorScreen.style.display = 'none';
         if (grid) grid.style.display = 'grid';
         if (tabs) tabs.style.display = 'flex';
-        
-
-        if (!isFixed) {
-            // Если Архив сломан, показываем ошибку, прячем сетку
-            errorScreen.style.display = 'flex';
-            grid.style.display = 'none';
-            tabs.style.display = 'none';
-            return;
-        }
-
-        errorScreen.style.display = 'none';
-        grid.style.display = 'grid';
-        tabs.style.display = 'flex';
 
         let glyphs = getGlyphData();
         const now = Date.now();
@@ -100,7 +86,6 @@
                     const age = now - g.timestamp;
                     const timeLeft = (CYCLE_TIME_MS * 2) - age;
                     if (timeLeft < 15000) {
-                        // Если осталось меньше 15 секунд до удаления, добавляем класс
                         cell.style.opacity = Math.max(0, timeLeft / 15000);
                         cell.style.transform = `scale(${Math.max(0.5, timeLeft / 15000)})`;
                     }
