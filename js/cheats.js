@@ -8,7 +8,7 @@
 
         // Эта функция вызывается из terminal.js перед обычной обработкой команд
         handleCommand: function(cmd, print) {
-            // Обработка подтверждения Y/N
+            // Обработка подтверждения Y/N для очистки
             if (this.state === 'CONFIRM_CLEAR') {
                 if (cmd === 'y' || cmd === 'yes') {
                     localStorage.clear();
@@ -26,7 +26,21 @@
                 }
             }
 
-            // Сама команда
+            // --- НОВЫЙ ЧИТ ДЛЯ АРХИВА ---
+            if (cmd === 'fix_archive') {
+                const words = ["СИСТЕМА", "ПАМЯТЬ", "КОД", "СИГНАЛ", "ВЕКТОР", "АРХИВ", "ЗВЕЗДА", "ОРБИТА", "МОДУЛЬ", "ДАННЫЕ"];
+                words.forEach(w => {
+                    localStorage.setItem('s9_glyph_' + w, 'true');
+                });
+                localStorage.setItem('s9_archive_calibrated', 'true');
+                print('<span class="ok">[ЧИТ] 10 ЭТАЛОННЫХ ТРАССИТОВ ВВЕДЕНО. АРХИВ ОТКАЛИБРОВАН.</span>');
+                print('<span class="sys">ПЕРЕХОД В АРХИВ ДЛЯ ПРОВЕРКИ...</span>');
+                setTimeout(() => { window.location.href = 'archive.html'; }, 1500);
+                return true; 
+            }
+            // -----------------------------
+
+            // Очистка памяти
             if (cmd === 'clear_memory') {
                 print('<span class="warn">ВНИМАНИЕ: ВЕСЬ ПРОГРЕСС ИГРЫ БУДЕТ УДАЛЕН. ПОДТВЕРДИТЕ (Y/N)</span>');
                 this.state = 'CONFIRM_CLEAR';
@@ -36,6 +50,7 @@
             // Справка по читам
             if (cmd === 'cheats') {
                 print('<span class="sys">[СПИСОК ЧИТОВ]</span>');
+                print('> <span class="cmd-text">fix_archive</span> - Автоматически вводит 10 слов для починки Архива');
                 print('> <span class="cmd-text">clear_memory</span> - Полная очистка localStorage');
                 return true;
             }
