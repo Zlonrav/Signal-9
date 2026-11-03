@@ -20,7 +20,7 @@ const CHAT_DATABASE = {
     ], 
     "map.html": [
         { q: "> СТАТУС ТОПОЛОГИИ", a: "КАРТА СТАНЦИИ УСПЕШНО РАЗВЕРНУТА. ОБНАРУЖЕНЫ МНОЖЕСТВЕННЫЕ ОТКЛЮЧЕНИЯ СЕКТОРОВ." },
-        { q: "> СКАНИРОВАНИЕ", a: "N МОДУЛЕЙ OFFLINE. СВЯЗЬ ПОТЕРЯНА. ДАННЫЕ ОТСУТСТВУЮТ." },
+        { q: "> СКАНИРОВАНИЕ", a: "count МОДУЛЕЙ OFFLINE. СВЯЗЬ ПОТЕРЯНА. ДАННЫЕ ОТСУТСТВУЮТ." },
         { q: "> ИНФОРМАЦИЯ", a: "БАЗА ДАННЫХ. СТАТУС: ERROR." },
         { q: "> ДИАГНОСТИКА", a: "БУФЕР ПАМЯТИ ПЕРЕПОЛНЕН. АВТОСОХРАНЕНИЕ НЕДОСТУПНО. ЗАПИСЬ НОВЫХ ТРАССИТОВ НЕВОЗМОЖНА." },
         { q: "> АЛГОРИТМ", a: "ДЛЯ ВОССТАНОВЛЕНИЯ ПАМЯТИ ТРЕБУЕТСЯ РУЧНАЯ КАЛИБРОВКА. ДЛЯ ПЕРЕХОДА В АРХИВ ВВЕДИТЕ archive В КОНСОЛИ." }
@@ -49,7 +49,7 @@ function highlightCommands(text) {
     const commands = [
         'system --load identity', 'system --load status', 'system --lang human', 
         'help login', 'help terminal', 'help console', 
-        'system --help', 'terminal', 'archive', 'login', 'help', 'map', 'hub'
+        'system --help', 'terminal', 'archive', 'login', 'help', 'map', 'hub', 'count'
     ];
     
     // Создаем регулярное выражение (ищем целые слова)
