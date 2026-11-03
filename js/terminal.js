@@ -114,6 +114,11 @@
 
     // 5. ОБРАБОТКА КОМАНД
     function processCommand(cmd) {
+        // --- ХУК ДЛЯ ЧИТОВ ---
+        if (window.CheatManager && window.CheatManager.handleCommand(cmd, print)) {
+            return; // Если читы обработали команду, терминал останавливается
+        }
+        // ---------------------
         print(`> ${printCmd(cmd)}`);
 
         // ЛОГИКА ПЕРВОГО КВЕСТА (ПОКА НЕ ЗАГРУЖЕН ЯЗЫК)
