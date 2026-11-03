@@ -8,7 +8,7 @@
         "js/visual.js",
         "js/ui.js",
         "js/journal.js",  
-        "js/terminal.js"
+        "js/terminal.js",
         "js/cheats.js"
     ];
     scripts.forEach(src => {
