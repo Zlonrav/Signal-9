@@ -59,7 +59,7 @@ function update() {
 
     // --- АВТОСОХРАНЕНИЕ В АРХИВ ---
     if (timePassed >= TOTAL_DECRYPT_TIME && timePassed < TOTAL_DECRYPT_TIME + 2) {
-        if (localStorage.getItem('s9_archive_fixed') === 'true') {
+        if (localStorage.getItem('s9_archive_calibrated') === 'true') {
             let glyphs = [];
             const data = localStorage.getItem('s9_glyphs_data');
             if (data) glyphs = JSON.parse(data);
