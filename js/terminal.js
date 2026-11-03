@@ -117,9 +117,9 @@
     function processCommand(cmd) {
         print(`> ${printCmd(cmd)}`);
 
-        // --- ХУК ДЛЯ ЧИТОВ (ДОБАВИТЬ СЮДА) ---
+        // --- ХУК ДЛЯ ЧИТОВ ---
         if (window.CheatManager && window.CheatManager.handleCommand(cmd, print)) {
-            return; // Если читы обработали команду, терминал останавливается
+            return; 
         }
 
         // Определяем страницу и проверяем, не логин ли это
@@ -180,6 +180,22 @@
                 print(`> ${printCmd('clear_memory')} - Полная очистка памяти (выход в меню логина)`);
             } else {
                 print(`НЕТ ИНФОРМАЦИИ ПО ТЕМЕ '${topic}'.`, 'err');
+            }
+            return;
+        }
+
+        // --- ОБРАБОТКА КОМАНД ДЛЯ ОПЕРАЦИОННОЙ СИСТЕМЫ ---
+        if (cmd.startsWith('os --reset qubit_')) {
+            if (currentPage !== 'os.html') {
+                print(`ОШИБКА: КОМАНДА ДОСТУПНА ТОЛЬКО В ОПЕРАЦИОННОЙ СИСТЕМЕ.`, 'err');
+            } else {
+                const qubitId = cmd.split('qubit_')[1];
+                if (qubitId) {
+                    print(`<span class="ok">[ОС] КУБИТ ${qubitId} ПЕРЕКАЛИБРОВАН.</span>`);
+                    window.dispatchEvent(new CustomEvent('repair_qubit', { detail: qubitId }));
+                } else {
+                    print(`ОШИБКА: НЕВЕРНЫЙ ФОРМАТ КОМАНДЫ. ИСПОЛЬЗУЙТЕ os --reset qubit_XX`, 'err');
+                }
             }
             return;
         }
