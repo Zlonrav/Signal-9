@@ -42,7 +42,6 @@
         if (tabs) tabs.style.display = 'flex';
 
         let phrases = getPhraseData();
-        const now = Date.now();
 
         // 1. Сортируем все фразы по времени (новые вверху)
         phrases.sort((a, b) => b.timestamp - a.timestamp);
@@ -72,20 +71,10 @@
                     const cell = document.createElement('div');
                     cell.className = 'glyph-cell';
                     
-                    // --- ЛОГИКА ПЛАВНОГО ИСЧЕЗНОВЕНИЯ ---
-                    if (currentPage === 2) {
-                        const age = now - phraseObj.timestamp;
-                        const timeLeft = (CYCLE_TIME_MS * 2) - age;
-                        // Если фраза старая (5-я строка) или время подходит к концу — тускнеем
-                        if (timeLeft < 15000) {
-                            cell.style.opacity = Math.max(0, timeLeft / 15000);
-                            cell.style.transform = `scale(${Math.max(0.5, timeLeft / 15000)})`;
-                        } else if (row === 4) {
-                            // Самая нижняя фраза всегда чуть тусклее, показывая, что она на выходе
-                            cell.style.opacity = 0.5;
-                        }
+                    // Если это вторая вкладка, самая нижняя (5-я) фраза будет полупрозрачной
+                    if (currentPage === 2 && row === 4) {
+                        cell.style.opacity = 0.5;
                     }
-                    // -----------------------------------
 
                     const indices = typeof getPath === 'function' ? getPath(word) : [];
                     let svgMarkup = typeof createSVG === 'function' ? createSVG(indices) : '';
