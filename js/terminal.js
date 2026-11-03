@@ -115,15 +115,15 @@
 
     // 5. ОБРАБОТКА КОМАНД
     function processCommand(cmd) {
-        // --- ХУК ДЛЯ ЧИТОВ ---
-        if (window.CheatManager && window.CheatManager.handleCommand(cmd, print)) {
-            return; // Если читы обработали команду, терминал останавливается
-        }
-        // ---------------------
         print(`> ${printCmd(cmd)}`);
 
-        // ЛОГИКА ПЕРВОГО КВЕСТА (ПОКА НЕ ЗАГРУЖЕН ЯЗЫК)
-        if (localStorage.getItem('s9_lang_human') !== 'true') {
+        // Определяем страницу и проверяем, не логин ли это
+        const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+        const isLoginPage = currentPage === 'login.html';
+        const isHuman = isLoginPage || localStorage.getItem('s9_lang_human') === 'true';
+
+        // ЛОГИКА ПЕРВОГО КВЕСТА (ТОЛЬКО В ХАБЕ)
+        if (!isHuman) {
             switch(cmd) {
                 case 'system --help':
                     print(`<span class="topic-header">[СИСТЕМА]</span> ДОСТУПНЫЕ КОМАНДЫ ВОССТАНОВЛЕНИЯ:`);
@@ -148,8 +148,9 @@
             return;
         }
 
-        // --- ОБЫЧНЫЙ РЕЖИМ (ЯЗЫК ЗАГРУЖЕН) ---
+        // --- ОБЫЧНЫЙ РЕЖИМ (ЯЗЫК ЗАГРУЖЕН ИЛИ МЫ НА ЛОГИНЕ) ---
         if (cmd.startsWith('help ')) {
+            // ... дальше идет твой код для help login, help terminal и т.д.
             const topic = cmd.split(' ')[1];
             
             if (topic === 'login') {
