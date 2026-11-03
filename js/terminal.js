@@ -83,13 +83,19 @@
         return `<span class="cmd-text">${cmdName}</span>`;
     }
 
-    // 4. ПРОВЕРКА ДОСТУПА К МОДУЛЯМ (Зависит от флагов localStorage)
+    // Слушатель автовызова
+    window.addEventListener('autoOpenConsole', () => {
+        toggleConsole(true);
+        print(`<span class="err">[!] КОМАНДНЫЙ ПРОЦЕССОР ПОВРЕЖДЕН.</span>`);
+        print(`ВВЕДИТЕ ${printCmd('system --help')} ДЛЯ СПИСКА КОМАНД ВОССТАНОВЛЕНИЯ.`);
+    });
+
+    // 4. ПРОВЕРКА ДОСТУПА К МОДУЛЯМ
     function isModuleOnline(moduleId) {
         switch(moduleId) {
             case 'hub': case 'map': case 'terminal':
                 return true;
             case 'archive':
-                // Архив доступен только если мы просмотрели карту
                 return localStorage.getItem('s9_map_visited') === 'true';
             case 'os':
                 return localStorage.getItem('s9_archive_fixed') === 'true';
@@ -109,8 +115,34 @@
     // 5. ОБРАБОТКА КОМАНД
     function processCommand(cmd) {
         print(`> ${printCmd(cmd)}`);
-        
-        // Обработка Help с аргументами
+
+        // ЛОГИКА ПЕРВОГО КВЕСТА (ПОКА НЕ ЗАГРУЖЕН ЯЗЫК)
+        if (localStorage.getItem('s9_lang_human') !== 'true') {
+            switch(cmd) {
+                case 'system --help':
+                    print(`<span class="topic-header">[СИСТЕМА]</span> ДОСТУПНЫЕ КОМАНДЫ ВОССТАНОВЛЕНИЯ:`);
+                    print(`> ${printCmd('system --load identity')} - Модуль идентификации`);
+                    print(`> ${printCmd('system --load status')} - Модуль статуса`);
+                    print(`> ${printCmd('system --lang human')} - Переводчик на человеческий язык`);
+                    break;
+                case 'system --load identity':
+                    print(`<span class="ok">[СИСТЕМА] МОДУЛЬ ИДЕНТИФИКАЦИИ ПОДКЛЮЧЕН. ОБЪЕКТ: ЦИФРОВАЯ СУЩНОСТЬ.</span>`);
+                    break;
+                case 'system --load status':
+                    print(`<span class="ok">[СИСТЕМА] МОДУЛЬ СТАТУСА ПОДКЛЮЧЕН. СОСТОЯНИЕ: АКТИВНО.</span>`);
+                    break;
+                case 'system --lang human':
+                    print(`<span class="ok">[СИСТЕМА] ПЕРЕВОДЧИК ЗАГРУЖЕН. ПЕРЕЗАГРУЗКА ИНТЕРФЕЙСА...</span>`);
+                    localStorage.setItem('s9_lang_human', 'true');
+                    setTimeout(() => { location.reload(); }, 1500);
+                    break;
+                default:
+                    print(`ОШИБКА: КОМАНДНЫЙ ПРОЦЕССОР ПОВРЕЖДЕН. ДОСТУПНЫ ТОЛЬКО КОМАНДЫ ВОССТАНОВЛЕНИЯ.`, 'err');
+            }
+            return;
+        }
+
+        // --- ОБЫЧНЫЙ РЕЖИМ (ЯЗЫК ЗАГРУЖЕН) ---
         if (cmd.startsWith('help ')) {
             const topic = cmd.split(' ')[1];
             
@@ -162,7 +194,7 @@
                 if (isModuleOnline('gateway')) print(`> ${printCmd('gateway')} - Переход к Транспортному Шлюзу`);
                 else print(`> ${printCmd('gateway')} - <span class="err">[OFFLINE]</span>`);
                 
-                print(``); // Пустая строка для красоты
+                print(``);
                 print(`<span class="topic-header">[СПРАВОЧНЫЙ МОДУЛЬ]</span>`);
                 print(`> ${printCmd('help [тема]')} - Информация о модуле или команде`);
                 
@@ -183,7 +215,6 @@
                 print(`ФЛАГ ДОСТУПА: ${localStorage.getItem('s9_access_granted') || 'НЕТ'}`);
                 break;
                 
-            // --- НАВИГАЦИЯ ---
             case 'hub': window.location.href = 'index.html'; break;
             case 'map': window.location.href = 'map.html'; break;
             case 'terminal': window.location.href = 'tools.html'; break;
@@ -229,7 +260,6 @@
         }
     }
 
-    // 6. СОБЫТИЯ
     document.addEventListener('keydown', (e) => {
         if (e.key === '`' || e.key === '~' || e.key === 'Ё' || e.key === 'ё') {
             e.preventDefault();
