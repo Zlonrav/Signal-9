@@ -59,12 +59,17 @@ const CHAT_DATABASE = {
 
         let page = window.location.pathname.split('/').pop() || 'index.html';
         
-        // Если язык не загружен, на главной показываем сырой код
-        if (page === 'index.html' && localStorage.getItem('s9_lang_human') !== 'true') {
+        // Если мы на странице логина, язык ВСЕГДА человеческий
+        const isLoginPage = page === 'login.html';
+        const isHuman = isLoginPage || localStorage.getItem('s9_lang_human') === 'true';
+        
+        // Показываем сырой код ТОЛЬКО на главной странице и если язык не загружен
+        if (page === 'index.html' && !isHuman) {
             return CHAT_DATABASE['index.html'];
         }
-        // Если язык загружен, на главной показываем нормальный текст
-        if (page === 'index.html' && localStorage.getItem('s9_lang_human') === 'true') {
+        
+        // Если язык загружен (или мы на логине), показываем нормальный текст
+        if (page === 'index.html' && isHuman) {
             return [
                 { q: "> СИСТЕМА ПРИЁМА СИГНАЛА", a: "ДЕШИФРОВКА ВХОДЯЩЕГО ПОТОКА ЗАПУЩЕНА. ИСТОЧНИК СИГНАЛА НЕИЗВЕСТЕН. КАЖДЫЕ 128 СЕКУНД КАНАЛ ПЕРЕЗАГРУЖАЕТСЯ, ГЕНЕРИРУЯ НОВУЮ ПОРЦИЮ ТРАССИТОВ." },
                 { q: "> ДИАГНОСТИКА ПАМЯТИ", a: "ВНИМАНИЕ. ОБНАРУЖЕНА ПОТЕРЯ СВЯЗИ С УДАЛЕННЫМ МОДУЛЕМ ПАМЯТИ. БУФЕР АРХИВА НЕДОСТУПЕН. ЗАПИСЬ ДАННЫХ НЕВОЗМОЖНА." },
