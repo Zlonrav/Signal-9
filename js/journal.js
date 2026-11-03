@@ -103,62 +103,65 @@ const CHAT_DATABASE = {
 
     // --- НОВЫЙ ДВИЖОК ПЕЧАТИ С ПОДДЕРЖКОЙ <cmd> ---
     function typeHtmlText(element, htmlText, onComplete) {
-        element.innerHTML = ''; // Очищаем поле
+        element.innerHTML = ''; 
         
-        // Разбиваем текст на части: обычный текст и команды
-        const parts = htmlText.split(/(<cmd>.*?<\/cmd>)/g);
-        let partIndex = 0;
+        // Создаем временный контейнер для парсинга HTML
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = htmlText;
+
+        const nodes = Array.from(tempDiv.childNodes);
+        let nodeIndex = 0;
         let charIndex = 0;
         let currentWrapper = null;
-        let isCmd = false;
+        let currentNodeText = '';
 
-        function typeNext() {
-            if (partIndex >= parts.length) {
+        function typeNextChar() {
+            if (nodeIndex >= nodes.length) {
                 if (onComplete) onComplete();
                 return;
             }
 
-            const part = parts[partIndex];
-
-            // Обработка тегов
-            if (part === '<cmd>') {
-                isCmd = true;
-                partIndex++;
-                typeNext();
-                return;
-            }
-            if (part === '</cmd>') {
-                isCmd = false;
-                partIndex++;
-                typeNext();
-                return;
-            }
-
-            // Создаем обертку, если ее нет
+            const node = nodes[nodeIndex];
+            
+            // Если обертка еще не создана для текущего узла
             if (!currentWrapper) {
-                currentWrapper = document.createElement('span');
-                if (isCmd) currentWrapper.className = 'cmd-text';
-                element.appendChild(currentWrapper);
+                if (node.nodeType === Node.TEXT_NODE) {
+                    // Обычный текст
+                    currentWrapper = document.createElement('span');
+                    element.appendChild(currentWrapper);
+                } else if (node.nodeName.toLowerCase() === 'cmd') {
+                    // Команда (внутри тега <cmd>)
+                    currentWrapper = document.createElement('span');
+                    currentWrapper.className = 'cmd-text'; // Применяем неоновый стиль
+                    element.appendChild(currentWrapper);
+                } else {
+                    // Неизвестный тег, пропускаем
+                    nodeIndex++;
+                    typeNextChar();
+                    return;
+                }
+                currentNodeText = node.textContent;
+                charIndex = 0;
             }
 
-            // Печатаем символ
-            if (charIndex < part.length) {
-                const char = part[charIndex];
+            // Печатаем символы
+            if (charIndex < currentNodeText.length) {
+                const char = currentNodeText[charIndex];
                 currentWrapper.textContent += char;
                 if (char !== " ") playTypeSound();
                 charIndex++;
-                setTimeout(typeNext, 30);
+                setTimeout(typeNextChar, 30);
             } else {
-                // Часть напечатана, переходим к следующей
-                partIndex++;
-                charIndex = 0;
-                currentWrapper = null; // Сбрасываем обертку для новой части
-                typeNext();
+                // Узел напечатан, переходим к следующему
+                nodeIndex++;
+                currentWrapper = null;
+                typeNextChar();
             }
         }
-        typeNext();
+
+        if (nodes.length > 0) typeNextChar();
+        else if (onComplete) onComplete();
     }
-    // ---------------------------------------------
 
     window.updateQuestion = function() {
         const qField = document.getElementById('quest-field');
