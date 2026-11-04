@@ -67,7 +67,7 @@
 
                 print('<span class="ok">[ЧИТ] ЗАДАНИЕ С АРХИВОМ СБРОШЕНО. ВСЕ ФЛАГИ И ФРАЗЫ УДАЛЕНЫ.</span>');
                 print('<span class="sys">ПЕРЕХОД В АРХИВ ДЛЯ ПРОВЕРКИ...</span>');
-                setTimeout(() => { window.location.href = 'archive.html'; }, 1500);
+                setTimeout(() => { location.reload(); }, 1500);
                 return true;
             }
             // -----------------------------------
