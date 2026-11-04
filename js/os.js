@@ -89,7 +89,10 @@
 
             checkAllFixed();
             // Запускаем рисование трасс после создания кубитов
-            setInterval(drawTraces, 2000);
+            setTimeout(() => {
+                drawTraces();
+                setInterval(drawTraces, 2000);
+            }, 100);
         }
 
         // --- 3. ЛОГИКА РЕМОНТА ---
@@ -144,17 +147,24 @@
         // --- 4. ЛОГИКА СЛУЧАЙНЫХ ТРАСС ---
         function drawTraces() {
             const tracesLayer = document.getElementById('tracesLayer');
-            if (!tracesLayer) return;
+            const container = document.querySelector('.os-container');
+            if (!tracesLayer || !container) return;
+            
             tracesLayer.innerHTML = ''; 
 
             const qubits = document.querySelectorAll('.qubit');
             if (qubits.length === 0) return;
 
+            const containerRect = container.getBoundingClientRect();
             const coords = [];
+            
             qubits.forEach(q => {
                 const rect = q.getBoundingClientRect();
-                // Координаты для SVG (относительно окна)
-                coords.push({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+                // Координаты относительно контейнера
+                coords.push({ 
+                    x: rect.left + rect.width / 2 - containerRect.left, 
+                    y: rect.top + rect.height / 2 - containerRect.top 
+                });
             });
 
             for (let i = 0; i < 5; i++) {
@@ -167,7 +177,7 @@
                     line.setAttribute('y1', p1.y);
                     line.setAttribute('x2', p2.x);
                     line.setAttribute('y2', p2.y);
-                    line.setAttribute('stroke', 'rgba(0, 242, 255, 0.3)'); 
+                    line.setAttribute('stroke', 'rgba(0, 242, 255, 0.4)'); 
                     line.setAttribute('stroke-width', '2');
                     line.setAttribute('stroke-dasharray', '5 10'); 
                     
