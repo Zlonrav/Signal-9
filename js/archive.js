@@ -82,11 +82,15 @@
 
         // --- ЛОГИКА ЗАВЕРШЕНИЯ ТЕСТА ---
         if (isCalibrated && !isFixed) {
-            const baseline = parseInt(localStorage.getItem('s9_archive_baseline_count') || '0', 10);
+            // Берем время калибровки (сохраняем его при вводе 10 слов)
+            const calibrationTime = parseInt(localStorage.getItem('s9_archive_calibration_time') || '0', 10);
             
-            if (phrases.length - baseline >= 2) {
+            // Считаем, сколько фраз появилось ПОСЛЕ калибровки
+            const newPhrasesCount = phrases.filter(p => p.timestamp > calibrationTime).length;
+
+            // Если новых фраз 2 или больше — тест пройден
+            if (newPhrasesCount >= 2) {
                 localStorage.setItem('s9_archive_fixed', 'true');
-                // Перезагружаем страницу, чтобы журнал увидел новый флаг
                 setTimeout(() => { location.reload(); }, 1000);
             }
         }
