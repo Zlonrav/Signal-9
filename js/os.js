@@ -1,7 +1,6 @@
 // js/os.js
 (function() {
     const CORRECT_ID = "0x7f930cb4ddb0"; 
-    const BROKEN_QUBITS = [3, 7, 12, 15, 19, 22, 25]; 
 
     document.addEventListener('DOMContentLoaded', () => {
         const lockdown = document.getElementById('os-lockdown');
@@ -21,13 +20,12 @@
                 if (e.key === 'Enter') {
                     const val = input.value.trim().toLowerCase();
                     const cleanVal = val.replace(/[^a-z0-9]/g, '');
-                    const targetId = "7f930cb4ddb0"; // ID без 0x
+                    const targetId = "7f930cb4ddb0"; 
 
                     if (cleanVal === targetId) {
                         localStorage.setItem('s9_os_captcha', 'true');
                         lockdown.classList.add('hidden');
                         initQubits();
-                        // Обновляем журнал, чтобы он увидел новый флаг
                         if (typeof window.updateQuestion === 'function') {
                             window.currentChatStep = 0;
                             window.updateQuestion();
@@ -45,55 +43,78 @@
             });
         }
 
-        // --- 2. ОТРИСОВКА КУБИТОВ ---
+        // --- 2. ГЕНЕРАЦИЯ И ОТРИСОВКА КУБИТОВ ---
         function initQubits() {
             grid.innerHTML = '';
             
-            for (let i = 1; i <= 25; i++) { 
-                const qubit = document.createElement('div');
-                qubit.className = 'qubit';
-                qubit.id = `qubit_${String(i).padStart(2, '0')}`;
-                
-                const isBroken = BROKEN_QUBITS.includes(i);
-                const isFixed = localStorage.getItem(`s9_qubit_${i}_fixed`) === 'true';
-
-                if (isBroken && !isFixed) {
-                    qubit.classList.add('broken');
-                } else {
-                    qubit.classList.add('active');
+            // Проверяем, есть ли уже список сломанных кубитов
+            let brokenList = JSON.parse(localStorage.getItem('s9_os_broken_qubits'));
+            
+            // Если списка нет (первый заход), генерируем 7 случайных
+            if (!brokenList) {
+                brokenList = [];
+                while(brokenList.length < 7) {
+                    const r = Math.floor(Math.random() * 5) + 1;
+                    const c = Math.floor(Math.random() * 5) + 1;
+                    const coord = `r${r}c${c}`;
+                    if (!brokenList.includes(coord)) {
+                        brokenList.push(coord);
+                    }
                 }
+                localStorage.setItem('s9_os_broken_qubits', JSON.stringify(brokenList));
+            }
 
-                grid.appendChild(qubit);
+            for (let r = 1; r <= 5; r++) {
+                for (let c = 1; c <= 5; c++) {
+                    const coord = `r${r}c${c}`;
+                    const qubit = document.createElement('div');
+                    qubit.className = 'qubit';
+                    qubit.id = `qubit_${coord}`;
+                    
+                    const isBroken = brokenList.includes(coord);
+
+                    if (isBroken) {
+                        qubit.classList.add('broken');
+                    } else {
+                        qubit.classList.add('active');
+                    }
+
+                    grid.appendChild(qubit);
+                }
             }
 
             checkAllFixed();
         }
 
-        // --- 3. СЛУШАЕМ КОМАНДУ ИЗ КОНСОЛИ ---
+        // --- 3. ЛОГИКА РЕМОНТА ---
         window.addEventListener('repair_qubit', (e) => {
-            const qubitId = e.detail; 
-            const qubitNum = parseInt(qubitId, 10);
-            
-            if (!BROKEN_QUBITS.includes(qubitNum)) return; 
+            const coord = e.detail; // Например, r1c2
+            const qubitEl = document.getElementById(`qubit_${coord}`);
+            if (!qubitEl) return;
 
-            const qubitEl = document.getElementById(`qubit_${qubitId}`);
-            if (qubitEl && qubitEl.classList.contains('broken')) {
+            let brokenList = JSON.parse(localStorage.getItem('s9_os_broken_qubits') || '[]');
+
+            if (qubitEl.classList.contains('broken')) {
+                // Если кубит был сломан — чиним
                 qubitEl.classList.remove('broken');
                 qubitEl.classList.add('active');
-                localStorage.setItem(`s9_qubit_${qubitNum}_fixed`, 'true');
+                brokenList = brokenList.filter(item => item !== coord);
+                localStorage.setItem('s9_os_broken_qubits', JSON.stringify(brokenList));
                 checkAllFixed();
+            } else {
+                // Если кубит был рабочим — временно ломаем
+                qubitEl.classList.remove('active');
+                qubitEl.classList.add('broken');
+                if (!brokenList.includes(coord)) brokenList.push(coord);
+                localStorage.setItem('s9_os_broken_qubits', JSON.stringify(brokenList));
             }
         });
 
         function checkAllFixed() {
-            let allFixed = true;
-            BROKEN_QUBITS.forEach(num => {
-                if (localStorage.getItem(`s9_qubit_${num}_fixed`) !== 'true') {
-                    allFixed = false;
-                }
-            });
-
-            if (allFixed) {
+            const brokenList = JSON.parse(localStorage.getItem('s9_os_broken_qubits') || '[]');
+            
+            // Если в списке осталось 0 сломанных кубитов, значит система стабильна
+            if (brokenList.length === 0) {
                 localStorage.setItem('s9_os_fixed', 'true');
                 if (typeof window.updateQuestion === 'function') {
                     window.currentChatStep = 0;
