@@ -104,7 +104,17 @@
     // Обновление таймера телеметрии
     setInterval(() => {
         const timerEl = document.getElementById('timer');
-        if (timerEl && typeof CYCLE_TIME !== 'undefined') {
+        if (!timerEl) return;
+
+        const isCalibrated = localStorage.getItem('s9_archive_calibrated') === 'true';
+        
+        // Если калибровка не пройдена, показываем заглушку и не тикаем
+        if (!isCalibrated) {
+            timerEl.innerText = "ОЖИДАНИЕ КАЛИБРОВКИ ПАМЯТИ...";
+            return;
+        }
+
+        if (typeof CYCLE_TIME !== 'undefined') {
             const timeSec = Math.floor(Date.now() / 1000);
             const timeLeft = CYCLE_TIME - (timeSec % CYCLE_TIME);
             timerEl.innerText = `ПРИЁМ СИГНАЛА: ${timeLeft} сек`;
