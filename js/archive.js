@@ -97,6 +97,19 @@
                 }
             }
         }
+        // --- ЛОГИКА ЗАВЕРШЕНИЯ ТЕСТА (ТОЛЬКО В ВИЗУАЛЬНОМ РЕНДЕРЕ) ---
+        const isCalibrated = localStorage.getItem('s9_archive_calibrated') === 'true';
+        const isFixed = localStorage.getItem('s9_archive_fixed') === 'true';
+
+        if (isCalibrated && !isFixed) {
+            const baseline = parseInt(localStorage.getItem('s9_archive_baseline_count') || '0', 10);
+            // Если в памяти появилось 2 новые фразы (2 новых ряда на экране)
+            if (phrases.length - baseline >= 2) {
+                localStorage.setItem('s9_archive_fixed', 'true');
+                // Принудительно перезагружаем страницу, чтобы журнал увидел флаг
+                setTimeout(() => { location.reload(); }, 1000);
+            }
+        }
     }
 
     function initArchive() {
