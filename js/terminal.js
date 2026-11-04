@@ -190,9 +190,10 @@
                 print(`РЕЖИМ «ТРАССИТ»: СОЕДИНИТЕ ТОЧКИ, ЧТОБЫ РАСПОЗНАТЬ СЛОВО.`);
             } else if (topic === 'cheats') {
                 print(`<span class="topic-header">[ЧИТЫ]</span> ДОСТУПНЫЕ КОМАНДЫ ДЛЯ ОТЛАДКИ:`);
-                print(`> ${printCmd('fix_archive')} - Автоматически вводит 10 слов и открывает Архив`);
-                print(`> ${printCmd('fix_os')} - Обходит защиту ОС и чинит все кубиты`);
-                print(`> ${printCmd('clear_memory')} - Полная очистка памяти (выход в меню логина)`);
+                print(`> ${printCmd('fix_lang')} - Восстанавливает человеческий язык`);
+                print(`> ${printCmd('fix_archive')} - Вводит 10 слов и чинит Архив`);
+                print(`> ${printCmd('fix_os')} - Обходит защиту ОС и чинит кубиты`);
+                print(`> ${printCmd('clear_memory')} - Полная очистка памяти`);
             } else {
                 print(`НЕТ ИНФОРМАЦИИ ПО ТЕМЕ '${topic}'.`, 'err');
             }
