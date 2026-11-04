@@ -72,7 +72,9 @@
             }
 
             // --- ЧИТ: ТОЛЬКО КАЛИБРОВКА АРХИВА (БЕЗ ЗАВЕРШЕНИЯ ТЕСТА) ---
+            // --- ЧИТ: ТОЛЬКО КАЛИБРОВКА АРХИВА (БЕЗ ЗАВЕРШЕНИЯ ТЕСТА) ---
             if (cmd === 'calibrate_archive') {
+                // Полностью очищаем память от старых фраз
                 localStorage.removeItem('s9_phrases_data');
                 localStorage.removeItem('s9_archive_fixed');
 
@@ -89,10 +91,9 @@
                 localStorage.setItem('s9_phrases_data', JSON.stringify(phrasesData));
                 localStorage.setItem('s9_archive_calibrated', 'true');
                 localStorage.setItem('s9_archive_baseline_count', '2');
-                localStorage.setItem('s9_archive_calibration_time', (now + 2000).toString());
                 
-                print('<span class="ok">[ЧИТ] 10 ЭТАЛОННЫХ ТРАССИТОВ ВВЕДЕНО. АРХИВ ОТКАЛИБРОВАН, НО ТЕСТ НЕ ЗАВЕРШЕН.</span>');
-                print('<span class="sys">ПЕРЕХОД В АРХИВ ДЛЯ ОЖИДАНИЯ ДВУХ ЦИКЛОВ...</span>');
+                print('<span class="ok">[ЧИТ] 10 ЭТАЛОННЫХ ТРАССИТОВ ВВЕДЕНО. В ПАМЯТИ РОВНО 2 ФРАЗЫ.</span>');
+                print('<span class="sys">ПЕРЕХОД В АРХИВ ДЛЯ ОЖИДАНИЯ ДВУХ НОВЫХ ФРАЗ...</span>');
                 setTimeout(() => { window.location.href = 'archive.html'; }, 1500);
                 return true; 
             }
