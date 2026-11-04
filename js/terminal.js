@@ -91,7 +91,7 @@
         print(`ВВЕДИТЕ ${printCmd('system --help')} ДЛЯ СПИСКА КОМАНД ВОССТАНОВЛЕНИЯ.`);
     });
 
-    // 4. ПРОВЕРКА ДОСТУПА К МОДУЛЯМ (Исправленная)
+    // 4. ПРОВЕРКА ДОСТУПА К МОДУЛЯМ
     function isModuleOnline(moduleId) {
         const isAuthorized = localStorage.getItem('s9_access_granted') === 'true';
 
@@ -151,23 +151,19 @@
                     localStorage.setItem('s9_lang_human', 'true');
                     setTimeout(() => { location.reload(); }, 1500);
                     break;
-                    
-                // --- РАЗРЕШАЕМ ВОЗВРАТ НА ЛОГИН И В ТЕРМИНАЛ ---
                 case 'login': 
                     window.location.href = 'login.html'; 
                     break;
                 case 'terminal': 
                     window.location.href = 'tools.html'; 
                     break;
-                // -----------------------------------------------
-
                 default:
                     print(`ОШИБКА: КОМАНДНЫЙ ПРОЦЕССОР ПОВРЕЖДЕН. ДОСТУПНЫ ТОЛЬКО КОМАНДЫ ВОССТАНОВЛЕНИЯ.`, 'err');
             }
             return;
         }
 
-        // --- ОБЫЧНЫЙ РЕЖИМ (ЯЗЫК ЗАГРУЖЕН ИЛИ МЫ НА ЛОГИНЕ) ---
+        // --- ОБЫЧНЫЙ РЕЖИМ ---
         if (cmd.startsWith('help ')) {
             const topic = cmd.split(' ')[1];
             
@@ -196,18 +192,18 @@
                 print(`> ${printCmd('reset_archive')} - Сбрасывает задание с Архивом`);
                 print(`> ${printCmd('fix_os')} - Обходит защиту ОС и чинит кубиты`);
                 print(`> ${printCmd('clear_memory')} - Полная очистка памяти`);
-            } else {
-                print(`НЕТ ИНФОРМАЦИИ ПО ТЕМЕ '${topic}'.`, 'err');
             } else if (topic === 'os') {
                 print(`<span class="topic-header">[ОС]</span> ОПЕРАЦИОННАЯ СИСТЕМА СТАНЦИИ.`);
                 print(`ПРЕДНАЗНАЧЕНА ДЛЯ УПРАВЛЕНИЯ КВАНТОВЫМИ ВЫЧИСЛЕНИЯМИ.`);
                 print(`В СЛУЧАЕ ДЕКОГЕРЕНЦИИ КУБИТОВ ИСПОЛЬЗУЙТЕ КОМАНДУ <cmd>os --reset qubit_XX</cmd>,`);
                 print(`ГДЕ XX — НОМЕР СБОЙНОГО КУБИТА (ОТ 01 ДО 25).`);
+            } else {
+                print(`НЕТ ИНФОРМАЦИИ ПО ТЕМЕ '${topic}'.`, 'err');
             }
             return;
         }
 
-        // --- ОБРАБОТКА КОМАНД ДЛЯ ОПЕРАЦИОННОЙ СИСТЕМЫ ---
+        // --- КОМАНДА ДЛЯ ОС ---
         if (cmd.startsWith('os --reset qubit_')) {
             if (currentPage !== 'os.html') {
                 print(`ОШИБКА: КОМАНДА ДОСТУПНА ТОЛЬКО В ОПЕРАЦИОННОЙ СИСТЕМЕ.`, 'err');
@@ -337,7 +333,6 @@
             e.preventDefault();
             toggleConsole(!overlay.classList.contains('active'));
         }
-        // Escape больше не закрывает консоль (чтобы не мешал Punto Switcher)
     });
 
     const toggleBtn = document.getElementById('console-toggle-btn');
@@ -356,4 +351,5 @@
             input.value = '';
         }
     });
+
 })();
