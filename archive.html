@@ -103,13 +103,22 @@
 </head>
 <body class="tools-page">
     <!-- ТЕЛЕМЕТРИЯ -->
-    <div class="telemetry-panel">
-        <div class="telemetry-row">
-            <svg width="25" height="25" viewBox="0 0 100 100" style="stroke: var(--neon); fill: none; margin-right: 10px;">
-                <path d="M10 10 L30 10 M10 10 L10 30 M90 90 L70 90 M90 90 L90 70 M50 10 L50 90 M10 50 L90 50" stroke-width="4"></path>
-            </svg>
-            <span id="timer">ПРИЁМ СИГНАЛА: ...</span>
-        </div>
+    <div class="telemetry-panel" style="
+        position: fixed; 
+        top: 25px; 
+        left: 25px; 
+        z-index: 1000; 
+        background: rgba(0, 0, 0, 0.5); 
+        padding: 10px 15px; 
+        border-left: 2px solid var(--neon);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    ">
+        <svg width="25" height="25" viewBox="0 0 100 100" style="stroke: var(--neon); fill: none; flex-shrink: 0;">
+            <path d="M10 10 L30 10 M10 10 L10 30 M90 90 L70 90 M90 90 L90 70 M50 10 L50 90 M10 50 L90 50" stroke-width="4"></path>
+        </svg>
+        <span id="timer" style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--neon); letter-spacing: 2px;">ПРИЁМ СИГНАЛА: ...</span>
     </div>
     <div class="chat-system">
         <div id="quest-field" class="question" onclick="handleChatClick()"></div>
