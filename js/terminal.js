@@ -98,9 +98,20 @@
         switch(moduleId) {
             case 'terminal':
                 return true; // Терминал доступен всегда
-            case 'hub':
-            case 'map':
-                return isAuthorized; // Хаб и Карта только после логина
+            case 'hub': 
+                if (localStorage.getItem('s9_access_granted') === 'true') {
+                    window.location.href = 'index.html'; 
+                } else {
+                    print(`ОШИБКА: ДОСТУП ЗАКРЫТ. ТРЕБУЕТСЯ АВТОРИЗАЦИЯ.`, 'err');
+                }
+                break;
+            case 'map': 
+                if (localStorage.getItem('s9_access_granted') === 'true') {
+                    window.location.href = 'map.html'; 
+                } else {
+                    print(`ОШИБКА: ДОСТУП ЗАКРЫТ. ТРЕБУЕТСЯ АВТОРИЗАЦИЯ.`, 'err');
+                }
+                break;
             case 'archive':
                 return localStorage.getItem('s9_map_visited') === 'true';
             case 'os':
