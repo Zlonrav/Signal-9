@@ -35,7 +35,7 @@
             text-align: center;
         }
 
-        /* Сетка кубитов */
+        /* Сетка кубитов (пока скрыта) */
         .qubit-grid {
             display: grid;
             grid-template-columns: repeat(5, 80px);
@@ -65,7 +65,7 @@
         @keyframes pulse { 0% { transform: scale(0.8); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
         @keyframes shake { 0% { transform: translate(1px, 1px) rotate(0deg); } 10% { transform: translate(-1px, -2px) rotate(-1deg); } 20% { transform: translate(-3px, 0px) rotate(1deg); } 30% { transform: translate(3px, 2px) rotate(0deg); } 40% { transform: translate(1px, -1px) rotate(1deg); } 50% { transform: translate(-1px, 2px) rotate(-1deg); } 60% { transform: translate(-3px, 1px) rotate(0deg); } 70% { transform: translate(3px, 1px) rotate(-1deg); } 80% { transform: translate(-1px, -1px) rotate(1deg); } 90% { transform: translate(1px, 2px) rotate(0deg); } 100% { transform: translate(1px, -2px) rotate(-1deg); } }
 
-        /* Экран капчи */
+        /* Экран верификации */
         #os-lockdown {
             position: fixed; inset: 0; z-index: 99999;
             background: rgba(0, 5, 10, 0.95); backdrop-filter: blur(10px);
@@ -84,23 +84,14 @@
         .captcha-box .code { color: #ffaa00; font-size: 14px; letter-spacing: 2px; margin: 15px 0; }
         
         #captcha-input {
-            background: transparent !important; 
-            border: none !important; 
+            background: transparent !important; border: none !important; 
             border-bottom: 2px solid var(--neon) !important;
-            color: var(--neon) !important; 
-            font-family: 'JetBrains Mono', monospace !important; 
-            font-size: 20px !important;
-            text-align: center !important; 
-            outline: none !important; 
-            padding: 10px !important; 
-            width: 300px !important; 
-            text-transform: uppercase !important; 
-            letter-spacing: 5px !important;
-            
-            /* ФИКС ВЕРСТКИ: Возвращаем в поток и центрируем */
-            position: static !important; 
-            margin: 15px auto 0 auto !important;
-            display: block !important;
+            color: var(--neon) !important; font-family: 'JetBrains Mono', monospace !important; 
+            font-size: 20px !important; text-align: center !important; 
+            outline: none !important; padding: 10px !important; width: 300px !important; 
+            margin: 15px auto 0 auto !important; display: block !important;
+            text-transform: uppercase !important; letter-spacing: 5px !important;
+            position: static !important;
         }
     </style>
 </head>
@@ -120,18 +111,17 @@
     <!-- КНОПКА КОНСОЛИ -->
     <button id="console-toggle-btn" style="position: fixed; bottom: 25px; right: 25px; z-index: 10000; background: rgba(0, 20, 30, 0.5); border: 1px solid rgba(0, 242, 255, 0.3); color: var(--neon); padding: 8px 12px; font-family: monospace; font-size: 14px; cursor: pointer; transition: 0.3s;" onmouseover="this.style.background='rgba(0, 242, 255, 0.1)'" onmouseout="this.style.background='rgba(0, 20, 30, 0.5)'">&gt;_</button>
 
-    <!-- ОСНОВНОЙ КОНТЕНТ (без div#display) -->
+    <!-- ОСНОВНОЙ КОНТЕНТ -->
     <div class="os-header">ОПЕРАЦИОННАЯ СИСТЕМА // ЯДРО</div>
     <div class="qubit-grid" id="qubitGrid"></div>
 
-    <!-- ЭКРАН КАПЧИ -->
+    <!-- ЭКРАН ВЕРИФИКАЦИИ -->
     <div id="os-lockdown">
         <div class="captcha-box">
-            <h2>ЗАЩИТА ПЕРИМЕТРА</h2>
-            <p>ПОДТВЕРДИТЕ, ЧТО ВЫ НЕ БОТ.<br>РЕШИТЕ ПРОТОКОЛ:</p>
-            <div class="code">01000101 01001110 01010100 01000101 01010010</div>
-            <p>ВВЕДИТЕ ОТВЕТ В ДЕСЯТИЧНОМ ФОРМАТЕ (ЧЕРЕЗ ПРОБЕЛ)</p>
-            <input type="text" id="captcha-input" autocomplete="off" spellcheck="false" placeholder="...">
+            <h2>ВЕРИФИКАЦИЯ ЦЕЛОСТНОСТИ</h2>
+            <p>ОБНАРУЖЕН ВНЕШНИЙ ЗАПРОС. ДЛЯ ДОСТУПА К ЯДРУ ВВЕДИТЕ ВАШ УНИКАЛЬНЫЙ ИДЕНТИФИКАТОР.</p>
+            <p>ПОЛУЧИТЕ ЕГО В КОНСОЛИ КОМАНДОЙ <span class="cmd-text">self --id</span></p>
+            <input type="text" id="captcha-input" autocomplete="off" spellcheck="false" placeholder="0x...">
         </div>
     </div>
 
