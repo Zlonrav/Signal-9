@@ -347,22 +347,4 @@
             input.value = '';
         }
     });
-
-    const toggleBtn = document.getElementById('console-toggle-btn');
-    if (toggleBtn) {
-        toggleBtn.addEventListener('click', () => {
-            toggleConsole(!overlay.classList.contains('active'));
-        });
-    }
-
-    bgOverlay.addEventListener('click', () => toggleConsole(false));
-
-    input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            const cmd = input.value.trim().toLowerCase();
-            if (cmd) processCommand(cmd);
-            input.value = '';
-        }
-    });
-
 })();
