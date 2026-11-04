@@ -250,14 +250,23 @@
                             statusLabel.innerText = "КАЛИБРОВКА ЗАВЕРШЕНА";
                             statusLabel.style.color = "#00ff44"; 
                             localStorage.setItem('s9_archive_calibrated', 'true');
-
-                            const glyphsData = [];
-                            const now = Date.now();
-                            TARGET_WORDS.forEach((w, i) => {
-                                glyphsData.push({ word: w, timestamp: now - (i * 1000) });
-                            });
-                            localStorage.setItem('s9_glyphs_data', JSON.stringify(glyphsData));
                             
+                            // --- НОВАЯ ЛОГИКА ДЛЯ АРХИВА (ФРАЗЫ) ---
+                            const phrase1 = TARGET_WORDS.slice(0, 5); // СИСТЕМА, ПАМЯТЬ, КОД, СИГНАЛ, ВЕКТОР
+                            const phrase2 = TARGET_WORDS.slice(5, 10); // АРХИВ, ЗВЕЗДА, ОРБИТА, МОДУЛЬ, ДАННЫЕ
+                            const now = Date.now();
+                            
+                            const phrasesData = [
+                                { text: phrase1.join(' '), words: phrase1, timestamp: now - 1000 },
+                                { text: phrase2.join(' '), words: phrase2, timestamp: now }
+                            ];
+                            
+                            localStorage.setItem('s9_phrases_data', JSON.stringify(phrasesData));
+                            
+                            // Запоминаем, что на момент калибровки у нас 2 фразы
+                            localStorage.setItem('s9_archive_baseline_count', '2');
+                            // ----------------------------------------
+
                             setTimeout(() => {
                                 window.location.href = 'archive.html';
                             }, 2000);
