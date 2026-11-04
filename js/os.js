@@ -89,6 +89,8 @@
                         qubit.classList.add('active');
                         const symbolSpan = document.createElement('span');
                         symbolSpan.className = 'qubit-symbol';
+                        symbolSpan.innerText = '0'; // Начальный символ
+                        symbolSpan.style.opacity = '1'; // Сразу показываем
                         qubit.appendChild(symbolSpan);
                     }
 
