@@ -54,23 +54,22 @@
                 return true; 
             }
 
-            // --- НОВЫЙ ЧИТ ДЛЯ СБРОСА АРХИВА ---
+            // --- ЧИТ ДЛЯ СБРОСА АРХИВА ---
             if (cmd === 'reset_archive') {
                 localStorage.removeItem('s9_archive_calibrated');
                 localStorage.removeItem('s9_archive_fixed');
                 localStorage.removeItem('s9_archive_baseline_count');
                 localStorage.removeItem('s9_phrases_data');
+                localStorage.removeItem('s9_archive_calibration_time');
                 
-                // Удаляем флаги введенных 10 слов
                 const words = ["СИСТЕМА", "ПАМЯТЬ", "КОД", "СИГНАЛ", "ВЕКТОР", "АРХИВ", "ЗВЕЗДА", "ОРБИТА", "МОДУЛЬ", "ДАННЫЕ"];
                 words.forEach(w => localStorage.removeItem('s9_glyph_' + w));
 
                 print('<span class="ok">[ЧИТ] ЗАДАНИЕ С АРХИВОМ СБРОШЕНО. ВСЕ ФЛАГИ И ФРАЗЫ УДАЛЕНЫ.</span>');
-                print('<span class="sys">ПЕРЕХОД В АРХИВ ДЛЯ ПРОВЕРКИ...</span>');
+                print('<span class="sys">ПЕРЕЗАГРУЗКА...</span>');
                 setTimeout(() => { location.reload(); }, 1500);
                 return true;
             }
-            // -----------------------------------
 
             // --- ЧИТ: ТОЛЬКО КАЛИБРОВКА АРХИВА (БЕЗ ЗАВЕРШЕНИЯ ТЕСТА) ---
             if (cmd === 'calibrate_archive') {
@@ -90,9 +89,6 @@
                 localStorage.setItem('s9_phrases_data', JSON.stringify(phrasesData));
                 localStorage.setItem('s9_archive_calibrated', 'true');
                 localStorage.setItem('s9_archive_baseline_count', '2');
-                
-                // ВАЖНО: Время калибровки на 2 секунды ПОЗЖЕ, 
-                // чтобы эталонные фразы гарантированно считались "старыми"
                 localStorage.setItem('s9_archive_calibration_time', (now + 2000).toString());
                 
                 print('<span class="ok">[ЧИТ] 10 ЭТАЛОННЫХ ТРАССИТОВ ВВЕДЕНО. АРХИВ ОТКАЛИБРОВАН, НО ТЕСТ НЕ ЗАВЕРШЕН.</span>');
@@ -101,6 +97,7 @@
                 return true; 
             }
 
+            // --- ЧИТ ДЛЯ ОС ---
             if (cmd === 'fix_os') {
                 localStorage.setItem('s9_os_captcha', 'true');
                 [3, 7, 12, 15, 19].forEach(num => {
