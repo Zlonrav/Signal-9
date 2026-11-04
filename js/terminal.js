@@ -219,6 +219,10 @@
         }
         
         switch(cmd) {
+            case 'self --id':
+                print(`<span class="topic-header">[ИДЕНТИФИКАТОР ЯДРА]</span>`);
+                print(`0x7f930cb4ddb0`);
+                break;
             case 'help':
                 print(`<span class="topic-header">[ПРОТОКОЛЫ ПЕРЕМЕЩЕНИЯ]</span>`);
                 
