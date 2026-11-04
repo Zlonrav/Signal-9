@@ -20,7 +20,7 @@
                 if (e.key === 'Enter') {
                     const val = input.value.trim().toLowerCase();
                     const cleanVal = val.replace(/[^a-z0-9]/g, '');
-                    const targetId = "7f930cb4ddb0"; 
+                    const targetId = "0x7f930cb4ddb0"; 
 
                     if (cleanVal === targetId) {
                         localStorage.setItem('s9_os_captcha', 'true');
