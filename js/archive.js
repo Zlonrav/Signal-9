@@ -30,11 +30,15 @@
         const isFixed = localStorage.getItem('s9_archive_fixed') === 'true';
         const isCalibrated = localStorage.getItem('s9_archive_calibrated') === 'true';
 
-        if (!isFixed && !isCalibrated) {
-            if (errorScreen) errorScreen.style.display = 'flex';
-            if (grid) grid.style.display = 'none';
-            if (tabs) tabs.style.display = 'none';
-            return;
+        // --- ЛОГИКА ЗАВЕРШЕНИЯ ТЕСТА ---
+        if (isCalibrated && !isFixed) {
+            const calibrationTime = parseInt(localStorage.getItem('s9_archive_calibration_time') || '0', 10);
+            const newPhrasesCount = phrases.filter(p => p.timestamp > calibrationTime).length;
+
+            if (newPhrasesCount >= 2) {
+                localStorage.setItem('s9_archive_fixed', 'true');
+                setTimeout(() => { location.reload(); }, 1000);
+            }
         }
 
         if (errorScreen) errorScreen.style.display = 'none';
