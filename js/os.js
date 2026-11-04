@@ -87,7 +87,8 @@
                         qubit.classList.add('broken');
                     } else {
                         qubit.classList.add('active');
-                        // Кружочки создаются через CSS ::after, ничего не добавляем
+                        const randomDelay = (Math.random() * -2).toFixed(2); 
+                        qubit.style.setProperty('--anim-delay', `${randomDelay}s`);
                     }
 
                     grid.appendChild(qubit);
