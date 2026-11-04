@@ -93,9 +93,14 @@
 
     // 4. ПРОВЕРКА ДОСТУПА К МОДУЛЯМ
     function isModuleOnline(moduleId) {
+        const isAuthorized = localStorage.getItem('s9_access_granted') === 'true';
+
         switch(moduleId) {
-            case 'hub': case 'map': case 'terminal':
-                return true;
+            case 'terminal':
+                return true; // Терминал доступен всегда
+            case 'hub':
+            case 'map':
+                return isAuthorized; // Хаб и Карта только после логина
             case 'archive':
                 return localStorage.getItem('s9_map_visited') === 'true';
             case 'os':
@@ -112,7 +117,7 @@
                 return false;
         }
     }
-
+    
     // 5. ОБРАБОТКА КОМАНД
     function processCommand(cmd) {
         print(`> ${printCmd(cmd)}`);
