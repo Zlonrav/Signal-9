@@ -73,7 +73,7 @@
                     cell.className = 'glyph-cell';
                     
                     if (currentPage === 2 && row === 4) {
-                        cell.style.opacity = 0.5;
+                        cell.style.opacity = 1;
                     }
 
                     const indices = typeof getPath === 'function' ? getPath(word) : [];
@@ -101,22 +101,30 @@
 
     document.addEventListener('DOMContentLoaded', initArchive);
     // Обновление таймера телеметрии
+    // Обновление таймера телеметрии
     setInterval(() => {
         const timerEl = document.getElementById('timer');
         if (!timerEl) return;
 
         const isCalibrated = localStorage.getItem('s9_archive_calibrated') === 'true';
         
-        // Если калибровка не пройдена, показываем заглушку и не тикаем
         if (!isCalibrated) {
             timerEl.innerText = "ОЖИДАНИЕ КАЛИБРОВКИ ПАМЯТИ...";
             return;
         }
 
-        if (typeof CYCLE_TIME !== 'undefined') {
+        if (typeof CYCLE_TIME !== 'undefined' && typeof TOTAL_DECRYPT_TIME !== 'undefined') {
             const timeSec = Math.floor(Date.now() / 1000);
-            const timeLeft = CYCLE_TIME - (timeSec % CYCLE_TIME);
-            timerEl.innerText = `ПРИЁМ СИГНАЛА: ${timeLeft} сек`;
+            const timePassed = timeSec % CYCLE_TIME;
+            const timeLeft = CYCLE_TIME - timePassed;
+
+            // Если прошло больше времени, чем нужно на дешифровку (110 сек),
+            // значит данные уже отправлены в Архив, и мы ждем нового цикла
+            if (timePassed >= TOTAL_DECRYPT_TIME) {
+                timerEl.innerText = `ОЖИДАНИЕ СЛЕДУЮЩЕГО ЦИКЛА: ${timeLeft} сек`;
+            } else {
+                timerEl.innerText = `ПРИЁМ СИГНАЛА: ${timeLeft} сек`;
+            }
         }
     }, 1000);
 })();
