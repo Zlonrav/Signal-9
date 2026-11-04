@@ -46,11 +46,21 @@
             { id: 'sectorff', title: 'СЕКТОР\n[0xFF]', x: 850, y: 650, url: '#', type: 'offline' }
         ],
         links: [
-            { s: 'hub', t: 'tools' }, { s: 'hub', t: 'map' }, { s: 'hub', t: 'core' }, { s: 'hub', t: 'edr' },
-            { s: 'tools', t: 'os' }, { s: 'tools', t: 'sector00' },
-            { s: 'core', t: 'telemetry' }, { s: 'core', t: 'archive' },
-            { s: 'edr', t: 'gateway' }, { s: 'edr', t: 'sectorff' },
-            { s: 'map', t: 'archive' }, { s: 'map', t: 'sectorff' }
+            // Крест от центра
+            { s: 'hub', t: 'tools' }, { s: 'hub', t: 'map' }, 
+            { s: 'hub', t: 'reactor' }, { s: 'hub', t: 'edr' },
+
+            // Верхние ветки
+            { s: 'tools', t: 'uninitialized' }, { s: 'tools', t: 'res1' },
+            
+            // Левая ветка
+            { s: 'reactor', t: 'telemetry' }, 
+            
+            // Правая ветка
+            { s: 'edr', t: 'hangar' }, { s: 'edr', t: 'res2' },
+            
+            // Низ (связь карты)
+            { s: 'map', t: 'archive' }, { s: 'map', t: 'res2' }
         ]
     };
 
