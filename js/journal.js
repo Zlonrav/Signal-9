@@ -94,7 +94,12 @@ const CHAT_DATABASE = {
                 const phrases = JSON.parse(localStorage.getItem('s9_phrases_data') || '[]');
                 
                 // Если в Архиве появилось хотя бы 2 новых фразы из Хаба
-                if (phrases.length >= 2) {
+            if (isCalibrated && !isFixed) {
+                const phrases = JSON.parse(localStorage.getItem('s9_phrases_data') || '[]');
+                const baseline = parseInt(localStorage.getItem('s9_archive_baseline_count') || '0', 10);
+                
+                // Ждем, пока добавится минимум 2 новые фразы
+                if (phrases.length - baseline >= 2) {
                     localStorage.setItem('s9_archive_fixed', 'true');
                     isFixed = true; 
                 } else {
