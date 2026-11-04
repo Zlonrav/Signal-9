@@ -18,9 +18,14 @@
             
             input.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
-                    const val = input.value.trim().toLowerCase();
+                    let val = input.value.trim().toLowerCase();
+                    // Убираем "0x" в начале, если есть
+                    if (val.startsWith('0x')) {
+                        val = val.substring(2);
+                    }
+                    // Очищаем от всего, кроме букв и цифр
                     const cleanVal = val.replace(/[^a-z0-9]/g, '');
-                    const targetId = "0x7f930cb4ddb0"; 
+                    const targetId = "7f930cb4ddb0"; // ID без 0x
 
                     if (cleanVal === targetId) {
                         localStorage.setItem('s9_os_captcha', 'true');
