@@ -151,6 +151,16 @@
                     localStorage.setItem('s9_lang_human', 'true');
                     setTimeout(() => { location.reload(); }, 1500);
                     break;
+                    
+                // --- РАЗРЕШАЕМ ВОЗВРАТ НА ЛОГИН И В ТЕРМИНАЛ ---
+                case 'login': 
+                    window.location.href = 'login.html'; 
+                    break;
+                case 'terminal': 
+                    window.location.href = 'tools.html'; 
+                    break;
+                // -----------------------------------------------
+
                 default:
                     print(`ОШИБКА: КОМАНДНЫЙ ПРОЦЕССОР ПОВРЕЖДЕН. ДОСТУПНЫ ТОЛЬКО КОМАНДЫ ВОССТАНОВЛЕНИЯ.`, 'err');
             }
