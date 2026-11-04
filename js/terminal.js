@@ -204,16 +204,19 @@
         }
 
         // --- КОМАНДА ДЛЯ ОС ---
-        if (cmd.startsWith('os --reset qubit_')) {
+        if (cmd.startsWith('os --reset qubit ')) {
             if (currentPage !== 'os.html') {
                 print(`ОШИБКА: КОМАНДА ДОСТУПНА ТОЛЬКО В ОПЕРАЦИОННОЙ СИСТЕМЕ.`, 'err');
             } else {
-                const qubitId = cmd.split('qubit_')[1];
-                if (qubitId) {
-                    print(`<span class="ok">[ОС] КУБИТ ${qubitId} ПЕРЕКАЛИБРОВАН.</span>`);
-                    window.dispatchEvent(new CustomEvent('repair_qubit', { detail: qubitId }));
+                // Извлекаем координаты (r1c2)
+                const coords = cmd.split(' ')[3]; 
+                const match = coords.match(/^r([1-5])c([1-5])$/i);
+                
+                if (match) {
+                    print(`<span class="ok">[ОС] ПОПЫТКА СБРОСА КУБИТА ${coords.toUpperCase()}...</span>`);
+                    window.dispatchEvent(new CustomEvent('repair_qubit', { detail: coords.toLowerCase() }));
                 } else {
-                    print(`ОШИБКА: НЕВЕРНЫЙ ФОРМАТ КОМАНДЫ. ИСПОЛЬЗУЙТЕ os --reset qubit_XX`, 'err');
+                    print(`ОШИБКА: НЕВЕРНЫЙ ФОРМАТ КООРДИНАТ. ИСПОЛЬЗУЙТЕ rXcY (НАПРИМЕР, r1c2)`, 'err');
                 }
             }
             return;
