@@ -91,27 +91,16 @@
         print(`ВВЕДИТЕ ${printCmd('system --help')} ДЛЯ СПИСКА КОМАНД ВОССТАНОВЛЕНИЯ.`);
     });
 
-    // 4. ПРОВЕРКА ДОСТУПА К МОДУЛЯМ
+    // 4. ПРОВЕРКА ДОСТУПА К МОДУЛЯМ (Исправленная)
     function isModuleOnline(moduleId) {
         const isAuthorized = localStorage.getItem('s9_access_granted') === 'true';
 
         switch(moduleId) {
             case 'terminal':
-                return true; // Терминал доступен всегда
-            case 'hub': 
-                if (localStorage.getItem('s9_access_granted') === 'true') {
-                    window.location.href = 'index.html'; 
-                } else {
-                    print(`ОШИБКА: ДОСТУП ЗАКРЫТ. ТРЕБУЕТСЯ АВТОРИЗАЦИЯ.`, 'err');
-                }
-                break;
-            case 'map': 
-                if (localStorage.getItem('s9_access_granted') === 'true') {
-                    window.location.href = 'map.html'; 
-                } else {
-                    print(`ОШИБКА: ДОСТУП ЗАКРЫТ. ТРЕБУЕТСЯ АВТОРИЗАЦИЯ.`, 'err');
-                }
-                break;
+                return true; 
+            case 'hub':
+            case 'map':
+                return isAuthorized; 
             case 'archive':
                 return localStorage.getItem('s9_map_visited') === 'true';
             case 'os':
@@ -138,7 +127,6 @@
             return; 
         }
 
-        // Определяем страницу и проверяем, не логин ли это
         const currentPage = window.location.pathname.split('/').pop() || 'index.html';
         const isLoginPage = currentPage === 'login.html';
         const isHuman = isLoginPage || localStorage.getItem('s9_lang_human') === 'true';
@@ -220,15 +208,12 @@
             case 'help':
                 print(`<span class="topic-header">[ПРОТОКОЛЫ ПЕРЕМЕЩЕНИЯ]</span>`);
                 
-                // Проверяем Хаб
                 if (isModuleOnline('hub')) print(`> ${printCmd('hub')} - Переход в Главный Хаб`);
                 else print(`> ${printCmd('hub')} - <span class="err">[OFFLINE]</span>`);
                 
-                // Проверяем Карту
                 if (isModuleOnline('map')) print(`> ${printCmd('map')} - Переход на Карту`);
                 else print(`> ${printCmd('map')} - <span class="err">[OFFLINE]</span>`);
 
-                // Терминал доступен всегда
                 print(`> ${printCmd('terminal')} - Переход в Терминал`);
                 
                 if (isModuleOnline('archive')) print(`> ${printCmd('archive')} - Переход в Базу Данных`);
@@ -271,76 +256,15 @@
                 break;
                 
             case 'hub': 
-                if (localStorage.getItem('s9_access_granted') === 'true') {
-                    window.location.href = 'index.html'; 
-                } else {
-                    print(`ОШИБКА: ДОСТУП ЗАКРЫТ. ТРЕБУЕТСЯ АВТОРИЗАЦИЯ.`, 'err');
-                }
+                if (isModuleOnline('hub')) window.location.href = 'index.html'; 
+                else print(`ОШИБКА: ДОСТУП ЗАКРЫТ. ТРЕБУЕТСЯ АВТОРИЗАЦИЯ.`, 'err');
                 break;
 
             case 'map': 
-                if (localStorage.getItem('s9_access_granted') === 'true') {
-                    window.location.href = 'map.html'; 
-                } else {
-                    print(`ОШИБКА: ДОСТУП ЗАКРЫТ. ТРЕБУЕТСЯ АВТОРИЗАЦИЯ.`, 'err');
-                }
+                if (isModuleOnline('map')) window.location.href = 'map.html'; 
+                else print(`ОШИБКА: ДОСТУП ЗАКРЫТ. ТРЕБУЕТСЯ АВТОРИЗАЦИЯ.`, 'err');
                 break;
 
-            case 'terminal': window.location.href = 'tools.html'; break;
-            case 'login': window.location.href = 'login.html'; break;
-            
-            case 'archive':
-                if (isModuleOnline('archive')) window.location.href = 'archive.html';
-                else print(`ОШИБКА: МОДУЛЬ [АРХИВ] НЕДОСТУПЕН.`, 'err');
-                break;
-                
-            case 'os':
-                if (isModuleOnline('os')) window.location.href = 'os.html';
-                else print(`ОШИБКА: МОДУЛЬ [ОС] НЕДОСТУПЕН.`, 'err');
-                break;
-                
-            case 'edr':
-                if (isModuleOnline('edr')) window.location.href = 'edr.html';
-                else print(`ОШИБКА: МОДУЛЬ [EDR] НЕДОСТУПЕН.`, 'err');
-                break;
-
-            case 'telemetry':
-                if (isModuleOnline('telemetry')) window.location.href = 'telemetry.html';
-                else print(`ОШИБКА: МОДУЛЬ [ТЕЛЕМЕТРИЯ] НЕДОСТУПЕН.`, 'err');
-                break;
-
-            case 'core':
-                if (isModuleOnline('core')) window.location.href = 'reactor.html';
-                else print(`ОШИБКА: МОДУЛЬ [ЭНЕРГОЯДРО] НЕДОСТУПЕН.`, 'err');
-                break;
-                
-            case 'gateway':
-                if (isModuleOnline('gateway')) window.location.href = 'gateway.html';
-                else print(`ОШИБКА: МОДУЛЬ [ШЛЮЗ] НЕДОСТУПЕН.`, 'err');
-                break;
-                
-            case 'sector00':
-            case 'sectorff':
-                print(`ОШИБКА: МОДУЛЬ НЕДОСТУПЕН (OFFLINE).`, 'err');
-                break;
-                
-            default:
-                print(`НЕИЗВЕСТНАЯ КОМАНДА. ВВЕДИТЕ ${printCmd('help')}.`, 'err');
-        }
-                
-            case 'clear':
-                output.innerHTML = '';
-                print('КОНСОЛЬ ОЧИЩЕНА.');
-                break;
-                
-            case 'test':
-                print(`СТАТУС СИСТЕМЫ: <span class="ok">В НОРМЕ</span>`);
-                print(`ТЕКУЩАЯ СТРАНИЦА: ${page}`);
-                print(`ФЛАГ ДОСТУПА: ${localStorage.getItem('s9_access_granted') || 'НЕТ'}`);
-                break;
-                
-            case 'hub': window.location.href = 'index.html'; break;
-            case 'map': window.location.href = 'map.html'; break;
             case 'terminal': window.location.href = 'tools.html'; break;
             case 'login': window.location.href = 'login.html'; break;
             
