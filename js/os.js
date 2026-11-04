@@ -1,21 +1,55 @@
 // js/os.js
-// js/os.js
 (function() {
     const CORRECT_ID = "0x7f930cb4ddb0"; 
-    const BROKEN_QUBITS = [3, 7, 12, 15, 19, 22, 25]; // Теперь 7 сломанных кубитов из 25
+    const BROKEN_QUBITS = [3, 7, 12, 15, 19, 22, 25]; 
 
     document.addEventListener('DOMContentLoaded', () => {
         const lockdown = document.getElementById('os-lockdown');
         const input = document.getElementById('captcha-input');
         const grid = document.getElementById('qubitGrid');
 
-        // ... (Логика входа остается без изменений) ...
+        // --- 1. ЛОГИКА ВЕРИФИКАЦИИ ---
+        const isCaptchaPassed = localStorage.getItem('s9_os_captcha') === 'true';
 
-        // 2. ОТРИСОВКА КУБИТОВ (25 штук)
+        if (isCaptchaPassed) {
+            lockdown.classList.add('hidden');
+            initQubits();
+        } else {
+            setTimeout(() => input.focus(), 100);
+            
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    const val = input.value.trim().toLowerCase();
+                    const cleanVal = val.replace(/[^a-z0-9]/g, '');
+                    const targetId = "7f930cb4ddb0"; // ID без 0x
+
+                    if (cleanVal === targetId) {
+                        localStorage.setItem('s9_os_captcha', 'true');
+                        lockdown.classList.add('hidden');
+                        initQubits();
+                        // Обновляем журнал, чтобы он увидел новый флаг
+                        if (typeof window.updateQuestion === 'function') {
+                            window.currentChatStep = 0;
+                            window.updateQuestion();
+                        }
+                    } else {
+                        input.value = '';
+                        input.placeholder = "НЕВЕРНЫЙ ИДЕНТИФИКАТОР";
+                        input.style.borderBottomColor = "#ff3333";
+                        setTimeout(() => { 
+                            input.placeholder = "0x..."; 
+                            input.style.borderBottomColor = "var(--neon)"; 
+                        }, 2000);
+                    }
+                }
+            });
+        }
+
+        // --- 2. ОТРИСОВКА КУБИТОВ ---
         function initQubits() {
             grid.innerHTML = '';
             
-            for (let i = 1; i <= 25; i++) { // Цикл до 25
+            for (let i = 1; i <= 25; i++) { 
                 const qubit = document.createElement('div');
                 qubit.className = 'qubit';
                 qubit.id = `qubit_${String(i).padStart(2, '0')}`;
@@ -35,9 +69,7 @@
             checkAllFixed();
         }
 
-        // ... (Логика слушателя repair_qubit и checkAllFixed остается без изменений) ...
-
-        // 3. СЛУШАЕМ КОМАНДУ ИЗ КОНСОЛИ
+        // --- 3. СЛУШАЕМ КОМАНДУ ИЗ КОНСОЛИ ---
         window.addEventListener('repair_qubit', (e) => {
             const qubitId = e.detail; 
             const qubitNum = parseInt(qubitId, 10);
