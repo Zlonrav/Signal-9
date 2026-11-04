@@ -91,15 +91,15 @@
                 localStorage.setItem('s9_archive_calibrated', 'true');
                 localStorage.setItem('s9_archive_baseline_count', '2');
                 
-                // ВАЖНО: Время калибровки ставим ПОСЛЕ создания фраз, 
-                // чтобы они были "старыми" и не считались новыми
-                localStorage.setItem('s9_archive_calibration_time', Date.now().toString());
+                // ВАЖНО: Время калибровки на 2 секунды ПОЗЖЕ, 
+                // чтобы эталонные фразы гарантированно считались "старыми"
+                localStorage.setItem('s9_archive_calibration_time', (now + 2000).toString());
                 
                 print('<span class="ok">[ЧИТ] 10 ЭТАЛОННЫХ ТРАССИТОВ ВВЕДЕНО. АРХИВ ОТКАЛИБРОВАН, НО ТЕСТ НЕ ЗАВЕРШЕН.</span>');
                 print('<span class="sys">ПЕРЕХОД В АРХИВ ДЛЯ ОЖИДАНИЯ ДВУХ ЦИКЛОВ...</span>');
                 setTimeout(() => { window.location.href = 'archive.html'; }, 1500);
                 return true; 
-            }  return true; 
+            }
             }
             if (cmd === 'fix_os') {
                 localStorage.setItem('s9_os_captcha', 'true');
