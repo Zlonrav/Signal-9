@@ -85,25 +85,17 @@ const CHAT_DATABASE = {
         }
 
         // 3. АРХИВ
+        // --- ЛОГИКА ДЛЯ АРХИВА ---
         if (page === 'archive.html') {
             const isCalibrated = localStorage.getItem('s9_archive_calibrated') === 'true';
-            let isFixed = localStorage.getItem('s9_archive_fixed') === 'true';
+            const isFixed = localStorage.getItem('s9_archive_fixed') === 'true';
 
             if (isCalibrated && !isFixed) {
-                const phrases = JSON.parse(localStorage.getItem('s9_phrases_data') || '[]');
-                const baseline = parseInt(localStorage.getItem('s9_archive_baseline_count') || '0', 10);
-                
-                // Ждем появления минимум двух новых фраз
-                if (phrases.length - baseline >= 2) { 
-                    localStorage.setItem('s9_archive_fixed', 'true');
-                    isFixed = true; 
-                } else {
-                    return [
-                        { q: "> КАЛИБРОВКА ЗАВЕРШЕНА", a: "РУЧНАЯ КАЛИБРОВКА ПАМЯТИ ПРОЙДЕНА УСПЕШНО. БУФЕР ГОТОВ К ТЕСТУ АВТОЗАПИСИ." },
-                        { q: "> ТЕСТ АВТОЗАПИСИ", a: "ДЛЯ ПОДТВЕРЖДЕНИЯ СТАБИЛЬНОСТИ НЕОБХОДИМО ДОЖДАТЬСЯ ДВУХ НОВЫХ ЦИКЛОВ ДЕШИФРОВКИ СИГНАЛА." },
-                        { q: "> СТАТУС ТЕСТА", a: "ОЖИДАНИЕ ПОСТУПЛЕНИЯ НОВЫХ ТРАССИТОВ ИЗ ЭФИРА. СЛЕДИТЕ ЗА ТАЙМЕРОМ ТЕЛЕМЕТРИИ." }
-                    ];
-                }
+                return [
+                    { q: "> КАЛИБРОВКА ЗАВЕРШЕНА", a: "РУЧНАЯ КАЛИБРОВКА ПАМЯТИ ПРОЙДЕНА УСПЕШНО. БУФЕР ГОТОВ К ТЕСТУ АВТОЗАПИСИ." },
+                    { q: "> ТЕСТ АВТОЗАПИСИ", a: "ДЛЯ ПОДТВЕРЖДЕНИЯ СТАБИЛЬНОСТИ НЕОБХОДИМО ДОЖДАТЬСЯ ДВУХ НОВЫХ ЦИКЛОВ ДЕШИФРОВКИ СИГНАЛА." },
+                    { q: "> СТАТУС ТЕСТА", a: "ОЖИДАНИЕ ПОСТУПЛЕНИЯ НОВЫХ ТРАССИТОВ ИЗ ЭФИРА. СЛЕДИТЕ ЗА ТАЙМЕРОМ ТЕЛЕМЕТРИИ." }
+                ];
             }
             
             if (isFixed) {
