@@ -198,7 +198,6 @@
                 print(`> ${printCmd('clear_memory')} - Полная очистка памяти`);
             } else {
                 print(`НЕТ ИНФОРМАЦИИ ПО ТЕМЕ '${topic}'.`, 'err');
-            }
             } else if (topic === 'os') {
                 print(`<span class="topic-header">[ОС]</span> ОПЕРАЦИОННАЯ СИСТЕМА СТАНЦИИ.`);
                 print(`ПРЕДНАЗНАЧЕНА ДЛЯ УПРАВЛЕНИЯ КВАНТОВЫМИ ВЫЧИСЛЕНИЯМИ.`);
