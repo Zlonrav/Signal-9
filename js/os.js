@@ -111,6 +111,8 @@
             if (qubitEl.classList.contains('broken')) {
                 qubitEl.classList.remove('broken');
                 qubitEl.classList.add('active');
+                const randomDelay = (Math.random() * -2).toFixed(2);
+                qubitEl.style.setProperty('--anim-delay', `${randomDelay}s`);
                 
                 brokenList = brokenList.filter(item => item !== coord);
                 localStorage.setItem('s9_os_broken_qubits', JSON.stringify(brokenList));
