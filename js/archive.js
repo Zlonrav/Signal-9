@@ -73,7 +73,7 @@
                     
                     // Если это вторая вкладка, самая нижняя (5-я) фраза будет полупрозрачной
                     if (currentPage === 2 && row === 4) {
-                        cell.style.opacity = 0.5;
+                        cell.style.opacity = 1;
                     }
 
                     const indices = typeof getPath === 'function' ? getPath(word) : [];
