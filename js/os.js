@@ -31,14 +31,15 @@
                 if (cleanVal.length === 12) {
                     if (cleanVal === targetId) {
                         localStorage.setItem('s9_os_captcha', 'true');
-                        localStorage.setItem('s9_os_errors', '0'); 
+                        // ...
                         lockdown.classList.add('hidden');
                         initQubits();
-                        if (typeof window.updateQuestion === 'function') {
-                            window.currentChatStep = 0;
-                            window.updateQuestion();
+                        
+                        // Запускаем модемный звук
+                        if (typeof window.startOsModemSound === 'function') {
+                            window.startOsModemSound();
                         }
-                    } else {
+                        else {
                         input.value = '';
                         input.placeholder = "ОШИБКА ДОСТУПА";
                         input.style.borderBottomColor = "#ff3333";
