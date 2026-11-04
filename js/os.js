@@ -37,7 +37,7 @@
                         }
                     } else {
                         input.value = '';
-                        input.placeholder = "НЕВЕРНЫЙ ИДЕНТИФИКАТОР";
+                        input.placeholder = "ОШИБКА ДОСТУПА";
                         input.style.borderBottomColor = "#ff3333";
                         setTimeout(() => { 
                             input.placeholder = "0x..."; 
