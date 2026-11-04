@@ -196,7 +196,7 @@
                 print(`> ${printCmd('reset_archive')} - Сбрасывает задание с Архивом`);
                 print(`> ${printCmd('fix_os')} - Обходит защиту ОС и чинит кубиты`);
                 print(`> ${printCmd('clear_memory')} - Полная очистка памяти`);
-            }else {
+            } else {
                 print(`НЕТ ИНФОРМАЦИИ ПО ТЕМЕ '${topic}'.`, 'err');
             }
             return;
