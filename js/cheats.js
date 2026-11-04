@@ -97,7 +97,23 @@
                 setTimeout(() => { window.location.href = 'archive.html'; }, 1500);
                 return true; 
             }
-
+            // --- ЧИТ ДЛЯ СБРОСА ОС ---
+            if (cmd === 'reset_os') {
+                localStorage.removeItem('s9_os_captcha');
+                localStorage.removeItem('s9_os_fixed');
+                localStorage.removeItem('s9_os_broken_qubits');
+                
+                // Удаляем флаги починки каждого кубита
+                for (let i = 1; i <= 25; i++) {
+                    localStorage.removeItem(`s9_qubit_${i}_fixed`);
+                    localStorage.removeItem(`s9_qubit_r1c1_fixed`); // На случай старых форматов
+                }
+                
+                print('<span class="ok">[ЧИТ] ПРОХОЖДЕНИЕ ОС СБРОШЕНО. ВСЕ КУБИТЫ И ID УДАЛЕНЫ.</span>');
+                print('<span class="sys">ПЕРЕЗАГРУЗКА...</span>');
+                setTimeout(() => { location.reload(); }, 1500);
+                return true;
+            }
             // --- ЧИТ ДЛЯ ОС ---
             if (cmd === 'fix_os') {
                 localStorage.setItem('s9_os_captcha', 'true');
