@@ -1,132 +1,99 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <script src="js/auth.js"></script> 
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
-    <title>СИГНАЛ-9 // ОПЕРАЦИОННАЯ СИСТЕМА</title>
-    
-    <link rel="stylesheet" type="text/css" href="style.css">
-    <link rel="stylesheet" type="text/css" href="style-tools.css">
-    <link rel="stylesheet" type="text/css" href="style-chat-terminal.css">
-    
-    <style>
-        body.tools-page { 
-            overflow: hidden; 
-            height: 100vh; 
-            background-color: #010306; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            margin: 0;
+// js/os.js
+(function() {
+    const CORRECT_ID = "0x7f930cb4ddb0"; // Наш ID
+    const BROKEN_QUBITS = [3, 7, 12, 15, 19];
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const lockdown = document.getElementById('os-lockdown');
+        const input = document.getElementById('captcha-input');
+        const grid = document.getElementById('qubitGrid');
+
+        // 1. ЛОГИКА ВЕРИФИКАЦИИ
+        const isCaptchaPassed = localStorage.getItem('s9_os_captcha') === 'true';
+
+        if (isCaptchaPassed) {
+            lockdown.classList.add('hidden');
+            initQubits();
+        } else {
+            setTimeout(() => input.focus(), 100);
+            
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    const val = input.value.trim().toLowerCase();
+                    // Проверяем с 0x и без
+                    if (val === CORRECT_ID || val === CORRECT_ID.replace('0x', '')) {
+                        localStorage.setItem('s9_os_captcha', 'true');
+                        lockdown.classList.add('hidden');
+                        initQubits();
+                        if (typeof window.updateQuestion === 'function') window.dispatchEvent(new Event('storage'));
+                    } else {
+                        input.value = '';
+                        input.placeholder = "НЕВЕРНЫЙ ИДЕНТИФИКАТОР";
+                        input.style.borderBottomColor = "#ff3333";
+                        setTimeout(() => { 
+                            input.placeholder = "0x..."; 
+                            input.style.borderBottomColor = "var(--neon)"; 
+                        }, 2000);
+                    }
+                }
+            });
         }
 
-        .os-header { 
-            font-family: 'Michroma', sans-serif; 
-            font-size: 14px; 
-            letter-spacing: 8px; 
-            color: var(--neon); 
-            text-transform: uppercase; 
-            opacity: 0.6; 
-            text-shadow: 0 0 20px var(--neon); 
-            z-index: 100; 
-            margin-bottom: 40px; 
-            text-align: center;
+        // 2. ОТРИСОВКА КУБИТОВ
+        function initQubits() {
+            grid.innerHTML = '';
+            
+            for (let i = 1; i <= 20; i++) {
+                const qubit = document.createElement('div');
+                qubit.className = 'qubit';
+                qubit.id = `qubit_${String(i).padStart(2, '0')}`;
+                
+                const isBroken = BROKEN_QUBITS.includes(i);
+                const isFixed = localStorage.getItem(`s9_qubit_${i}_fixed`) === 'true';
+
+                if (isBroken && !isFixed) {
+                    qubit.classList.add('broken');
+                } else {
+                    qubit.classList.add('active');
+                }
+
+                grid.appendChild(qubit);
+            }
+
+            checkAllFixed();
         }
 
-        /* Сетка кубитов (пока скрыта) */
-        .qubit-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 80px);
-            grid-template-rows: repeat(4, 80px);
-            gap: 20px;
-            z-index: 10;
+        // 3. СЛУШАЕМ КОМАНДУ ИЗ КОНСОЛИ
+        window.addEventListener('repair_qubit', (e) => {
+            const qubitId = e.detail; 
+            const qubitNum = parseInt(qubitId, 10);
+            
+            if (!BROKEN_QUBITS.includes(qubitNum)) return; 
+
+            const qubitEl = document.getElementById(`qubit_${qubitId}`);
+            if (qubitEl && qubitEl.classList.contains('broken')) {
+                qubitEl.classList.remove('broken');
+                qubitEl.classList.add('active');
+                localStorage.setItem(`s9_qubit_${qubitNum}_fixed`, 'true');
+                checkAllFixed();
+            }
+        });
+
+        function checkAllFixed() {
+            let allFixed = true;
+            BROKEN_QUBITS.forEach(num => {
+                if (localStorage.getItem(`s9_qubit_${num}_fixed`) !== 'true') {
+                    allFixed = false;
+                }
+            });
+
+            if (allFixed) {
+                localStorage.setItem('s9_os_fixed', 'true');
+                if (typeof window.updateQuestion === 'function') {
+                    window.currentChatStep = 0;
+                    window.updateQuestion();
+                }
+            }
         }
-
-        .qubit {
-            width: 80px; height: 80px;
-            background: rgba(2, 10, 15, 0.85);
-            border: 1px solid rgba(0, 242, 255, 0.3);
-            border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 10px; color: #666;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        .qubit.active { border-color: var(--neon); box-shadow: 0 0 15px rgba(0, 242, 255, 0.2); }
-        .qubit.active::after { content: ''; width: 30px; height: 30px; border: 2px solid var(--neon); border-radius: 50%; animation: pulse 2s infinite; }
-        
-        .qubit.broken { border-color: #ff3333; box-shadow: 0 0 15px rgba(255, 51, 51, 0.2); animation: shake 0.5s infinite; }
-        .qubit.broken::after { content: 'ERR'; color: #ff3333; font-weight: bold; font-size: 12px; }
-
-        @keyframes pulse { 0% { transform: scale(0.8); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
-        @keyframes shake { 0% { transform: translate(1px, 1px) rotate(0deg); } 10% { transform: translate(-1px, -2px) rotate(-1deg); } 20% { transform: translate(-3px, 0px) rotate(1deg); } 30% { transform: translate(3px, 2px) rotate(0deg); } 40% { transform: translate(1px, -1px) rotate(1deg); } 50% { transform: translate(-1px, 2px) rotate(-1deg); } 60% { transform: translate(-3px, 1px) rotate(0deg); } 70% { transform: translate(3px, 1px) rotate(-1deg); } 80% { transform: translate(-1px, -1px) rotate(1deg); } 90% { transform: translate(1px, 2px) rotate(0deg); } 100% { transform: translate(1px, -2px) rotate(-1deg); } }
-
-        /* Экран верификации */
-        #os-lockdown {
-            position: fixed; inset: 0; z-index: 99999;
-            background: rgba(0, 5, 10, 0.95); backdrop-filter: blur(10px);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: opacity 0.5s ease;
-        }
-        
-        #os-lockdown.hidden { opacity: 0; pointer-events: none; }
-
-        .captcha-box {
-            border: 1px solid var(--neon); background: #020508; padding: 30px; text-align: center;
-            box-shadow: 0 0 30px rgba(0, 242, 255, 0.1);
-        }
-        .captcha-box h2 { color: var(--neon); font-family: 'Michroma', sans-serif; font-size: 16px; margin-bottom: 20px; }
-        .captcha-box p { color: #aaa; font-family: 'JetBrains Mono', monospace; font-size: 12px; margin-bottom: 20px; line-height: 1.5; }
-        .captcha-box .code { color: #ffaa00; font-size: 14px; letter-spacing: 2px; margin: 15px 0; }
-        
-        #captcha-input {
-            background: transparent !important; border: none !important; 
-            border-bottom: 2px solid var(--neon) !important;
-            color: var(--neon) !important; font-family: 'JetBrains Mono', monospace !important; 
-            font-size: 20px !important; text-align: center !important; 
-            outline: none !important; padding: 10px !important; width: 300px !important; 
-            margin: 15px auto 0 auto !important; display: block !important;
-            text-transform: uppercase !important; letter-spacing: 5px !important;
-            position: static !important;
-        }
-    </style>
-</head>
-<body class="tools-page">
-
-    <!-- СИСТЕМНЫЙ ЖУРНАЛ -->
-    <div class="chat-system">
-        <div id="quest-field" class="question" onclick="handleChatClick()"></div>
-        <div id="answer-field" class="answer-field"></div>
-    </div>
-
-    <!-- ФОНОВЫЕ СЛОИ -->
-    <canvas id="starfield"></canvas>
-    <div id="scanner-line"></div>
-    <div id="overlay-noise"></div>
-
-    <!-- КНОПКА КОНСОЛИ -->
-    <button id="console-toggle-btn" style="position: fixed; bottom: 25px; right: 25px; z-index: 10000; background: rgba(0, 20, 30, 0.5); border: 1px solid rgba(0, 242, 255, 0.3); color: var(--neon); padding: 8px 12px; font-family: monospace; font-size: 14px; cursor: pointer; transition: 0.3s;" onmouseover="this.style.background='rgba(0, 242, 255, 0.1)'" onmouseout="this.style.background='rgba(0, 20, 30, 0.5)'">&gt;_</button>
-
-    <!-- ОСНОВНОЙ КОНТЕНТ -->
-    <div class="os-header">ОПЕРАЦИОННАЯ СИСТЕМА // ЯДРО</div>
-    <div class="qubit-grid" id="qubitGrid"></div>
-
-    <!-- ЭКРАН ВЕРИФИКАЦИИ -->
-    <div id="os-lockdown">
-        <div class="captcha-box">
-            <h2>ВЕРИФИКАЦИЯ ЦЕЛОСТНОСТИ</h2>
-            <p>ОБНАРУЖЕН ВНЕШНИЙ ЗАПРОС. ДЛЯ ДОСТУПА К ЯДРУ ВВЕДИТЕ ВАШ УНИКАЛЬНЫЙ ИДЕНТИФИКАТОР.</p>
-            <p>ПОЛУЧИТЕ ЕГО В КОНСОЛИ КОМАНДОЙ <span class="cmd-text">self --id</span></p>
-            <input type="text" id="captcha-input" autocomplete="off" spellcheck="false" placeholder="0x...">
-        </div>
-    </div>
-
-    <!-- ПОДКЛЮЧЕНИЕ СКРИПТОВ -->
-    <script src="js/loader.js"></script>
-    <script src="js/os.js"></script>
-</body>
-</html>
+    });
+})();
