@@ -34,20 +34,21 @@
 
             // --- ЧИТ ДЛЯ АРХИВА ---
             if (cmd === 'fix_archive') {
-                const words = ["СИСТЕМА", "ПАМЯТЬ", "КОД", "СИГНАЛ", "ВЕКТОР", "АРХИВ", "ЗВЕЗДА", "ОРБИТА", "МОДУЛЬ", "ДАННЫЕ"];
-                const phrasesData = [];
+                const TARGET_WORDS = ["СИСТЕМА", "ПАМЯТЬ", "КОД", "СИГНАЛ", "ВЕКТОР", "АРХИВ", "ЗВЕЗДА", "ОРБИТА", "МОДУЛЬ", "ДАННЫЕ"];
+                const phrase1 = TARGET_WORDS.slice(0, 5);
+                const phrase2 = TARGET_WORDS.slice(5, 10);
                 const now = Date.now();
 
-                words.forEach((w, i) => {
-                    localStorage.setItem('s9_glyph_' + w, 'true');
-                    phrasesData.push({ word: w, timestamp: now - (i * 1000) });
-                });
+                const phrasesData = [
+                    { text: phrase1.join(' '), words: phrase1, timestamp: now - 1000 },
+                    { text: phrase2.join(' '), words: phrase2, timestamp: now }
+                ];
 
                 localStorage.setItem('s9_phrases_data', JSON.stringify(phrasesData));
                 localStorage.setItem('s9_archive_calibrated', 'true');
-                localStorage.setItem('s9_archive_fixed', 'true'); // Чтобы сразу перескочить в ОС
+                localStorage.setItem('s9_archive_baseline_count', '2');
                 
-                print('<span class="ok">[ЧИТ] 10 ЭТАЛОННЫХ ТРАССИТОВ ВВЕДЕНО. АРХИВ ПОЧИНЕН.</span>');
+                print('<span class="ok">[ЧИТ] 10 ЭТАЛОННЫХ ТРАССИТОВ ВВЕДЕНО. АРХИВ ОТКАЛИБРОВАН.</span>');
                 setTimeout(() => { window.location.href = 'archive.html'; }, 1500);
                 return true; 
             }
