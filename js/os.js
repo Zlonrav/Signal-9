@@ -13,6 +13,11 @@
         if (isCaptchaPassed) {
             lockdown.classList.add('hidden');
             initQubits();
+            
+            // Запускаем модемный звук, если звук уже включен
+            if (typeof window.startOsModemSound === 'function' && window.audioCtx) {
+                window.startOsModemSound();
+            }
         } else {
             setTimeout(() => input.focus(), 100);
             
