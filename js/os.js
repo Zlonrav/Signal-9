@@ -20,7 +20,7 @@
         } else {
             setTimeout(() => input.focus(), 100);
             
-            input.addEventListener('input', (e) => {
+                        input.addEventListener('input', (e) => {
                 let val = input.value.trim().toLowerCase();
                 if (val.startsWith('0x')) val = val.substring(2);
                 
@@ -43,6 +43,7 @@
                             window.updateQuestion();
                         }
                     } else {
+                        // Если ID неверный
                         input.value = '';
                         input.placeholder = "ОШИБКА ДОСТУПА";
                         input.style.borderBottomColor = "#ff3333";
