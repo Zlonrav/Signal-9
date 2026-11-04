@@ -192,6 +192,7 @@
                 print(`> ${printCmd('reset_archive')} - Сбрасывает задание с Архивом`);
                 print(`> ${printCmd('fix_os')} - Обходит защиту ОС и чинит кубиты`);
                 print(`> ${printCmd('clear_memory')} - Полная очистка памяти`);
+                print(`> ${printCmd('reset_os')} - Сбрасывает прохождение ОС`);
             } else if (topic === 'os') {
                 print(`<span class="topic-header">[ОС]</span> ОПЕРАЦИОННАЯ СИСТЕМА СТАНЦИИ.`);
                 print(`ПРЕДНАЗНАЧЕНА ДЛЯ УПРАВЛЕНИЯ КВАНТОВЫМИ ВЫЧИСЛЕНИЯМИ.`);
