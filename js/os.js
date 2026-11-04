@@ -16,17 +16,21 @@
         } else {
             setTimeout(() => input.focus(), 100);
             
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    let val = input.value.trim().toLowerCase();
-                    // Убираем "0x" в начале, если есть
-                    if (val.startsWith('0x')) {
-                        val = val.substring(2);
-                    }
-                    // Очищаем от всего, кроме букв и цифр
-                    const cleanVal = val.replace(/[^a-z0-9]/g, '');
-                    const targetId = "7f930cb4ddb0"; // ID без 0x
+            // Вместо keydown используем input
+            input.addEventListener('input', (e) => {
+                let val = input.value.trim().toLowerCase();
+                
+                // Убираем "0x" в начале, если есть
+                if (val.startsWith('0x')) {
+                    val = val.substring(2);
+                }
+                
+                // Очищаем от всего, кроме букв и цифр
+                const cleanVal = val.replace(/[^a-z0-9]/g, '');
+                const targetId = "7f930cb4ddb0"; // ID без 0x
 
+                // Если ввели ровно 12 символов (длина ID) — проверяем
+                if (cleanVal.length === 12) {
                     if (cleanVal === targetId) {
                         localStorage.setItem('s9_os_captcha', 'true');
                         lockdown.classList.add('hidden');
