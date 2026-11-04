@@ -14,7 +14,6 @@
             lockdown.classList.add('hidden');
             initQubits();
             
-            // Запускаем модемный звук, если звук уже включен
             if (typeof window.startOsModemSound === 'function' && window.audioCtx) {
                 window.startOsModemSound();
             }
@@ -31,15 +30,19 @@
                 if (cleanVal.length === 12) {
                     if (cleanVal === targetId) {
                         localStorage.setItem('s9_os_captcha', 'true');
-                        // ...
+                        localStorage.setItem('s9_os_errors', '0'); 
                         lockdown.classList.add('hidden');
                         initQubits();
                         
-                        // Запускаем модемный звук
                         if (typeof window.startOsModemSound === 'function') {
                             window.startOsModemSound();
                         }
-                        else {
+                        
+                        if (typeof window.updateQuestion === 'function') {
+                            window.currentChatStep = 0;
+                            window.updateQuestion();
+                        }
+                    } else {
                         input.value = '';
                         input.placeholder = "ОШИБКА ДОСТУПА";
                         input.style.borderBottomColor = "#ff3333";
@@ -94,29 +97,27 @@
             }
 
             checkAllFixed();
-            startSymbolAnimation(); // <--- ДОБАВИТЬ ЭТО
-            setInterval(drawTraces, 8000); // <--- ДОБАВИТЬ ЭТО
+            animateSymbols(); // <--- ИСПРАВЛЕНО ИМЯ ФУНКЦИИ
+            setInterval(drawTraces, 8000); 
         }
 
         // --- 3. АНИМАЦИЯ СИМВОЛОВ ---
         function animateSymbols() {
             const symbols = ['0', '1', '#', '@', '%', '&', '*', '+', '='];
-            const activeQubits = document.querySelectorAll('.qubit.active');
             
             setInterval(() => {
+                const activeQubits = document.querySelectorAll('.qubit.active');
                 activeQubits.forEach(q => {
                     const symbolSpan = q.querySelector('.qubit-symbol');
                     if (symbolSpan) {
-                        // Плавно скрываем
                         symbolSpan.style.opacity = '0';
                         setTimeout(() => {
-                            // Меняем символ и плавно показываем
                             symbolSpan.innerText = symbols[Math.floor(Math.random() * symbols.length)];
                             symbolSpan.style.opacity = '1';
-                        }, 1500); // Ждем 1.5 сек (время исчезновения)
+                        }, 1500); 
                     }
                 });
-            }, 4000); // Смена раз в 4 секунды
+            }, 4000); 
         }
 
         // --- 4. РЕМОНТ ---
@@ -131,7 +132,7 @@
             if (qubitEl.classList.contains('broken')) {
                 qubitEl.classList.remove('broken');
                 qubitEl.classList.add('active');
-                // Добавляем символ при починке
+                
                 if (!qubitEl.querySelector('.qubit-symbol')) {
                     const symbolSpan = document.createElement('span');
                     symbolSpan.className = 'qubit-symbol';
@@ -139,6 +140,7 @@
                     symbolSpan.style.opacity = '1';
                     qubitEl.appendChild(symbolSpan);
                 }
+                
                 brokenList = brokenList.filter(item => item !== coord);
                 localStorage.setItem('s9_os_broken_qubits', JSON.stringify(brokenList));
                 checkAllFixed();
@@ -176,7 +178,7 @@
             }
         }
 
-        // --- 5. ТРАССЫ (ТОЛЬКО МЕЖДУ СОСЕДНИМИ) ---
+        // --- 5. ТРАССЫ ---
         function drawTraces() {
             const tracesLayer = document.getElementById('tracesLayer');
             const container = document.querySelector('.os-container');
@@ -203,10 +205,9 @@
                     const dx = Math.abs(coords[i].x - coords[j].x);
                     const dy = Math.abs(coords[i].y - coords[j].y);
                     
-                    // Только соседние (горизонталь, вертикаль, диагональ)
                     const isNeighbor = (dx < 10 && dy < 90) || (dy < 10 && dx < 90) || (Math.abs(dx - dy) < 10 && dx < 125);
 
-                    if (isNeighbor && Math.random() > 0.7) { // 30% шанс, чтобы не было каши
+                    if (isNeighbor && Math.random() > 0.7) { 
                         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                         line.setAttribute('x1', coords[i].x);
                         line.setAttribute('y1', coords[i].y);
@@ -215,7 +216,7 @@
                         line.setAttribute('stroke', 'rgba(0, 242, 255, 0.3)'); 
                         line.setAttribute('stroke-width', '2');
                         line.setAttribute('stroke-dasharray', '4 8'); 
-                        line.style.animation = 'flow 24s linear infinite'; // ОЧЕНЬ медленно
+                        line.style.animation = 'flow 24s linear infinite'; 
                         tracesLayer.appendChild(line);
                     }
                 }
