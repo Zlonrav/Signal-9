@@ -42,15 +42,11 @@
         if (tabs) tabs.style.display = 'flex';
 
         let phrases = getPhraseData();
-
-        // Сортируем по времени (новые вверху)
         phrases.sort((a, b) => b.timestamp - a.timestamp);
 
-        // Делим на буферы по 5 штук
         let buffer1 = phrases.slice(0, 5); 
         let buffer2 = phrases.slice(5, 10); 
 
-        // Выбираем, что рисовать
         let currentList = (currentPage === 1) ? buffer1 : buffer2;
 
         grid.innerHTML = '';
@@ -84,16 +80,13 @@
             }
         }
 
-        // --- ЛОГИКА ЗАВЕРШЕНИЯ ТЕСТА (ТОЛЬКО В ВИЗУАЛЬНОМ РЕНДЕРЕ) ---
-        const isCalibrated = localStorage.getItem('s9_archive_calibrated') === 'true';
-        const isFixed = localStorage.getItem('s9_archive_fixed') === 'true';
-
+        // --- ЛОГИКА ЗАВЕРШЕНИЯ ТЕСТА ---
         if (isCalibrated && !isFixed) {
             const baseline = parseInt(localStorage.getItem('s9_archive_baseline_count') || '0', 10);
-            // Если в памяти появилось 2 новые фразы (2 новых ряда на экране)
+            
             if (phrases.length - baseline >= 2) {
                 localStorage.setItem('s9_archive_fixed', 'true');
-                // Принудительно перезагружаем страницу, чтобы журнал увидел флаг
+                // Перезагружаем страницу, чтобы журнал увидел новый флаг
                 setTimeout(() => { location.reload(); }, 1000);
             }
         }
