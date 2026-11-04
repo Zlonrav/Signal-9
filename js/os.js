@@ -55,6 +55,7 @@
         // --- 2. КУБИТЫ ---
         function initQubits() {
             grid.innerHTML = '';
+            
             let brokenList = JSON.parse(localStorage.getItem('s9_os_broken_qubits'));
             
             if (!brokenList) {
@@ -63,7 +64,9 @@
                     const r = Math.floor(Math.random() * 5) + 1;
                     const c = Math.floor(Math.random() * 5) + 1;
                     const coord = `r${r}c${c}`;
-                    if (!brokenList.includes(coord)) brokenList.push(coord);
+                    if (!brokenList.includes(coord)) {
+                        brokenList.push(coord);
+                    }
                 }
                 localStorage.setItem('s9_os_broken_qubits', JSON.stringify(brokenList));
             }
@@ -75,7 +78,9 @@
                     qubit.className = 'qubit';
                     qubit.id = `qubit_${coord}`;
                     
-                    if (brokenList.includes(coord)) {
+                    const isBroken = brokenList.includes(coord);
+
+                    if (isBroken) {
                         qubit.classList.add('broken');
                     } else {
                         qubit.classList.add('active');
@@ -83,13 +88,14 @@
                         symbolSpan.className = 'qubit-symbol';
                         qubit.appendChild(symbolSpan);
                     }
+
                     grid.appendChild(qubit);
                 }
             }
 
             checkAllFixed();
-            animateSymbols();
-            setInterval(drawTraces, 8000); // Трассы раз в 8 секунд
+            startSymbolAnimation(); // <--- ДОБАВИТЬ ЭТО
+            setInterval(drawTraces, 8000); // <--- ДОБАВИТЬ ЭТО
         }
 
         // --- 3. АНИМАЦИЯ СИМВОЛОВ ---
