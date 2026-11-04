@@ -74,7 +74,12 @@
 
             // --- ЧИТ ДЛЯ ОС ---
             // --- ЧИТ: ТОЛЬКО КАЛИБРОВКА АРХИВА (БЕЗ ЗАВЕРШЕНИЯ ТЕСТА) ---
+            // --- ЧИТ: ТОЛЬКО КАЛИБРОВКА АРХИВА (БЕЗ ЗАВЕРШЕНИЯ ТЕСТА) ---
             if (cmd === 'calibrate_archive') {
+                // ОЧИЩАЕМ СТАРЫЕ ДАННЫЕ, ЧТОБЫ НАЧАТЬ С ЧИСТОГО ЛИСТА
+                localStorage.removeItem('s9_phrases_data');
+                localStorage.removeItem('s9_archive_fixed');
+
                 const words = ["СИСТЕМА", "ПАМЯТЬ", "КОД", "СИГНАЛ", "ВЕКТОР", "АРХИВ", "ЗВЕЗДА", "ОРБИТА", "МОДУЛЬ", "ДАННЫЕ"];
                 const phrase1 = words.slice(0, 5);
                 const phrase2 = words.slice(5, 10);
@@ -85,9 +90,6 @@
                     { text: phrase2.join(' '), words: phrase2, timestamp: now }
                 ];
 
-                // ВАЖНО: Удаляем флаг завершения, чтобы остаться на этапе ожидания
-                localStorage.removeItem('s9_archive_fixed'); 
-                
                 localStorage.setItem('s9_phrases_data', JSON.stringify(phrasesData));
                 localStorage.setItem('s9_archive_calibrated', 'true');
                 localStorage.setItem('s9_archive_baseline_count', '2');
