@@ -208,11 +208,12 @@
             if (currentPage !== 'os.html') {
                 print(`ОШИБКА: КОМАНДА ДОСТУПНА ТОЛЬКО В ОПЕРАЦИОННОЙ СИСТЕМЕ.`, 'err');
             } else {
-                // Извлекаем координаты (r1c2)
                 const coords = cmd.split(' ')[3]; 
                 const match = coords.match(/^r([1-5])c([1-5])$/i);
                 
                 if (match) {
+                    // Передаем функцию print в глобальную область, чтобы os.js могла её использовать
+                    window.print = print; 
                     print(`<span class="ok">[ОС] ПОПЫТКА СБРОСА КУБИТА ${coords.toUpperCase()}...</span>`);
                     window.dispatchEvent(new CustomEvent('repair_qubit', { detail: coords.toLowerCase() }));
                 } else {
