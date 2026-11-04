@@ -191,8 +191,8 @@
                 print(`> ${printCmd('fix_archive')} - Вводит 10 слов и чинит Архив`);
                 print(`> ${printCmd('reset_archive')} - Сбрасывает задание с Архивом`);
                 print(`> ${printCmd('fix_os')} - Обходит защиту ОС и чинит кубиты`);
-                print(`> ${printCmd('clear_memory')} - Полная очистка памяти`);
                 print(`> ${printCmd('reset_os')} - Сбрасывает прохождение ОС`);
+                print(`> ${printCmd('clear_memory')} - Полная очистка памяти`);
             } else if (topic === 'os') {
                 print(`<span class="topic-header">[ОС]</span> ОПЕРАЦИОННАЯ СИСТЕМА СТАНЦИИ.`);
                 print(`ПРЕДНАЗНАЧЕНА ДЛЯ УПРАВЛЕНИЯ КВАНТОВЫМИ ВЫЧИСЛЕНИЯМИ.`);
