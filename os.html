@@ -122,7 +122,8 @@
     <!-- ОСНОВНОЙ КОНТЕНТ -->
     <div class="os-header">ОПЕРАЦИОННАЯ СИСТЕМА // СЕКТОР 01</div>
         <!-- Слой для трасс -->
-    <svg id="tracesLayer" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1;"></svg>
+    <!-- Слой для трасс (поверх всего экрана) -->
+    <svg id="tracesLayer" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 2;"></svg>
     <div class="qubit-grid" id="qubitGrid"></div>
 
     <!-- ЭКРАН ВЕРИФИКАЦИИ -->
