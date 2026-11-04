@@ -79,6 +79,7 @@
                 // ОЧИЩАЕМ СТАРЫЕ ДАННЫЕ, ЧТОБЫ НАЧАТЬ С ЧИСТОГО ЛИСТА
                 localStorage.removeItem('s9_phrases_data');
                 localStorage.removeItem('s9_archive_fixed');
+                localStorage.setItem('s9_archive_calibration_time', Date.now().toString());
 
                 const words = ["СИСТЕМА", "ПАМЯТЬ", "КОД", "СИГНАЛ", "ВЕКТОР", "АРХИВ", "ЗВЕЗДА", "ОРБИТА", "МОДУЛЬ", "ДАННЫЕ"];
                 const phrase1 = words.slice(0, 5);
