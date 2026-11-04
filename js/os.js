@@ -87,10 +87,7 @@
                         qubit.classList.add('broken');
                     } else {
                         qubit.classList.add('active');
-                        const symbolSpan = document.createElement('span');
-                        symbolSpan.className = 'qubit-symbol';
-                        symbolSpan.innerText = '0'; // Начальный символ
-                        qubit.appendChild(symbolSpan);
+                        // Кружочки создаются через CSS ::after, ничего не добавляем
                     }
 
                     grid.appendChild(qubit);
@@ -98,26 +95,10 @@
             }
 
             checkAllFixed();
-            animateSymbols(); 
-            setInterval(drawTraces, 5000); // Трассы раз в 5 секунд
+            setInterval(drawTraces, 6000); // Трассы раз в 6 секунд
         }
 
-        // --- 3. АНИМАЦИЯ СИМВОЛОВ ---
-        function animateSymbols() {
-            const symbols = ['0', '1', '#', '@', '%', '&', '*', '+', '='];
-            
-            setInterval(() => {
-                const activeQubits = document.querySelectorAll('.qubit.active');
-                activeQubits.forEach(q => {
-                    const symbolSpan = q.querySelector('.qubit-symbol');
-                    if (symbolSpan) {
-                        symbolSpan.innerText = symbols[Math.floor(Math.random() * symbols.length)];
-                    }
-                });
-            }, 2000); // Меняем символ каждые 2 секунды
-        }
-
-        // --- 4. РЕМОНТ ---
+        // --- 3. РЕМОНТ ---
         window.addEventListener('repair_qubit', (e) => {
             const coord = e.detail; 
             const qubitEl = document.getElementById(`qubit_${coord}`);
@@ -130,21 +111,12 @@
                 qubitEl.classList.remove('broken');
                 qubitEl.classList.add('active');
                 
-                if (!qubitEl.querySelector('.qubit-symbol')) {
-                    const symbolSpan = document.createElement('span');
-                    symbolSpan.className = 'qubit-symbol';
-                    symbolSpan.innerText = '0';
-                    qubitEl.appendChild(symbolSpan);
-                }
-                
                 brokenList = brokenList.filter(item => item !== coord);
                 localStorage.setItem('s9_os_broken_qubits', JSON.stringify(brokenList));
                 checkAllFixed();
             } else {
                 qubitEl.classList.remove('active');
                 qubitEl.classList.add('broken');
-                const symbol = qubitEl.querySelector('.qubit-symbol');
-                if (symbol) symbol.remove();
                 
                 if (!brokenList.includes(coord)) brokenList.push(coord);
                 localStorage.setItem('s9_os_broken_qubits', JSON.stringify(brokenList));
@@ -174,44 +146,34 @@
             }
         }
 
-        // --- 5. ТРАССЫ (СТРОГО МЕЖДУ СОСЕДЯМИ) ---
+        // --- 4. ТРАССЫ (СТРОГО 5 ШТУК И ТОЛЬКО МЕЖДУ СОСЕДЯМИ) ---
         function drawTraces() {
             const tracesLayer = document.getElementById('tracesLayer');
-            const container = document.querySelector('.os-container');
-            if (!tracesLayer || !container) return;
+            if (!tracesLayer) return;
             
             tracesLayer.innerHTML = ''; 
 
-            const STEP = 85; // 70px (кубит) + 15px (gap)
-            const OFFSET = 35; // Половина кубита
-            const containerRect = container.getBoundingClientRect();
-
-            // Смещения для соседей (dx, dy)
             const neighborOffsets = [
-                { dr: 0, dc: 1 },   // Вправо
-                { dr: 0, dc: -1 },  // Влево
-                { dr: 1, dc: 0 },   // Вниз
-                { dr: -1, dc: 0 },  // Вверх
-                { dr: 1, dc: 1 },   // Вниз-вправо
-                { dr: 1, dc: -1 },  // Вниз-влево
-                { dr: -1, dc: 1 },  // Вверх-вправо
-                { dr: -1, dc: -1 }  // Вверх-влево
+                { dr: 0, dc: 1 }, { dr: 0, dc: -1 }, { dr: 1, dc: 0 }, { dr: -1, dc: 0 },
+                { dr: 1, dc: 1 }, { dr: 1, dc: -1 }, { dr: -1, dc: 1 }, { dr: -1, dc: -1 }
             ];
 
-            // Делаем 6 попыток нарисовать трассу
-            for (let i = 0; i < 6; i++) {
-                // Случайный кубит
-                const r1 = Math.floor(Math.random() * 5) + 1; // 1..5
-                const c1 = Math.floor(Math.random() * 5) + 1; // 1..5
+            let linesDrawn = 0;
+            let attempts = 0; // Защита от бесконечного цикла
+
+            while (linesDrawn < 5 && attempts < 100) {
+                attempts++;
                 
-                // Случайный сосед
+                const r1 = Math.floor(Math.random() * 5) + 1;
+                const c1 = Math.floor(Math.random() * 5) + 1;
+                
                 const offset = neighborOffsets[Math.floor(Math.random() * neighborOffsets.length)];
                 const r2 = r1 + offset.dr;
                 const c2 = c1 + offset.dc;
 
-                // Проверяем, что сосед не выходит за границы сетки 5x5
                 if (r2 >= 1 && r2 <= 5 && c2 >= 1 && c2 <= 5) {
-                    // Вычисляем координаты центров относительно контейнера
+                    const STEP = 85; 
+                    const OFFSET = 35; 
                     const x1 = (c1 - 1) * STEP + OFFSET;
                     const y1 = (r1 - 1) * STEP + OFFSET;
                     const x2 = (c2 - 1) * STEP + OFFSET;
@@ -222,11 +184,13 @@
                     line.setAttribute('y1', y1);
                     line.setAttribute('x2', x2);
                     line.setAttribute('y2', y2);
-                    line.setAttribute('stroke', 'rgba(0, 242, 255, 0.4)'); 
+                    line.setAttribute('stroke', 'rgba(0, 242, 255, 0.3)'); 
                     line.setAttribute('stroke-width', '2');
                     line.setAttribute('stroke-dasharray', '4 8'); 
                     line.style.animation = 'flow 24s linear infinite'; 
                     tracesLayer.appendChild(line);
+                    
+                    linesDrawn++; // Увеличиваем счетчик только после успешной отрисовки
                 }
             }
         }
