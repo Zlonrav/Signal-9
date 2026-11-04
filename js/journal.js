@@ -90,13 +90,14 @@ const CHAT_DATABASE = {
             let isFixed = localStorage.getItem('s9_archive_fixed') === 'true';
 
             if (isCalibrated && !isFixed) {
+                // Проверяем НОВУЮ переменную с фразами
                 const phrases = JSON.parse(localStorage.getItem('s9_phrases_data') || '[]');
-                // Если в Архиве больше 5 фраз, значит Хаб уже скинул новые (тест пройден)
-                if (phrases.length > 5) {
+                
+                // Если в Архиве появилось хотя бы 2 новых фразы из Хаба
+                if (phrases.length >= 2) {
                     localStorage.setItem('s9_archive_fixed', 'true');
                     isFixed = true; 
                 } else {
-                    // Если глифов всё еще 10, ждем
                     return [
                         { q: "> КАЛИБРОВКА ЗАВЕРШЕНА", a: "РУЧНАЯ КАЛИБРОВКА ПАМЯТИ ПРОЙДЕНА УСПЕШНО. БУФЕР ГОТОВ К ТЕСТУ АВТОЗАПИСИ." },
                         { q: "> ТЕСТ АВТОЗАПИСИ", a: "ДЛЯ ПОДТВЕРЖДЕНИЯ СТАБИЛЬНОСТИ ПЕРЕЙДИТЕ В ГЛАВНЫЙ ХАБ И ДОЖДИТЕСЬ ДВУХ ПОЛНЫХ ЦИКЛОВ ДЕШИФРОВКИ СИГНАЛА." },
@@ -105,7 +106,6 @@ const CHAT_DATABASE = {
                 }
             }
             
-            // Если фикс есть, показываем угрозу ОС
             if (isFixed) {
                 return [
                     { q: "> СТАТУС БАЗЫ ДАННЫХ", a: "ПАМЯТЬ СТАБИЛЬНА. АВТОСОХРАНЕНИЕ ТРАССИТОВ АКТИВИРОВАНО." },
@@ -113,6 +113,7 @@ const CHAT_DATABASE = {
                 ];
             }
         }
+        // --------------------------
 
         // Стандартный вывод для других страниц
         return (typeof CHAT_DATABASE !== 'undefined' && CHAT_DATABASE[page]) 
