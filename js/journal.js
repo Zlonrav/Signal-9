@@ -121,7 +121,7 @@ const CHAT_DATABASE = {
             if (isCaptchaPassed && !isOsFixed) {
                 return [
                     { q: "> ЯДРО РАЗБЛОКИРОВАНО", a: "ОБНАРУЖЕНА ДЕКОГЕРЕНЦИЯ КУБИТОВ." },
-                    { q: "> ИНСТРУКЦИЯ", a: "ИСПОЛЬЗУЙТЕ <cmd>os --reset qubit_XX</cmd> ДЛЯ ПОЧИНКИ." }
+                    { q: "> ИНСТРУКЦИЯ", a: "ИСПОЛЬЗУЙТЕ <cmd>os --reset qubit rXcY</cmd> ДЛЯ ПОЧИНКИ." }
                 ];
             }
 
