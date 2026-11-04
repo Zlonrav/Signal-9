@@ -92,7 +92,7 @@
 
             const sourceStatus = getNodeStatus(source);
             const targetStatus = getNodeStatus(target);
-            const active = (sourceStatus !== 'OFFLINE' && targetStatus !== 'OFFLINE') || (sourceStatus === 'ERROR' || targetStatus === 'ERROR');
+            const active = (sourceStatus === 'ONLINE' && targetStatus === 'ONLINE');
 
             const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
             g.setAttribute('class', active ? 'link-active' : 'link-locked');
