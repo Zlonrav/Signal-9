@@ -87,7 +87,9 @@
                         qubit.classList.add('broken');
                     } else {
                         qubit.classList.add('active');
-                        const randomDelay = (Math.random() * -2).toFixed(2); 
+                        
+                        // ДОБАВЛЯЕМ ЗАДЕРЖКУ
+                        const randomDelay = (Math.random() * -2).toFixed(2);
                         qubit.style.setProperty('--anim-delay', `${randomDelay}s`);
                     }
 
@@ -111,8 +113,12 @@
             if (qubitEl.classList.contains('broken')) {
                 qubitEl.classList.remove('broken');
                 qubitEl.classList.add('active');
+                
+                // ДОБАВЛЯЕМ ЗАДЕРЖКУ ПРИ РЕМОНТЕ
                 const randomDelay = (Math.random() * -2).toFixed(2);
                 qubitEl.style.setProperty('--anim-delay', `${randomDelay}s`);
+                
+                // ... дальше твой код ремонта ...
                 
                 brokenList = brokenList.filter(item => item !== coord);
                 localStorage.setItem('s9_os_broken_qubits', JSON.stringify(brokenList));
