@@ -77,3 +77,48 @@ window.playGlyphSound = async (pathIndices) => {
         chime.start(currentTime); chime.stop(currentTime + 0.05);
     }
 };
+// --- ЗВУК МОДЕМА ДЛЯ ОПЕРАЦИОННОЙ СИСТЕМЫ ---
+window.osModemInterval = null;
+
+window.startOsModemSound = () => {
+    // Если звук уже запущен или аудио не инициализировано — выходим
+    if (window.osModemInterval || !window.audioCtx || window.isMuted) return;
+
+    // Создаем генератор для модемного писка
+    const beep = () => {
+        if (!window.audioCtx || window.isMuted) return;
+        
+        const time = window.audioCtx.currentTime;
+        
+        // Основной тон (высокочастотный писк)
+        const osc = window.audioCtx.createOscillator();
+        const gain = window.audioCtx.createGain();
+        const filter = window.audioCtx.createBiquadFilter();
+        
+        osc.type = 'square'; // Квадратная волна для резкости
+        osc.frequency.setValueAtTime(1200, time); // Частота писка
+        osc.frequency.exponentialRampToValueAtTime(800, time + 0.1); // Небольшое скольжение
+        
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(1200, time);
+        filter.Q.value = 5;
+        
+        gain.gain.setValueAtTime(0, time);
+        gain.gain.linearRampToValueAtTime(0.03, time + 0.01); // Громкость писка
+        gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.15); // Затухание
+        
+        osc.connect(filter).connect(gain).connect(window.masterGain);
+        osc.start(time);
+        osc.stop(time + 0.15);
+    };
+
+    // Воспроизводим писк каждые 3 секунды
+    window.osModemInterval = setInterval(beep, 3000);
+};
+
+window.stopOsModemSound = () => {
+    if (window.osModemInterval) {
+        clearInterval(window.osModemInterval);
+        window.osModemInterval = null;
+    }
+};
