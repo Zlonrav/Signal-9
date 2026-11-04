@@ -46,15 +46,12 @@
         let phrases = getPhraseData();
         phrases.sort((a, b) => b.timestamp - a.timestamp);
 
-        // --- ПРОВЕРКА ТЕСТА ---
+        // --- ЛОГИКА ЗАВЕРШЕНИЯ ТЕСТА ---
         if (isCalibrated && !isFixed) {
-            const calibrationTime = parseInt(localStorage.getItem('s9_archive_calibration_time') || '0', 10);
-            const newPhrasesCount = phrases.filter(p => p.timestamp > calibrationTime).length;
-
-            if (newPhrasesCount >= 2) {
+            // Ждем, пока в памяти не станет ровно 4 фразы (2 эталонные + 2 новые)
+            if (phrases.length >= 4) {
                 localStorage.setItem('s9_archive_fixed', 'true');
                 setTimeout(() => { location.reload(); }, 1000);
-                return; // Прерываем отрисовку, чтобы страница перезагрузилась
             }
         }
         // ------------------------
