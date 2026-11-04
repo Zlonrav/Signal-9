@@ -92,10 +92,21 @@
 
             const sourceStatus = getNodeStatus(source);
             const targetStatus = getNodeStatus(target);
-            const active = (sourceStatus === 'ONLINE' && targetStatus === 'ONLINE');
+            
+            // Логика состояний линии
+            let lineClass = 'link-locked'; // По умолчанию тусклая
+            let isActive = false;
+
+            if (sourceStatus === 'ERROR' || targetStatus === 'ERROR') {
+                lineClass = 'link-error'; // Красная аварийная
+                isActive = true;
+            } else if (sourceStatus === 'ONLINE' && targetStatus === 'ONLINE') {
+                lineClass = 'link-active'; // Синяя активная
+                isActive = true;
+            }
 
             const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-            g.setAttribute('class', active ? 'link-active' : 'link-locked');
+            g.setAttribute('class', lineClass);
 
             const bgLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
             bgLine.setAttribute('x1', source.x); bgLine.setAttribute('y1', source.y);
@@ -103,7 +114,7 @@
             bgLine.setAttribute('class', 'link-bg');
             g.appendChild(bgLine);
 
-            if (active) {
+            if (isActive) {
                 const flowLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                 flowLine.setAttribute('x1', source.x); flowLine.setAttribute('y1', source.y);
                 flowLine.setAttribute('x2', target.x); flowLine.setAttribute('y2', target.y);
