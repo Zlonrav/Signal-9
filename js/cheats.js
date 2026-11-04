@@ -73,6 +73,30 @@
             // -----------------------------------
 
             // --- ЧИТ ДЛЯ ОС ---
+            // --- ЧИТ: ТОЛЬКО КАЛИБРОВКА АРХИВА (БЕЗ ЗАВЕРШЕНИЯ ТЕСТА) ---
+            if (cmd === 'calibrate_archive') {
+                const words = ["СИСТЕМА", "ПАМЯТЬ", "КОД", "СИГНАЛ", "ВЕКТОР", "АРХИВ", "ЗВЕЗДА", "ОРБИТА", "МОДУЛЬ", "ДАННЫЕ"];
+                const phrase1 = words.slice(0, 5);
+                const phrase2 = words.slice(5, 10);
+                const now = Date.now();
+
+                const phrasesData = [
+                    { text: phrase1.join(' '), words: phrase1, timestamp: now - 1000 },
+                    { text: phrase2.join(' '), words: phrase2, timestamp: now }
+                ];
+
+                // ВАЖНО: Удаляем флаг завершения, чтобы остаться на этапе ожидания
+                localStorage.removeItem('s9_archive_fixed'); 
+                
+                localStorage.setItem('s9_phrases_data', JSON.stringify(phrasesData));
+                localStorage.setItem('s9_archive_calibrated', 'true');
+                localStorage.setItem('s9_archive_baseline_count', '2');
+                
+                print('<span class="ok">[ЧИТ] 10 ЭТАЛОННЫХ ТРАССИТОВ ВВЕДЕНО. АРХИВ ОТКАЛИБРОВАН, НО ТЕСТ НЕ ЗАВЕРШЕН.</span>');
+                print('<span class="sys">ПЕРЕХОД В АРХИВ ДЛЯ ОЖИДАНИЯ ДВУХ ЦИКЛОВ...</span>');
+                setTimeout(() => { window.location.href = 'archive.html'; }, 1500);
+                return true; 
+            }
             if (cmd === 'fix_os') {
                 localStorage.setItem('s9_os_captcha', 'true');
                 [3, 7, 12, 15, 19].forEach(num => {
