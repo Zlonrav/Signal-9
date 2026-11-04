@@ -230,6 +230,17 @@ const CHAT_DATABASE = {
         const container = document.querySelector('.chat-system');
         if (!qField || !aField) return;
 
+        // --- СБРОС ШАГА ПРИ ИЗМЕНЕНИИ ФЛАГА АРХИВА ---
+        let page = window.location.pathname.split('/').pop() || 'index.html';
+        if (page === 'archive.html') {
+            const isFixed = localStorage.getItem('s9_archive_fixed') === 'true';
+            if (window.lastArchiveFixedState !== isFixed) {
+                window.currentChatStep = 0;
+                window.lastArchiveFixedState = isFixed;
+            }
+        }
+        // ---------------------------------------------
+
         const data = getActiveData();
 
         if (window.currentChatStep < data.length) {
