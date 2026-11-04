@@ -192,6 +192,7 @@
                 print(`<span class="topic-header">[ЧИТЫ]</span> ДОСТУПНЫЕ КОМАНДЫ ДЛЯ ОТЛАДКИ:`);
                 print(`> ${printCmd('fix_lang')} - Восстанавливает человеческий язык`);
                 print(`> ${printCmd('fix_archive')} - Вводит 10 слов и чинит Архив`);
+                print(`> ${printCmd('reset_archive')} - Сбрасывает задание с Архивом`);
                 print(`> ${printCmd('fix_os')} - Обходит защиту ОС и чинит кубиты`);
                 print(`> ${printCmd('clear_memory')} - Полная очистка памяти`);
             } else {
