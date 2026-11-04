@@ -323,11 +323,29 @@
     }
 
     document.addEventListener('keydown', (e) => {
+        // Открытие/закрытие ТОЛЬКО по тильде
         if (e.key === '`' || e.key === '~' || e.key === 'Ё' || e.key === 'ё') {
             e.preventDefault();
             toggleConsole(!overlay.classList.contains('active'));
         }
-        if (e.key === 'Escape') toggleConsole(false);
+        // Escape больше не закрывает консоль (чтобы не мешал Punto Switcher)
+    });
+
+    const toggleBtn = document.getElementById('console-toggle-btn');
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+            toggleConsole(!overlay.classList.contains('active'));
+        });
+    }
+
+    bgOverlay.addEventListener('click', () => toggleConsole(false));
+
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            const cmd = input.value.trim().toLowerCase();
+            if (cmd) processCommand(cmd);
+            input.value = '';
+        }
     });
 
     const toggleBtn = document.getElementById('console-toggle-btn');
