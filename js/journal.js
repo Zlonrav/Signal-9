@@ -84,21 +84,15 @@ const CHAT_DATABASE = {
             ];
         }
 
-        // 3. АРХИВ (НОВАЯ ЛОГИКА)
+        // 3. АРХИВ
         if (page === 'archive.html') {
             const isCalibrated = localStorage.getItem('s9_archive_calibrated') === 'true';
             let isFixed = localStorage.getItem('s9_archive_fixed') === 'true';
 
             if (isCalibrated && !isFixed) {
-                // Проверяем НОВУЮ переменную с фразами
-                const phrases = JSON.parse(localStorage.getItem('s9_phrases_data') || '[]');
-                
-                // Если в Архиве появилось хотя бы 2 новых фразы из Хаба
-            if (isCalibrated && !isFixed) {
                 const phrases = JSON.parse(localStorage.getItem('s9_phrases_data') || '[]');
                 const baseline = parseInt(localStorage.getItem('s9_archive_baseline_count') || '0', 10);
                 
-                // Ждем, пока добавится минимум 2 новые фразы
                 if (phrases.length - baseline >= 2) {
                     localStorage.setItem('s9_archive_fixed', 'true');
                     isFixed = true; 
@@ -118,9 +112,35 @@ const CHAT_DATABASE = {
                 ];
             }
         }
-        // --------------------------
 
-        // Стандартный вывод для других страниц
+        // 4. ОПЕРАЦИОННАЯ СИСТЕМА
+        if (page === 'os.html') {
+            const isCaptchaPassed = localStorage.getItem('s9_os_captcha') === 'true';
+            const isOsFixed = localStorage.getItem('s9_os_fixed') === 'true';
+
+            if (!isCaptchaPassed) {
+                return [
+                    { q: "> ЗАЩИТА ПЕРИМЕТРА", a: "ДОСТУП ЗАБЛОКИРОВАН. ТРЕБУЕТСЯ ВЕРИФИКАЦИЯ." },
+                    { q: "> ПРОТОКОЛ", a: "ПОЛУЧИТЕ ИДЕНТИФИКАТОР В КОНСОЛИ (<cmd>self --id</cmd>) И ВВЕДИТЕ ЕГО В ПОЛЕ." }
+                ];
+            }
+
+            if (isCaptchaPassed && !isOsFixed) {
+                return [
+                    { q: "> ЯДРО РАЗБЛОКИРОВАНО", a: "ОБНАРУЖЕНА ДЕКОГЕРЕНЦИЯ КУБИТОВ." },
+                    { q: "> ИНСТРУКЦИЯ", a: "ИСПОЛЬЗУЙТЕ <cmd>os --reset qubit_XX</cmd> ДЛЯ ПОЧИНКИ." }
+                ];
+            }
+
+            if (isOsFixed) {
+                return [
+                    { q: "> ОС СТАБИЛЬНА", a: "ВСЕ КУБИТЫ В НОРМЕ." },
+                    { q: "> НОВАЯ УГРОЗА", a: "ОБНАРУЖЕНЫ ПРИЗРАКИ В EDR. ПРОВЕРЬТЕ КАРТУ." }
+                ];
+            }
+        }
+
+        // Стандартный вывод для остальных страниц
         return (typeof CHAT_DATABASE !== 'undefined' && CHAT_DATABASE[page]) 
                ? CHAT_DATABASE[page] 
                : [{ q: "> СИСТЕМА", a: "ИНФОРМАЦИЯ ДЛЯ ЭТОЙ СТРАНИЦЫ ОТСУТСТВУЕТ." }];
