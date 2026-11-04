@@ -34,23 +34,31 @@
         }
 
         .qubit {
-            width: 70px; height: 70px;
-            background: rgba(2, 10, 15, 0.85);
-            border: 1px solid rgba(0, 242, 255, 0.3);
-            border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 10px; color: #666;
-            transition: all 0.3s ease;
-            position: relative;
-            transform: rotateX(10deg) rotateY(-10deg);
-            box-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+            /* ... остальные стили ... */
+            background: rgba(2, 10, 15, 0.4); /* Полупрозрачный фон */
+            z-index: 5; /* Поверх трасс */
         }
 
-        .qubit.active { border-color: var(--neon); box-shadow: 0 0 15px rgba(0, 242, 255, 0.2), 2px 2px 10px rgba(0,0,0,0.5); }
+        /* Мерцание для активных кубитов */
+        .qubit.active { 
+            border-color: var(--neon); 
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.2), 2px 2px 10px rgba(0,0,0,0.5); 
+            animation: flicker 3s infinite alternate; /* Добавили мерцание */
+        }
         .qubit.active::after { content: ''; width: 25px; height: 25px; border: 2px solid var(--neon); border-radius: 50%; animation: pulse 2s infinite; }
         
-        .qubit.broken { border-color: #ff3333; box-shadow: 0 0 15px rgba(255, 51, 51, 0.2), 2px 2px 10px rgba(0,0,0,0.5); animation: shake 1.5s infinite; }
+        @keyframes flicker {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; box-shadow: 0 0 5px rgba(0, 242, 255, 0.1); }
+            100% { opacity: 1; }
+        }
+
+        /* Сломанные кубиты оставляем непрозрачными */
+        .qubit.broken {
+            background: rgba(15, 2, 2, 0.85); /* Чуть плотнее */
+            opacity: 1; /* Сломанные не мерцают */
+            /* ... остальные стили ... */
+        }
         .qubit.broken::after { content: 'ERR'; color: #ff3333; font-weight: bold; font-size: 12px; }
 
         @keyframes pulse { 0% { transform: scale(0.8); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
@@ -110,6 +118,8 @@
 
     <!-- ОСНОВНОЙ КОНТЕНТ -->
     <div class="os-header">ОПЕРАЦИОННАЯ СИСТЕМА // СЕКТОР 01</div>
+        <!-- Слой для трасс -->
+    <svg id="tracesLayer" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1;"></svg>
     <div class="qubit-grid" id="qubitGrid"></div>
 
     <!-- ЭКРАН ВЕРИФИКАЦИИ -->
