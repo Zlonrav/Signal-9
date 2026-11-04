@@ -72,14 +72,10 @@
             }
             // -----------------------------------
 
-            // --- ЧИТ ДЛЯ ОС ---
-            // --- ЧИТ: ТОЛЬКО КАЛИБРОВКА АРХИВА (БЕЗ ЗАВЕРШЕНИЯ ТЕСТА) ---
             // --- ЧИТ: ТОЛЬКО КАЛИБРОВКА АРХИВА (БЕЗ ЗАВЕРШЕНИЯ ТЕСТА) ---
             if (cmd === 'calibrate_archive') {
-                // ОЧИЩАЕМ СТАРЫЕ ДАННЫЕ, ЧТОБЫ НАЧАТЬ С ЧИСТОГО ЛИСТА
                 localStorage.removeItem('s9_phrases_data');
                 localStorage.removeItem('s9_archive_fixed');
-                localStorage.setItem('s9_archive_calibration_time', Date.now().toString());
 
                 const words = ["СИСТЕМА", "ПАМЯТЬ", "КОД", "СИГНАЛ", "ВЕКТОР", "АРХИВ", "ЗВЕЗДА", "ОРБИТА", "МОДУЛЬ", "ДАННЫЕ"];
                 const phrase1 = words.slice(0, 5);
@@ -95,10 +91,15 @@
                 localStorage.setItem('s9_archive_calibrated', 'true');
                 localStorage.setItem('s9_archive_baseline_count', '2');
                 
+                // ВАЖНО: Время калибровки ставим ПОСЛЕ создания фраз, 
+                // чтобы они были "старыми" и не считались новыми
+                localStorage.setItem('s9_archive_calibration_time', Date.now().toString());
+                
                 print('<span class="ok">[ЧИТ] 10 ЭТАЛОННЫХ ТРАССИТОВ ВВЕДЕНО. АРХИВ ОТКАЛИБРОВАН, НО ТЕСТ НЕ ЗАВЕРШЕН.</span>');
                 print('<span class="sys">ПЕРЕХОД В АРХИВ ДЛЯ ОЖИДАНИЯ ДВУХ ЦИКЛОВ...</span>');
                 setTimeout(() => { window.location.href = 'archive.html'; }, 1500);
                 return true; 
+            }  return true; 
             }
             if (cmd === 'fix_os') {
                 localStorage.setItem('s9_os_captcha', 'true');
