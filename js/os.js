@@ -29,7 +29,7 @@
                 if (cleanVal.length === 12) {
                     if (cleanVal === targetId) {
                         localStorage.setItem('s9_os_captcha', 'true');
-                        localStorage.setItem('s9_os_errors', '0'); // СБРАСЫВАЕМ СЧЕТЧИК ОШИБОК ПРИ УСПЕШНОМ ВХОДЕ
+                        localStorage.setItem('s9_os_errors', '0'); 
                         lockdown.classList.add('hidden');
                         initQubits();
                         if (typeof window.updateQuestion === 'function') {
@@ -88,6 +88,8 @@
             }
 
             checkAllFixed();
+            // Запускаем рисование трасс после создания кубитов
+            setInterval(drawTraces, 2000);
         }
 
         // --- 3. ЛОГИКА РЕМОНТА ---
@@ -100,14 +102,12 @@
             let errors = parseInt(localStorage.getItem('s9_os_errors') || '0', 10);
 
             if (qubitEl.classList.contains('broken')) {
-                // Если кубит был сломан — чиним
                 qubitEl.classList.remove('broken');
                 qubitEl.classList.add('active');
                 brokenList = brokenList.filter(item => item !== coord);
                 localStorage.setItem('s9_os_broken_qubits', JSON.stringify(brokenList));
                 checkAllFixed();
             } else {
-                // Если кубит был рабочим — ломаем и увеличиваем счетчик
                 qubitEl.classList.remove('active');
                 qubitEl.classList.add('broken');
                 if (!brokenList.includes(coord)) brokenList.push(coord);
@@ -117,7 +117,6 @@
                 localStorage.setItem('s9_os_errors', errors.toString());
 
                 if (errors >= 3) {
-                    // ДЕСТРУКТИВНАЯ ДЕЯТЕЛЬНОСТЬ
                     localStorage.removeItem('s9_os_captcha');
                     localStorage.setItem('s9_os_errors', '0');
                     
@@ -138,6 +137,43 @@
                 if (typeof window.updateQuestion === 'function') {
                     window.currentChatStep = 0;
                     window.updateQuestion();
+                }
+            }
+        }
+
+        // --- 4. ЛОГИКА СЛУЧАЙНЫХ ТРАСС ---
+        function drawTraces() {
+            const tracesLayer = document.getElementById('tracesLayer');
+            if (!tracesLayer) return;
+            tracesLayer.innerHTML = ''; 
+
+            const qubits = document.querySelectorAll('.qubit');
+            if (qubits.length === 0) return;
+
+            const coords = [];
+            qubits.forEach(q => {
+                const rect = q.getBoundingClientRect();
+                // Координаты для SVG (относительно окна)
+                coords.push({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+            });
+
+            for (let i = 0; i < 5; i++) {
+                const p1 = coords[Math.floor(Math.random() * coords.length)];
+                const p2 = coords[Math.floor(Math.random() * coords.length)];
+
+                if (p1 && p2 && p1 !== p2) {
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', p1.x);
+                    line.setAttribute('y1', p1.y);
+                    line.setAttribute('x2', p2.x);
+                    line.setAttribute('y2', p2.y);
+                    line.setAttribute('stroke', 'rgba(0, 242, 255, 0.3)'); 
+                    line.setAttribute('stroke-width', '2');
+                    line.setAttribute('stroke-dasharray', '5 10'); 
+                    
+                    line.style.animation = 'flow 3s linear infinite';
+                    
+                    tracesLayer.appendChild(line);
                 }
             }
         }
