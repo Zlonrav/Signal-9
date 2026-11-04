@@ -24,7 +24,7 @@
                 }
             }
 
-            // --- ЧИТ ДЛЯ ЯЗЫКА (Первый квест) ---
+            // --- ЧИТ ДЛЯ ЯЗЫКА ---
             if (cmd === 'fix_lang') {
                 localStorage.setItem('s9_lang_human', 'true');
                 print('<span class="ok">[ЧИТ] ЯЗЫКОВОЙ МОДУЛЬ ПРИНУДИТЕЛЬНО ЗАГРУЖЕН. ПЕРЕЗАГРУЗКА...</span>');
@@ -32,11 +32,11 @@
                 return true;
             }
 
-            // --- ЧИТ ДЛЯ АРХИВА ---
+            // --- ЧИТ ДЛЯ АРХИВА (ПОЧИНКА) ---
             if (cmd === 'fix_archive') {
-                const TARGET_WORDS = ["СИСТЕМА", "ПАМЯТЬ", "КОД", "СИГНАЛ", "ВЕКТОР", "АРХИВ", "ЗВЕЗДА", "ОРБИТА", "МОДУЛЬ", "ДАННЫЕ"];
-                const phrase1 = TARGET_WORDS.slice(0, 5);
-                const phrase2 = TARGET_WORDS.slice(5, 10);
+                const words = ["СИСТЕМА", "ПАМЯТЬ", "КОД", "СИГНАЛ", "ВЕКТОР", "АРХИВ", "ЗВЕЗДА", "ОРБИТА", "МОДУЛЬ", "ДАННЫЕ"];
+                const phrase1 = words.slice(0, 5);
+                const phrase2 = words.slice(5, 10);
                 const now = Date.now();
 
                 const phrasesData = [
@@ -46,12 +46,31 @@
 
                 localStorage.setItem('s9_phrases_data', JSON.stringify(phrasesData));
                 localStorage.setItem('s9_archive_calibrated', 'true');
+                localStorage.setItem('s9_archive_fixed', 'true');
                 localStorage.setItem('s9_archive_baseline_count', '2');
                 
-                print('<span class="ok">[ЧИТ] 10 ЭТАЛОННЫХ ТРАССИТОВ ВВЕДЕНО. АРХИВ ОТКАЛИБРОВАН.</span>');
+                print('<span class="ok">[ЧИТ] 10 ЭТАЛОННЫХ ТРАССИТОВ ВВЕДЕНО. АРХИВ ПОЧИНЕН.</span>');
                 setTimeout(() => { window.location.href = 'archive.html'; }, 1500);
                 return true; 
             }
+
+            // --- НОВЫЙ ЧИТ ДЛЯ СБРОСА АРХИВА ---
+            if (cmd === 'reset_archive') {
+                localStorage.removeItem('s9_archive_calibrated');
+                localStorage.removeItem('s9_archive_fixed');
+                localStorage.removeItem('s9_archive_baseline_count');
+                localStorage.removeItem('s9_phrases_data');
+                
+                // Удаляем флаги введенных 10 слов
+                const words = ["СИСТЕМА", "ПАМЯТЬ", "КОД", "СИГНАЛ", "ВЕКТОР", "АРХИВ", "ЗВЕЗДА", "ОРБИТА", "МОДУЛЬ", "ДАННЫЕ"];
+                words.forEach(w => localStorage.removeItem('s9_glyph_' + w));
+
+                print('<span class="ok">[ЧИТ] ЗАДАНИЕ С АРХИВОМ СБРОШЕНО. ВСЕ ФЛАГИ И ФРАЗЫ УДАЛЕНЫ.</span>');
+                print('<span class="sys">ПЕРЕХОД В АРХИВ ДЛЯ ПРОВЕРКИ...</span>');
+                setTimeout(() => { window.location.href = 'archive.html'; }, 1500);
+                return true;
+            }
+            // -----------------------------------
 
             // --- ЧИТ ДЛЯ ОС ---
             if (cmd === 'fix_os') {
@@ -78,6 +97,7 @@
                 print('<span class="sys">[СПИСОК ЧИТОВ]</span>');
                 print('> <span class="cmd-text">fix_lang</span> - Восстанавливает человеческий язык');
                 print('> <span class="cmd-text">fix_archive</span> - Вводит 10 слов и чинит Архив');
+                print('> <span class="cmd-text">reset_archive</span> - Сбрасывает задание с Архивом');
                 print('> <span class="cmd-text">fix_os</span> - Обходит защиту ОС и чинит кубиты');
                 print('> <span class="cmd-text">clear_memory</span> - Полная очистка памяти');
                 return true;
