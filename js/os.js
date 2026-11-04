@@ -174,7 +174,7 @@
             }
         }
 
-        // --- 5. ТРАССЫ ---
+        // --- 5. ТРАССЫ (СТРОГО МЕЖДУ СОСЕДЯМИ) ---
         function drawTraces() {
             const tracesLayer = document.getElementById('tracesLayer');
             const container = document.querySelector('.os-container');
@@ -182,40 +182,51 @@
             
             tracesLayer.innerHTML = ''; 
 
-            const qubits = document.querySelectorAll('.qubit');
-            if (qubits.length === 0) return;
-
+            const STEP = 85; // 70px (кубит) + 15px (gap)
+            const OFFSET = 35; // Половина кубита
             const containerRect = container.getBoundingClientRect();
-            const coords = [];
-            
-            qubits.forEach(q => {
-                const rect = q.getBoundingClientRect();
-                coords.push({ 
-                    x: rect.left + rect.width / 2 - containerRect.left, 
-                    y: rect.top + rect.height / 2 - containerRect.top 
-                });
-            });
 
-            for (let i = 0; i < coords.length; i++) {
-                for (let j = i + 1; j < coords.length; j++) {
-                    const dx = Math.abs(coords[i].x - coords[j].x);
-                    const dy = Math.abs(coords[i].y - coords[j].y);
-                    
-                    // Упрощенное условие: расстояние по X и Y меньше 100 пикселей
-                    const isNeighbor = dx < 100 && dy < 100;
+            // Смещения для соседей (dx, dy)
+            const neighborOffsets = [
+                { dr: 0, dc: 1 },   // Вправо
+                { dr: 0, dc: -1 },  // Влево
+                { dr: 1, dc: 0 },   // Вниз
+                { dr: -1, dc: 0 },  // Вверх
+                { dr: 1, dc: 1 },   // Вниз-вправо
+                { dr: 1, dc: -1 },  // Вниз-влево
+                { dr: -1, dc: 1 },  // Вверх-вправо
+                { dr: -1, dc: -1 }  // Вверх-влево
+            ];
 
-                    if (isNeighbor && Math.random() > 0.5) { // 50% шанс
-                        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                        line.setAttribute('x1', coords[i].x);
-                        line.setAttribute('y1', coords[i].y);
-                        line.setAttribute('x2', coords[j].x);
-                        line.setAttribute('y2', coords[j].y);
-                        line.setAttribute('stroke', 'rgba(0, 242, 255, 0.4)'); 
-                        line.setAttribute('stroke-width', '2');
-                        line.setAttribute('stroke-dasharray', '4 8'); 
-                        line.style.animation = 'flow 24s linear infinite'; 
-                        tracesLayer.appendChild(line);
-                    }
+            // Делаем 6 попыток нарисовать трассу
+            for (let i = 0; i < 6; i++) {
+                // Случайный кубит
+                const r1 = Math.floor(Math.random() * 5) + 1; // 1..5
+                const c1 = Math.floor(Math.random() * 5) + 1; // 1..5
+                
+                // Случайный сосед
+                const offset = neighborOffsets[Math.floor(Math.random() * neighborOffsets.length)];
+                const r2 = r1 + offset.dr;
+                const c2 = c1 + offset.dc;
+
+                // Проверяем, что сосед не выходит за границы сетки 5x5
+                if (r2 >= 1 && r2 <= 5 && c2 >= 1 && c2 <= 5) {
+                    // Вычисляем координаты центров относительно контейнера
+                    const x1 = (c1 - 1) * STEP + OFFSET;
+                    const y1 = (r1 - 1) * STEP + OFFSET;
+                    const x2 = (c2 - 1) * STEP + OFFSET;
+                    const y2 = (r2 - 1) * STEP + OFFSET;
+
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', x1);
+                    line.setAttribute('y1', y1);
+                    line.setAttribute('x2', x2);
+                    line.setAttribute('y2', y2);
+                    line.setAttribute('stroke', 'rgba(0, 242, 255, 0.4)'); 
+                    line.setAttribute('stroke-width', '2');
+                    line.setAttribute('stroke-dasharray', '4 8'); 
+                    line.style.animation = 'flow 24s linear infinite'; 
+                    tracesLayer.appendChild(line);
                 }
             }
         }
