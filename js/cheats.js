@@ -100,7 +100,7 @@
                 setTimeout(() => { window.location.href = 'archive.html'; }, 1500);
                 return true; 
             }
-            }
+
             if (cmd === 'fix_os') {
                 localStorage.setItem('s9_os_captcha', 'true');
                 [3, 7, 12, 15, 19].forEach(num => {
