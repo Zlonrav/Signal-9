@@ -250,8 +250,6 @@
                             statusLabel.innerText = "КАЛИБРОВКА ЗАВЕРШЕНА";
                             statusLabel.style.color = "#00ff44"; 
                             localStorage.setItem('s9_archive_calibrated', 'true');
-                            localStorage.setItem('s9_archive_calibration_time', Date.now().toString());
-                            
                             
                             // --- НОВАЯ ЛОГИКА ДЛЯ АРХИВА (ФРАЗЫ) ---
                             const phrase1 = TARGET_WORDS.slice(0, 5); // СИСТЕМА, ПАМЯТЬ, КОД, СИГНАЛ, ВЕКТОР
@@ -267,6 +265,10 @@
                             
                             // Запоминаем, что на момент калибровки у нас 2 фразы
                             localStorage.setItem('s9_archive_baseline_count', '2');
+                            
+                            // ВАЖНО: Время калибровки ставим на 2 секунды ПОЗЖЕ, 
+                            // чтобы эталонные фразы гарантированно считались "старыми"
+                            localStorage.setItem('s9_archive_calibration_time', (now + 2000).toString());
                             // ----------------------------------------
 
                             setTimeout(() => {
