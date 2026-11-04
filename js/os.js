@@ -16,23 +16,20 @@
         } else {
             setTimeout(() => input.focus(), 100);
             
-            // Вместо keydown используем input
             input.addEventListener('input', (e) => {
                 let val = input.value.trim().toLowerCase();
                 
-                // Убираем "0x" в начале, если есть
                 if (val.startsWith('0x')) {
                     val = val.substring(2);
                 }
                 
-                // Очищаем от всего, кроме букв и цифр
                 const cleanVal = val.replace(/[^a-z0-9]/g, '');
-                const targetId = "7f930cb4ddb0"; // ID без 0x
+                const targetId = "7f930cb4ddb0"; 
 
-                // Если ввели ровно 12 символов (длина ID) — проверяем
                 if (cleanVal.length === 12) {
                     if (cleanVal === targetId) {
                         localStorage.setItem('s9_os_captcha', 'true');
+                        localStorage.setItem('s9_os_errors', '0'); // СБРАСЫВАЕМ СЧЕТЧИК ОШИБОК ПРИ УСПЕШНОМ ВХОДЕ
                         lockdown.classList.add('hidden');
                         initQubits();
                         if (typeof window.updateQuestion === 'function') {
@@ -56,10 +53,8 @@
         function initQubits() {
             grid.innerHTML = '';
             
-            // Проверяем, есть ли уже список сломанных кубитов
             let brokenList = JSON.parse(localStorage.getItem('s9_os_broken_qubits'));
             
-            // Если списка нет (первый заход), генерируем 7 случайных
             if (!brokenList) {
                 brokenList = [];
                 while(brokenList.length < 7) {
@@ -97,11 +92,12 @@
 
         // --- 3. ЛОГИКА РЕМОНТА ---
         window.addEventListener('repair_qubit', (e) => {
-            const coord = e.detail; // Например, r1c2
+            const coord = e.detail; 
             const qubitEl = document.getElementById(`qubit_${coord}`);
             if (!qubitEl) return;
 
             let brokenList = JSON.parse(localStorage.getItem('s9_os_broken_qubits') || '[]');
+            let errors = parseInt(localStorage.getItem('s9_os_errors') || '0', 10);
 
             if (qubitEl.classList.contains('broken')) {
                 // Если кубит был сломан — чиним
@@ -111,18 +107,32 @@
                 localStorage.setItem('s9_os_broken_qubits', JSON.stringify(brokenList));
                 checkAllFixed();
             } else {
-                // Если кубит был рабочим — временно ломаем
+                // Если кубит был рабочим — ломаем и увеличиваем счетчик
                 qubitEl.classList.remove('active');
                 qubitEl.classList.add('broken');
                 if (!brokenList.includes(coord)) brokenList.push(coord);
                 localStorage.setItem('s9_os_broken_qubits', JSON.stringify(brokenList));
+                
+                errors++;
+                localStorage.setItem('s9_os_errors', errors.toString());
+
+                if (errors >= 3) {
+                    // ДЕСТРУКТИВНАЯ ДЕЯТЕЛЬНОСТЬ
+                    localStorage.removeItem('s9_os_captcha');
+                    localStorage.setItem('s9_os_errors', '0');
+                    
+                    if (typeof window.print === 'function') {
+                        window.print(`<span class="err">[ОС] ОБНАРУЖЕНА ДЕСТРУКТИВНАЯ ДЕЯТЕЛЬНОСТЬ. ДОСТУП ЗАБЛОКИРОВАН.</span>`);
+                    }
+                    
+                    setTimeout(() => { location.reload(); }, 1500);
+                }
             }
         });
 
         function checkAllFixed() {
             const brokenList = JSON.parse(localStorage.getItem('s9_os_broken_qubits') || '[]');
             
-            // Если в списке осталось 0 сломанных кубитов, значит система стабильна
             if (brokenList.length === 0) {
                 localStorage.setItem('s9_os_fixed', 'true');
                 if (typeof window.updateQuestion === 'function') {
