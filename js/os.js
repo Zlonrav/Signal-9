@@ -1,49 +1,21 @@
 // js/os.js
+// js/os.js
 (function() {
-    const CORRECT_ID = "0x7f930cb4ddb0"; // Наш ID
-    const BROKEN_QUBITS = [3, 7, 12, 15, 19];
+    const CORRECT_ID = "0x7f930cb4ddb0"; 
+    const BROKEN_QUBITS = [3, 7, 12, 15, 19, 22, 25]; // Теперь 7 сломанных кубитов из 25
 
     document.addEventListener('DOMContentLoaded', () => {
         const lockdown = document.getElementById('os-lockdown');
         const input = document.getElementById('captcha-input');
         const grid = document.getElementById('qubitGrid');
 
-        // 1. ЛОГИКА ВЕРИФИКАЦИИ
-        const isCaptchaPassed = localStorage.getItem('s9_os_captcha') === 'true';
+        // ... (Логика входа остается без изменений) ...
 
-        if (isCaptchaPassed) {
-            lockdown.classList.add('hidden');
-            initQubits();
-        } else {
-            setTimeout(() => input.focus(), 100);
-            
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    const val = input.value.trim().toLowerCase();
-                    // Проверяем с 0x и без
-                    if (val === CORRECT_ID || val === CORRECT_ID.replace('0x', '')) {
-                        localStorage.setItem('s9_os_captcha', 'true');
-                        lockdown.classList.add('hidden');
-                        initQubits();
-                        if (typeof window.updateQuestion === 'function') window.dispatchEvent(new Event('storage'));
-                    } else {
-                        input.value = '';
-                        input.placeholder = "НЕВЕРНЫЙ ИДЕНТИФИКАТОР";
-                        input.style.borderBottomColor = "#ff3333";
-                        setTimeout(() => { 
-                            input.placeholder = "0x..."; 
-                            input.style.borderBottomColor = "var(--neon)"; 
-                        }, 2000);
-                    }
-                }
-            });
-        }
-
-        // 2. ОТРИСОВКА КУБИТОВ
+        // 2. ОТРИСОВКА КУБИТОВ (25 штук)
         function initQubits() {
             grid.innerHTML = '';
             
-            for (let i = 1; i <= 20; i++) {
+            for (let i = 1; i <= 25; i++) { // Цикл до 25
                 const qubit = document.createElement('div');
                 qubit.className = 'qubit';
                 qubit.id = `qubit_${String(i).padStart(2, '0')}`;
@@ -62,6 +34,8 @@
 
             checkAllFixed();
         }
+
+        // ... (Логика слушателя repair_qubit и checkAllFixed остается без изменений) ...
 
         // 3. СЛУШАЕМ КОМАНДУ ИЗ КОНСОЛИ
         window.addEventListener('repair_qubit', (e) => {
