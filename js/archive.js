@@ -84,19 +84,6 @@
             }
         }
 
-        // --- АВТОМАТИЧЕСКАЯ ПРОВЕРКА ТЕСТА ---
-        // Если калибровка пройдена, но фикса нет, проверяем, пришло ли 2 новые фразы
-        if (isCalibrated && !isFixed) {
-            const baseline = parseInt(localStorage.getItem('s9_archive_baseline_count') || '0', 10);
-            if (phrases.length - baseline >= 2) {
-                localStorage.setItem('s9_archive_fixed', 'true');
-                // Принудительно обновляем журнал, чтобы он сразу показал отчет
-                if (typeof window.updateQuestion === 'function') {
-                    window.currentChatStep = 0; // Сбрасываем на первый шаг
-                    window.updateQuestion();
-                }
-            }
-        }
         // --- ЛОГИКА ЗАВЕРШЕНИЯ ТЕСТА (ТОЛЬКО В ВИЗУАЛЬНОМ РЕНДЕРЕ) ---
         const isCalibrated = localStorage.getItem('s9_archive_calibrated') === 'true';
         const isFixed = localStorage.getItem('s9_archive_fixed') === 'true';
