@@ -252,6 +252,7 @@
                             localStorage.setItem('s9_archive_calibrated', 'true');
                             
                             // --- НОВАЯ ЛОГИКА ДЛЯ АРХИВА (ФРАЗЫ) ---
+                            localStorage.removeItem('s9_phrases_data');
                             const phrase1 = TARGET_WORDS.slice(0, 5); // СИСТЕМА, ПАМЯТЬ, КОД, СИГНАЛ, ВЕКТОР
                             const phrase2 = TARGET_WORDS.slice(5, 10); // АРХИВ, ЗВЕЗДА, ОРБИТА, МОДУЛЬ, ДАННЫЕ
                             const now = Date.now();
