@@ -30,7 +30,23 @@
         const isFixed = localStorage.getItem('s9_archive_fixed') === 'true';
         const isCalibrated = localStorage.getItem('s9_archive_calibrated') === 'true';
 
-        // --- ЛОГИКА ЗАВЕРШЕНИЯ ТЕСТА ---
+        // Если калибровка не пройдена и фикса нет — показываем ошибку
+        if (!isFixed && !isCalibrated) {
+            if (errorScreen) errorScreen.style.display = 'flex';
+            if (grid) grid.style.display = 'none';
+            if (tabs) tabs.style.display = 'none';
+            return;
+        }
+
+        if (errorScreen) errorScreen.style.display = 'none';
+        if (grid) grid.style.display = 'grid';
+        if (tabs) tabs.style.display = 'flex';
+
+        // Получаем фразы СНАЧАЛА
+        let phrases = getPhraseData();
+        phrases.sort((a, b) => b.timestamp - a.timestamp);
+
+        // --- ПРОВЕРКА ТЕСТА ---
         if (isCalibrated && !isFixed) {
             const calibrationTime = parseInt(localStorage.getItem('s9_archive_calibration_time') || '0', 10);
             const newPhrasesCount = phrases.filter(p => p.timestamp > calibrationTime).length;
@@ -38,15 +54,10 @@
             if (newPhrasesCount >= 2) {
                 localStorage.setItem('s9_archive_fixed', 'true');
                 setTimeout(() => { location.reload(); }, 1000);
+                return; // Прерываем отрисовку, чтобы страница перезагрузилась
             }
         }
-
-        if (errorScreen) errorScreen.style.display = 'none';
-        if (grid) grid.style.display = 'grid';
-        if (tabs) tabs.style.display = 'flex';
-
-        let phrases = getPhraseData();
-        phrases.sort((a, b) => b.timestamp - a.timestamp);
+        // ------------------------
 
         let buffer1 = phrases.slice(0, 5); 
         let buffer2 = phrases.slice(5, 10); 
@@ -81,21 +92,6 @@
                     cell.className = 'glyph-cell empty-slot';
                     grid.appendChild(cell);
                 }
-            }
-        }
-
-        // --- ЛОГИКА ЗАВЕРШЕНИЯ ТЕСТА ---
-        if (isCalibrated && !isFixed) {
-            // Берем время калибровки (сохраняем его при вводе 10 слов)
-            const calibrationTime = parseInt(localStorage.getItem('s9_archive_calibration_time') || '0', 10);
-            
-            // Считаем, сколько фраз появилось ПОСЛЕ калибровки
-            const newPhrasesCount = phrases.filter(p => p.timestamp > calibrationTime).length;
-
-            // Если новых фраз 2 или больше — тест пройден
-            if (newPhrasesCount >= 2) {
-                localStorage.setItem('s9_archive_fixed', 'true');
-                setTimeout(() => { location.reload(); }, 1000);
             }
         }
     }
