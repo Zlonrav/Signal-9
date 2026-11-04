@@ -118,17 +118,6 @@
                 return true; 
             }
 
-            // Справка по читам
-            if (cmd === 'cheats') {
-                print('<span class="sys">[СПИСОК ЧИТОВ]</span>');
-                print('> <span class="cmd-text">fix_lang</span> - Восстанавливает человеческий язык');
-                print('> <span class="cmd-text">fix_archive</span> - Вводит 10 слов и чинит Архив');
-                print('> <span class="cmd-text">reset_archive</span> - Сбрасывает задание с Архивом');
-                print('> <span class="cmd-text">fix_os</span> - Обходит защиту ОС и чинит кубиты');
-                print('> <span class="cmd-text">clear_memory</span> - Полная очистка памяти');
-                return true;
-            }
-
             return false; 
         }
     };
