@@ -84,6 +84,17 @@
         .map-node.no-pointer {
             cursor: not-allowed !important;
         }
+        /* Стили для аварийной линии (к узлу с ошибкой) */
+        .link-error .link-bg { 
+            stroke: rgba(255, 51, 51, 0.3); 
+            stroke-dasharray: 4 4; 
+        }
+        .link-error .link-flow { 
+            stroke: #ff3333; 
+            stroke-dasharray: 8 16; 
+            filter: drop-shadow(0 0 5px #ff3333); 
+            animation: flow 20s linear infinite; 
+        }
     </style>
 </head>
 <body class="tools-page">
