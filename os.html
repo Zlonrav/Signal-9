@@ -12,41 +12,25 @@
     
     <style>
         body.tools-page { 
-            overflow: hidden; 
-            height: 100vh; 
-            background-color: #010306; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            margin: 0;
+            overflow: hidden; height: 100vh; background-color: #010306; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0;
         }
 
         .os-header { 
-            position: absolute;
-            top: 25px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-family: 'Michroma', sans-serif; 
-            font-size: 14px; 
-            letter-spacing: 8px; 
-            color: var(--neon); 
-            text-transform: uppercase; 
-            opacity: 0.6; 
-            text-shadow: 0 0 20px var(--neon); 
-            z-index: 100; 
-            pointer-events: none;
+            position: absolute; top: 25px; left: 50%; transform: translateX(-50%);
+            font-family: 'Michroma', sans-serif; font-size: 14px; letter-spacing: 8px; 
+            color: var(--neon); text-transform: uppercase; opacity: 0.6; 
+            text-shadow: 0 0 20px var(--neon); z-index: 100; pointer-events: none;
         }
 
-        /* Сетка кубитов (пока скрыта) */
-               /* Сетка кубитов 5x5 */
+        /* Сетка кубитов 5x5 */
         .qubit-grid {
             display: grid;
-            grid-template-columns: repeat(5, 70px); /* Чуть меньше, чтобы влезло 5x5 */
+            grid-template-columns: repeat(5, 70px);
             grid-template-rows: repeat(5, 70px);
             gap: 15px;
             z-index: 10;
-            perspective: 1000px; /* Для эффекта глубины */
+            perspective: 1000px; 
         }
 
         .qubit {
@@ -59,7 +43,6 @@
             font-size: 10px; color: #666;
             transition: all 0.3s ease;
             position: relative;
-            /* Эффект глубины: чуть повернуты и с тенью */
             transform: rotateX(10deg) rotateY(-10deg);
             box-shadow: 2px 2px 10px rgba(0,0,0,0.5);
         }
@@ -70,7 +53,7 @@
         .qubit.broken { border-color: #ff3333; box-shadow: 0 0 15px rgba(255, 51, 51, 0.2), 2px 2px 10px rgba(0,0,0,0.5); animation: shake 1.5s infinite; }
         .qubit.broken::after { content: 'ERR'; color: #ff3333; font-weight: bold; font-size: 12px; }
 
-        /* Менее трясущаяся анимация */
+        @keyframes pulse { 0% { transform: scale(0.8); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
         @keyframes shake { 
             0% { transform: rotateX(10deg) rotateY(-10deg) translate(1px, 1px); } 
             20% { transform: rotateX(10deg) rotateY(-10deg) translate(-1px, -1px); } 
@@ -87,26 +70,20 @@
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             transition: opacity 0.5s ease;
         }
-        
         #os-lockdown.hidden { opacity: 0; pointer-events: none; }
-
         .captcha-box {
             border: 1px solid var(--neon); background: #020508; padding: 30px; text-align: center;
             box-shadow: 0 0 30px rgba(0, 242, 255, 0.1);
         }
         .captcha-box h2 { color: var(--neon); font-family: 'Michroma', sans-serif; font-size: 16px; margin-bottom: 20px; }
         .captcha-box p { color: #aaa; font-family: 'JetBrains Mono', monospace; font-size: 12px; margin-bottom: 20px; line-height: 1.5; }
-        .captcha-box .code { color: #ffaa00; font-size: 14px; letter-spacing: 2px; margin: 15px 0; }
-        
         #captcha-input {
             background: transparent !important; border: none !important; 
-            border-bottom: 2px solid var(--neon) !important;
-            color: var(--neon) !important; font-family: 'JetBrains Mono', monospace !important; 
-            font-size: 20px !important; text-align: center !important; 
-            outline: none !important; padding: 10px !important; width: 300px !important; 
-            margin: 15px auto 0 auto !important; display: block !important;
-            text-transform: uppercase !important; letter-spacing: 5px !important;
-            position: static !important;
+            border-bottom: 2px solid var(--neon) !important; color: var(--neon) !important; 
+            font-family: 'JetBrains Mono', monospace !important; font-size: 20px !important; 
+            text-align: center !important; outline: none !important; padding: 10px !important; 
+            width: 300px !important; margin: 15px auto 0 auto !important; display: block !important;
+            text-transform: uppercase !important; letter-spacing: 5px !important; position: static !important;
         }
     </style>
 </head>
