@@ -90,7 +90,6 @@
                         const symbolSpan = document.createElement('span');
                         symbolSpan.className = 'qubit-symbol';
                         symbolSpan.innerText = '0'; // Начальный символ
-                        symbolSpan.style.opacity = '1'; // Сразу видимый
                         qubit.appendChild(symbolSpan);
                     }
 
@@ -99,8 +98,8 @@
             }
 
             checkAllFixed();
-            animateSymbols(); // <--- ВЫЗОВ ПРАВИЛЬНОЙ ФУНКЦИИ
-            setInterval(drawTraces, 8000); 
+            animateSymbols(); 
+            setInterval(drawTraces, 5000); // Трассы раз в 5 секунд
         }
 
         // --- 3. АНИМАЦИЯ СИМВОЛОВ ---
@@ -112,14 +111,10 @@
                 activeQubits.forEach(q => {
                     const symbolSpan = q.querySelector('.qubit-symbol');
                     if (symbolSpan) {
-                        symbolSpan.style.opacity = '0';
-                        setTimeout(() => {
-                            symbolSpan.innerText = symbols[Math.floor(Math.random() * symbols.length)];
-                            symbolSpan.style.opacity = '1';
-                        }, 1500); 
+                        symbolSpan.innerText = symbols[Math.floor(Math.random() * symbols.length)];
                     }
                 });
-            }, 4000); 
+            }, 2000); // Меняем символ каждые 2 секунды
         }
 
         // --- 4. РЕМОНТ ---
@@ -139,7 +134,6 @@
                     const symbolSpan = document.createElement('span');
                     symbolSpan.className = 'qubit-symbol';
                     symbolSpan.innerText = '0';
-                    symbolSpan.style.opacity = '1';
                     qubitEl.appendChild(symbolSpan);
                 }
                 
@@ -207,15 +201,16 @@
                     const dx = Math.abs(coords[i].x - coords[j].x);
                     const dy = Math.abs(coords[i].y - coords[j].y);
                     
-                    const isNeighbor = (dx < 10 && dy < 90) || (dy < 10 && dx < 90) || (Math.abs(dx - dy) < 10 && dx < 125);
+                    // Упрощенное условие: расстояние по X и Y меньше 100 пикселей
+                    const isNeighbor = dx < 100 && dy < 100;
 
-                    if (isNeighbor && Math.random() > 0.7) { 
+                    if (isNeighbor && Math.random() > 0.5) { // 50% шанс
                         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                         line.setAttribute('x1', coords[i].x);
                         line.setAttribute('y1', coords[i].y);
                         line.setAttribute('x2', coords[j].x);
                         line.setAttribute('y2', coords[j].y);
-                        line.setAttribute('stroke', 'rgba(0, 242, 255, 0.3)'); 
+                        line.setAttribute('stroke', 'rgba(0, 242, 255, 0.4)'); 
                         line.setAttribute('stroke-width', '2');
                         line.setAttribute('stroke-dasharray', '4 8'); 
                         line.style.animation = 'flow 24s linear infinite'; 
