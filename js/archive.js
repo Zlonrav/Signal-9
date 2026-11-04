@@ -101,4 +101,13 @@
     }
 
     document.addEventListener('DOMContentLoaded', initArchive);
+    // Обновление таймера телеметрии
+    setInterval(() => {
+        const timerEl = document.getElementById('timer');
+        if (timerEl && typeof CYCLE_TIME !== 'undefined') {
+            const timeSec = Math.floor(Date.now() / 1000);
+            const timeLeft = CYCLE_TIME - (timeSec % CYCLE_TIME);
+            timerEl.innerText = `ПРИЁМ СИГНАЛА: ${timeLeft} сек`;
+        }
+    }, 1000);
 })();
