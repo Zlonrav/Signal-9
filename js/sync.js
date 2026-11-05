@@ -41,9 +41,9 @@
                         const isArchiveFixed = localStorage.getItem('s9_archive_fixed') === 'true';
                         
                         if (!isArchiveFixed) {
-                            const refs = phrases.filter(p => p.is_reference);
-                            const others = phrases.filter(p => !p.is_reference);
-                            phrases = [...refs, ...others.slice(-8)];
+                            const manualPhrases = phrases.slice(0, 2);
+                            const newestPhrases = phrases.slice(-8);
+                            phrases = [...manualPhrases, ...newestPhrases];
                         } else {
                             phrases = phrases.slice(phrases.length - 10);
                         }
