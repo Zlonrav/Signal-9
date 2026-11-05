@@ -146,10 +146,11 @@
             const el = document.createElement(isClickable ? 'a' : 'div');
             if (isClickable) {
                 if (node.id === 'gateway') {
+                    // Если шлюз разблокирован, проверяем пройден ли EDR
                     if (localStorage.getItem('s9_edr_gateway_passed') === 'true') {
-                        el.href = 'gateway.html'; // Если взломали - идем в шлюз
+                        el.href = 'gateway.html';
                     } else {
-                        // Если не взломали, ставим триггер и идем ломать
+                        // Если не пройден - ставим триггер и ведем на взлом
                         el.onclick = (e) => {
                             e.preventDefault();
                             localStorage.setItem('s9_edr_gateway_trigger', 'true');
