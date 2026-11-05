@@ -74,6 +74,11 @@
         output.scrollTop = output.scrollHeight;
     }
 
+    window.printToConsole = function(text, type = 'normal') {
+        print(text, type);
+        toggleConsole(true); // Принудительно открываем консоль
+    };
+
     function toggleConsole(show) {
         overlay.classList.toggle('active', show);
         bgOverlay.classList.toggle('active', show);
