@@ -51,6 +51,17 @@ const CHAT_DATABASE = {
     let lastEmergencyState = null; 
 
     function getActiveData() {
+        // --- ФОНОВЫЕ ЛОГИ EDR ---
+        const osPassed = localStorage.getItem('s9_edr_os_passed') === 'true';
+        const gwPassed = localStorage.getItem('s9_edr_gateway_passed') === 'true';
+        if (osPassed && gwPassed) {
+            return [
+                { q: "> EDR MONITOR", a: "СИСТЕМА АКТИВНА. УГРОЗ НЕ ОБНАРУЖЕНО." },
+                { q: "> SCANNING", a: "ПРОВЕРКА ПАМЯТИ: 0 УГРОЗ." }
+            ];
+        }
+        // -------------------------
+
         const isEmergency = localStorage.getItem('s9_emergency_flag') === 'active';
         
         if (isEmergency !== lastEmergencyState) {
