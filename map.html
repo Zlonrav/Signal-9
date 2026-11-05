@@ -97,6 +97,14 @@
         }
         .link-active .link-bg { stroke: rgba(0, 242, 255, 0.2); }
         .link-active .link-flow { stroke: var(--neon); filter: drop-shadow(0 0 6px var(--neon)); }
+        .map-node[data-id="edr"].unlocked::before {
+            animation: pulseRadar 2s infinite;
+        }
+        @keyframes pulseRadar {
+            0% { box-shadow: 0 0 0 0 rgba(0, 242, 255, 0.4); }
+            70% { box-shadow: 0 0 0 20px rgba(0, 242, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 242, 255, 0); }
+        }
     </style>
 </head>
 <body class="tools-page">
