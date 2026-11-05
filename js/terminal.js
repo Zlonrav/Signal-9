@@ -44,7 +44,10 @@
     const overlay = document.createElement('div');
     overlay.id = 'tilde-console';
     overlay.innerHTML = `
-        <div class="console-header">Консоль Управления // Введите команду</div>
+        <div class="console-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <span>Консоль Управления // Введите команду</span>
+            <button id="console-close-btn" style="background: transparent; border: none; color: var(--neon); font-size: 16px; cursor: pointer; transition: 0.3s; padding: 0 5px;" onmouseover="this.style.color='#ff3333'; this.style.textShadow='0 0 10px #ff3333'" onmouseout="this.style.color='var(--neon)'; this.style.textShadow='none'">✕</button>
+        </div>
         <div class="console-output" id="terminal-output">
             <div>СИСТЕМА ГОТОВА. ВВЕДИТЕ <span class="cmd-text">help</span> ДЛЯ СПИСКА КОМАНД.</div>
         </div>
