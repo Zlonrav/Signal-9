@@ -312,7 +312,7 @@
                 break;
 
             case 'core':
-                if (isModuleOnline('core')) window.location.href = 'reactor.html';
+                if (isModuleOnline('core')) window.location.href = 'core.html';
                 else print(`ОШИБКА: МОДУЛЬ [ЭНЕРГОЯДРО] НЕДОСТУПЕН.`, 'err');
                 break;
                 
