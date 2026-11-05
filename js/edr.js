@@ -150,8 +150,19 @@
 
     function showPartialWorkingMode(moduleName) {
         content.innerHTML = `
-            <h2 style="color: var(--warn); text-shadow: 0 0 10px var(--warn);">ПРОТОКОЛ ${moduleName} АКТИВЕН</h2>
-            <p style="color: #aaa; margin-top: 20px; text-align: center;">Ожидание второго триггера для полной активации EDR.</p>
+            <div class="radar-container"><div class="radar-sweep"></div></div>
+            <h2 style="color: var(--ok); text-shadow: 0 0 10px var(--ok); margin: 0 0 10px 0;">ПРОТОКОЛ ${moduleName} АКТИВЕН</h2>
+            <p style="color: var(--neon); opacity: 0.7; margin-bottom: 15px;">ОЖИДАНИЕ ВТОРОГО ТРИГГЕРА ДЛЯ ПОЛНОЙ АКТИВАЦИИ.</p>
+            <div class="logs-container" id="edrLogs"></div>
         `;
+        
+        const logs = document.getElementById('edrLogs');
+        const messages = ["> EDR MONITOR: WAITING FOR GATEWAY...", "> KERNEL INTEGRITY: 100%", "> SCANNING MEMORY: 0 THREATS"];
+        let i = 0;
+        setInterval(() => { 
+            logs.innerHTML += `${messages[i % messages.length]}<br>`; 
+            logs.scrollTop = logs.scrollHeight; 
+            i++; 
+        }, 1500);
     }
 })();
