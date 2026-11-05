@@ -117,10 +117,9 @@
             // --- ЧИТ ДЛЯ ОС ---
             if (cmd === 'fix_os') {
                 localStorage.setItem('s9_os_captcha', 'true');
-                [3, 7, 12, 15, 19].forEach(num => {
-                    localStorage.setItem(`s9_qubit_${num}_fixed`, 'true');
-                });
+                localStorage.setItem('s9_os_broken_qubits', '[]'); // <-- Очищаем список сломанных кубитов
                 localStorage.setItem('s9_os_fixed', 'true');
+                localStorage.setItem('s9_os_errors', '0');
 
                 print('<span class="ok">[ЧИТ] ЗАЩИТА ПЕРИМЕТРА ОБОЙДЕНА. ВСЕ КУБИТЫ ПЕРЕКАЛИБРОВАНЫ.</span>');
                 setTimeout(() => { window.location.href = 'os.html'; }, 1500);
