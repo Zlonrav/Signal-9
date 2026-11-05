@@ -1,11 +1,8 @@
 // js/edr.js
 (function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const mode = urlParams.get('mode'); // 'os', 'gateway', или null
-    
     const content = document.getElementById('edrContent');
     
-    // Флаги
+    // Флаги прохождения
     const osPassed = localStorage.getItem('s9_edr_os_passed') === 'true';
     const gatewayPassed = localStorage.getItem('s9_edr_gateway_passed') === 'true';
     
@@ -13,24 +10,22 @@
     const osTrigger = localStorage.getItem('s9_edr_os_trigger') === 'true';
     const gatewayTrigger = localStorage.getItem('s9_edr_gateway_trigger') === 'true';
 
-    // --- 1. ЗАПУСК ПЕСОЧНИЦЫ (ДЛЯ ОС) ---
-    if (mode === 'os') {
-        if (!osTrigger) { window.location.replace('404.html'); return; } // Защита
+    // --- 1. ЗАПУСК ПЕСОЧНИЦЫ (ЕСЛИ ЕСТЬ ТРИГГЕР) ---
+    if (osTrigger) {
         startSandbox();
     } 
-    // --- 2. ЗАПУСК ВЗЛОМА ШИФРА (ДЛЯ ШЛЮЗА) ---
-    else if (mode === 'gateway') {
-        if (!gatewayTrigger) { window.location.replace('404.html'); return; } // Защита
+    // --- 2. ЗАПУСК ВЗЛОМА ШИФРА (ЕСЛИ ЕСТЬ ТРИГГЕР) ---
+    else if (gatewayTrigger) {
         startMastermind();
     } 
-    // --- 3. РАБОЧИЙ РЕЖИМ (БЕЗ ПАРАМЕТРОВ) ---
+    // --- 3. РАБОЧИЙ РЕЖИМ ---
     else {
         if (osPassed && gatewayPassed) {
             showFullWorkingMode();
         } else if (osPassed || gatewayPassed) {
             showPartialWorkingMode(osPassed ? 'ОС' : 'ШЛЮЗ');
         } else {
-            // Если зашли просто на edr.html и ничего не пройдено — 404
+            // Если нет ни триггеров, ни пройденных квестов — 404
             window.location.replace('404.html');
         }
     }
@@ -155,14 +150,9 @@
             <p style="color: var(--neon); opacity: 0.7; margin-bottom: 15px;">ОЖИДАНИЕ ВТОРОГО ТРИГГЕРА ДЛЯ ПОЛНОЙ АКТИВАЦИИ.</p>
             <div class="logs-container" id="edrLogs"></div>
         `;
-        
         const logs = document.getElementById('edrLogs');
         const messages = ["> EDR MONITOR: WAITING FOR GATEWAY...", "> KERNEL INTEGRITY: 100%", "> SCANNING MEMORY: 0 THREATS"];
         let i = 0;
-        setInterval(() => { 
-            logs.innerHTML += `${messages[i % messages.length]}<br>`; 
-            logs.scrollTop = logs.scrollHeight; 
-            i++; 
-        }, 1500);
+        setInterval(() => { logs.innerHTML += `${messages[i % messages.length]}<br>`; logs.scrollTop = logs.scrollHeight; i++; }, 1500);
     }
 })();
