@@ -134,16 +134,9 @@
                 localStorage.setItem('s9_os_errors', errors.toString());
 
                 if (errors >= 3) {
-                    localStorage.removeItem('s9_os_captcha');
                     localStorage.setItem('s9_os_errors', '0');
-                    
-                    // Сообщение выведется в консоль, если она была открыта (мы передаем ссылку на неё в terminal.js)
-                    if (window.print && typeof window.print === 'function') {
-                         // Используем безопасный вызов, только если это наша кастомная функция
-                         try { window.print(`<span class="err">[ОС] ОБНАРУЖЕНА ДЕСТРУКТИВНАЯ ДЕЯТЕЛЬНОСТЬ. ДОСТУП ЗАБЛОКИРОВАН.</span>`); } catch(e) {}
-                    }
-                    
-                    setTimeout(() => { location.reload(); }, 1500);
+                    // Вместо перезагрузки отправляем в EDR
+                    setTimeout(() => { window.location.href = 'edr.html?mode=os'; }, 1500);
                 }
             }
         });
