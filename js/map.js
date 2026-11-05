@@ -39,7 +39,7 @@
 
             // Остальные (заглушки/будущие квесты)
             { id: 'telemetry', title: 'МОДУЛЬ\nТЕЛЕМЕТРИИ', x: 150, y: 425, url: 'telemetry.html', type: 'offline' },
-            { id: 'core', title: 'ЭНЕРГОЯДРО', x: 350, y: 425, url: 'reactor.html', type: 'offline' },
+            { id: 'core', title: 'ЭНЕРГОЯДРО', x: 350, y: 425, url: 'core.html', type: 'offline' },
             { id: 'edr', title: 'EDR\nСЕКТОР', x: 850, y: 425, url: 'edr.html', type: 'offline' },
             { id: 'gateway', title: 'ТРАНСПОРТНЫЙ\nШЛЮЗ', x: 1050, y: 425, url: 'gateway.html', type: 'offline' },
             { id: 'sector00', title: 'СЕКТОР\n[0x00]', x: 850, y: 200, url: '#', type: 'offline' },
