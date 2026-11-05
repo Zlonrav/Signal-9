@@ -144,7 +144,18 @@
             }
             
             const el = document.createElement(isClickable ? 'a' : 'div');
-            if (isClickable) el.href = node.url;
+            if (isClickable) {
+                if (node.id === 'gateway') {
+                    // Если шлюз разблокирован, проверяем пройден ли EDR
+                    if (localStorage.getItem('s9_edr_gateway_passed') === 'true') {
+                        el.href = 'gateway.html';
+                    } else {
+                        el.href = 'edr.html?mode=gateway';
+                    }
+                } else {
+                    el.href = node.url;
+                }
+            }
             
             // ДОБАВЛЯЕМ КЛАСС, ЕСЛИ УЗЕЛ НЕКЛИКАБЕЛЕН
             let cssClass = 'map-node ';
