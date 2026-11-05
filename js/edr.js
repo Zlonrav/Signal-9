@@ -5,40 +5,42 @@
     
     const content = document.getElementById('edrContent');
     
-    // Флаги прохождения
+    // Флаги
     const osPassed = localStorage.getItem('s9_edr_os_passed') === 'true';
     const gatewayPassed = localStorage.getItem('s9_edr_gateway_passed') === 'true';
+    
+    // Триггеры (разрешения на вход)
+    const osTrigger = localStorage.getItem('s9_edr_os_trigger') === 'true';
+    const gatewayTrigger = localStorage.getItem('s9_edr_gateway_trigger') === 'true';
 
     // --- 1. ЗАПУСК ПЕСОЧНИЦЫ (ДЛЯ ОС) ---
     if (mode === 'os') {
+        if (!osTrigger) { window.location.replace('404.html'); return; } // Защита
         startSandbox();
     } 
     // --- 2. ЗАПУСК ВЗЛОМА ШИФРА (ДЛЯ ШЛЮЗА) ---
     else if (mode === 'gateway') {
+        if (!gatewayTrigger) { window.location.replace('404.html'); return; } // Защита
         startMastermind();
     } 
-    // --- 3. РАБОЧИЙ РЕЖИМ ---
+    // --- 3. РАБОЧИЙ РЕЖИМ (БЕЗ ПАРАМЕТРОВ) ---
     else {
         if (osPassed && gatewayPassed) {
             showFullWorkingMode();
         } else if (osPassed || gatewayPassed) {
             showPartialWorkingMode(osPassed ? 'ОС' : 'ШЛЮЗ');
         } else {
-            content.innerHTML = `
-                <h2 style="color: var(--err); text-shadow: 0 0 10px var(--err);">ДОСТУП ЗАКРЫТ</h2>
-                <p style="color: #aaa; margin-top: 10px;">Сектор EDR не инициализирован.<br>Требуется триггер из системы ОС или Транспортного Шлюза.</p>
-            `;
+            // Если зашли просто на edr.html и ничего не пройдено — 404
+            window.location.replace('404.html');
         }
     }
 
-    // --- ЛОГИКА ПЕСОЧНИЦЫ (3 ЭТАПА) ---
+    // --- ЛОГИКА ПЕСОЧНИЦЫ ---
     function startSandbox() {
         let phase = 1;
-        
         function renderPhase() {
             if (phase === 1) {
-                let x = 3;
-                let ans = (x * 2) * 2 * 2; // 24
+                let ans = 24;
                 content.innerHTML = `
                     <div style="color: var(--warn); margin-bottom: 10px;">ЭТАП 1 / 3</div>
                     <div class="code-box">
@@ -50,9 +52,7 @@
                 `;
                 document.getElementById('sbAns').oninput = (e) => { if(e.target.value === ans.toString()) { phase++; renderPhase(); } };
             } else if (phase === 2) {
-                let x = 5;
-                for(let i=0; i<3; i++) x += 2;
-                if (x > 10) x *= 2; // 22
+                let ans = 22;
                 content.innerHTML = `
                     <div style="color: var(--warn); margin-bottom: 10px;">ЭТАП 2 / 3</div>
                     <div class="code-box">
@@ -62,10 +62,9 @@
                     <div>ВВЕДИТЕ РЕЗУЛЬТАТ:</div>
                     <input type="text" id="sbAns" class="code-input" autocomplete="off">
                 `;
-                document.getElementById('sbAns').oninput = (e) => { if(e.target.value === x.toString()) { phase++; renderPhase(); } };
+                document.getElementById('sbAns').oninput = (e) => { if(e.target.value === ans.toString()) { phase++; renderPhase(); } };
             } else if (phase === 3) {
-                let x = 2, y = 10;
-                for(let i=0; i<3; i++) { x *= 3; if (x > 5) y += x; }
+                let ans = 88;
                 content.innerHTML = `
                     <div style="color: var(--warn); margin-bottom: 10px;">ЭТАП 3 / 3</div>
                     <div class="code-box">
@@ -76,9 +75,10 @@
                     <input type="text" id="sbAns" class="code-input" autocomplete="off">
                 `;
                 document.getElementById('sbAns').oninput = (e) => { 
-                    if(e.target.value === y.toString()) { 
+                    if(e.target.value === ans.toString()) { 
                         localStorage.setItem('s9_edr_os_passed', 'true');
-                        localStorage.setItem('s9_os_errors', '0'); // Сбрасываем ошибки для ОС
+                        localStorage.removeItem('s9_edr_os_trigger'); // Сжигаем триггер
+                        localStorage.setItem('s9_os_errors', '0'); 
                         content.innerHTML = `<h2 style="color: var(--ok);">ЛОГИКА ПОДТВЕРЖДЕНА</h2><p>Возврат в ОС...</p>`;
                         setTimeout(() => { window.location.href = 'os.html'; }, 2000);
                     } 
@@ -89,10 +89,9 @@
         renderPhase();
     }
 
-    // --- ЛОГИКА ВЗЛОМА ШИФРА (5 ЦИФР) ---
+    // --- ЛОГИКА ВЗЛОМА ШИФРА ---
     function startMastermind() {
         const targetCode = Array.from({length: 5}, () => Math.floor(Math.random() * 10)).join('');
-        
         content.innerHTML = `
             <div style="margin-bottom: 15px; color: var(--neon); text-align:center;">
                 > ДОСТУП К ШЛЮЗУ ЗАБЛОКИРОВАН.<br>
@@ -105,30 +104,17 @@
             </div>
             <button id="mmBtn" style="background:transparent; border:1px solid var(--neon); color:var(--neon); padding:10px 20px; cursor:pointer;">ПРОВЕРИТЬ</button>
         `;
-
         window.moveFocus = (el) => { if (el.value.length === 1 && el.nextElementSibling) el.nextElementSibling.focus(); };
 
         document.getElementById('mmBtn').onclick = () => {
             const inputs = document.querySelectorAll('#mmInputs input');
-            let guess = '';
-            inputs.forEach(i => guess += i.value);
+            let guess = ''; inputs.forEach(i => guess += i.value);
             if (guess.length !== 5) return;
 
             let exact = 0, wrongPos = 0;
-            let targetArr = targetCode.split('');
-            let guessArr = guess.split('');
-
-            // Точное совпадение
-            for(let i=0; i<5; i++) {
-                if (guessArr[i] === targetArr[i]) { exact++; targetArr[i] = null; guessArr[i] = null; }
-            }
-            // Не на месте
-            for(let i=0; i<5; i++) {
-                if (guessArr[i] !== null) {
-                    const idx = targetArr.indexOf(guessArr[i]);
-                    if (idx !== -1) { wrongPos++; targetArr[idx] = null; }
-                }
-            }
+            let targetArr = targetCode.split(''), guessArr = guess.split('');
+            for(let i=0; i<5; i++) { if (guessArr[i] === targetArr[i]) { exact++; targetArr[i] = null; guessArr[i] = null; } }
+            for(let i=0; i<5; i++) { if (guessArr[i] !== null) { const idx = targetArr.indexOf(guessArr[i]); if (idx !== -1) { wrongPos++; targetArr[idx] = null; } } }
 
             const log = document.getElementById('mmLogs');
             log.innerHTML += `<div>> ВВОД: ${guess} | <span style="color:var(--ok)">ТОЧНО: ${exact}</span> | <span style="color:var(--warn)">НЕ ТАМ: ${wrongPos}</span></div>`;
@@ -136,6 +122,7 @@
 
             if (exact === 5) {
                 localStorage.setItem('s9_edr_gateway_passed', 'true');
+                localStorage.removeItem('s9_edr_gateway_trigger'); // Сжигаем триггер
                 document.getElementById('mmBtn').disabled = true;
                 content.innerHTML = `<h2 style="color: var(--ok);">ШЛЮЗ РАЗБЛОКИРОВАН</h2><p>Возврат на Карту...</p>`;
                 setTimeout(() => { window.location.href = 'map.html'; }, 2000);
@@ -147,7 +134,7 @@
         setTimeout(() => document.querySelector('#mmInputs input').focus(), 100);
     }
 
-    // --- РАБОЧИЙ РЕЖИМ (РАДАР + ЛОГИ) ---
+    // --- РАБОЧИЙ РЕЖИМ ---
     function showFullWorkingMode() {
         content.innerHTML = `
             <div class="radar-container"><div class="radar-sweep"></div></div>
@@ -155,20 +142,10 @@
             <p style="color: var(--neon); opacity: 0.7; margin-bottom: 15px;">УГРОЗ НЕ ОБНАРУЖЕНО. МОНИТОРИНГ В ФОНОВОМ РЕЖИМЕ.</p>
             <div class="logs-container" id="edrLogs"></div>
         `;
-
         const logs = document.getElementById('edrLogs');
-        const messages = [
-            "> SCANNING MEMORY: 0 THREATS",
-            "> NETWORK GATEWAY: SECURED",
-            "> KERNEL INTEGRITY: 100%",
-            "> EDR MONITOR: ALL SYSTEMS CLEAN"
-        ];
+        const messages = ["> SCANNING MEMORY: 0 THREATS", "> NETWORK GATEWAY: SECURED", "> KERNEL INTEGRITY: 100%", "> EDR MONITOR: ALL SYSTEMS CLEAN"];
         let i = 0;
-        setInterval(() => {
-            logs.innerHTML += `${messages[i % messages.length]}<br>`;
-            logs.scrollTop = logs.scrollHeight;
-            i++;
-        }, 1500);
+        setInterval(() => { logs.innerHTML += `${messages[i % messages.length]}<br>`; logs.scrollTop = logs.scrollHeight; i++; }, 1500);
     }
 
     function showPartialWorkingMode(moduleName) {
@@ -177,5 +154,4 @@
             <p style="color: #aaa; margin-top: 20px; text-align: center;">Ожидание второго триггера для полной активации EDR.</p>
         `;
     }
-
 })();
