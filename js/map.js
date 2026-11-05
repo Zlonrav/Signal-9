@@ -45,21 +45,16 @@
             { id: 'sector00', title: 'СЕКТОР\n[0x00]', x: 850, y: 200, url: '#', type: 'offline' },
             { id: 'sectorff', title: 'СЕКТОР\n[0xFF]', x: 850, y: 650, url: '#', type: 'offline' }
         ],
+        // Удаляем MAP_POINTS и getMapPath полностью.
+        // Вместо них используем глобальные POINTS и getPath.
+        // В MAP_DATA.nodes меняем reactor на core.
+        // В links используем новую сетку:
         links: [
-            // Крест от центра
             { s: 'hub', t: 'tools' }, { s: 'hub', t: 'map' }, 
             { s: 'hub', t: 'core' }, { s: 'hub', t: 'edr' },
-        
-            // Верхняя ветка
             { s: 'tools', t: 'os' }, { s: 'tools', t: 'sector00' },
-            
-            // Левая ветка
             { s: 'core', t: 'telemetry' }, { s: 'core', t: 'os' }, { s: 'core', t: 'archive' },
-            
-            // Правая ветка
             { s: 'edr', t: 'gateway' }, { s: 'edr', t: 'sector00' }, { s: 'edr', t: 'sectorff' },
-            
-            // Низ
             { s: 'map', t: 'archive' }, { s: 'map', t: 'sectorff' }
         ]
     };
