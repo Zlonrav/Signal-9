@@ -36,9 +36,20 @@
                         timestamp: Date.now() 
                     });
 
-                    // Оставляем только 10 последних фраз (5 в буфере + 5 в верификации)
+                    // Оставляем только 10 фраз, но защищаем эталонные, пока Архив не починен
                     if (phrases.length > 10) {
-                        phrases = phrases.slice(phrases.length - 10);
+                        const isArchiveFixed = localStorage.getItem('s9_archive_fixed') === 'true';
+                        
+                        if (!isArchiveFixed) {
+                            // Если Архив еще не починен, сохраняем первые 2 (эталонные) 
+                            // и добавляем 8 самых новых.
+                            const manualPhrases = phrases.slice(0, 2);
+                            const newestPhrases = phrases.slice(-8);
+                            phrases = [...manualPhrases, ...newestPhrases];
+                        } else {
+                            // Если Архив починен, просто оставляем 10 последних
+                            phrases = phrases.slice(phrases.length - 10);
+                        }
                     }
 
                     localStorage.setItem('s9_phrases_data', JSON.stringify(phrases));
