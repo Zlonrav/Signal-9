@@ -146,11 +146,15 @@
             const el = document.createElement(isClickable ? 'a' : 'div');
             if (isClickable) {
                 if (node.id === 'gateway') {
-                    // Если шлюз разблокирован, проверяем пройден ли EDR
                     if (localStorage.getItem('s9_edr_gateway_passed') === 'true') {
-                        el.href = 'gateway.html';
+                        el.href = 'gateway.html'; // Если взломали - идем в шлюз
                     } else {
-                        el.href = 'edr.html?mode=gateway';
+                        // Если не взломали, ставим триггер и идем ломать
+                        el.onclick = (e) => {
+                            e.preventDefault();
+                            localStorage.setItem('s9_edr_gateway_trigger', 'true');
+                            window.location.href = 'edr.html?mode=gateway';
+                        };
                     }
                 } else {
                     el.href = node.url;
