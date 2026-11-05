@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EDR // ПРОТОТИП</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Michroma&display=swap');
+
+        :root {
+            --neon: #00f2ff;
+            --bg: #010306;
+            --err: #ff3333;
+            --ok: #00ff44;
+            --warn: #ffaa00;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--neon);
+            font-family: 'JetBrains Mono', monospace;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+            background-image: radial-gradient(circle at center, #03101a 0%, #010306 100%);
+        }
+
+        .header {
+            position: absolute;
+            top: 20px;
+            font-family: 'Michroma', sans-serif;
+            font-size: 16px;
+            letter-spacing: 4px;
+            text-shadow: 0 0 10px var(--neon);
+        }
+
+        .phase-title {
+            position: absolute;
+            top: 60px;
+            font-size: 12px;
+            letter-spacing: 2px;
+            opacity: 0.7;
+            color: var(--neon);
+            text-transform: uppercase;
+        }
+
+        #game-area {
+            width: 900px;
+            height: 550px;
+            border: 1px solid rgba(0, 242, 255, 0.3);
+            background: rgba(2, 10, 15, 0.9);
+            box-shadow: 0 0 40px rgba(0, 242, 255, 0.1), inset 0 0 30px rgba(0, 242, 255, 0.05);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+            border-radius: 4px;
+        }
+
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            display: flex;
+            gap: 20px;
+            z-index: 100;
+        }
+
+        button {
+            background: transparent;
+            border: 1px solid var(--neon);
+            color: var(--neon);
+            padding: 8px 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-radius: 2px;
+        }
+
+        button:hover {
+            background: rgba(0, 242, 255, 0.1);
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.3);
+        }
+
+        .msg {
+            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 28px; font-weight: bold; z-index: 100;
+            text-shadow: 0 0 15px currentColor; pointer-events: none;
+            opacity: 0; transition: opacity 0.3s; font-family: 'Michroma', sans-serif;
+        }
+        .msg.show { opacity: 1; }
+        .msg.err { color: var(--err); }
+        .msg.ok { color: var(--ok); }
+
+        /* --- МЕХАНИКА 1: РАДАР --- */
+        .radar-container {
+            width: 400px; height: 400px;
+            border-radius: 50%;
+            border: 2px solid rgba(0, 242, 255, 0.2);
+            position: relative;
+            background: radial-gradient(circle, rgba(0,242,255,0.05) 0%, transparent 70%);
+            overflow: hidden;
+            box-shadow: inset 0 0 50px rgba(0,242,255,0.1);
+        }
+        .radar-sweep {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: conic-gradient(from 0deg, transparent 0deg, rgba(0,242,255,0.2) 360deg);
+            border-radius: 50%;
+            animation: sweep 3s linear infinite;
+        }
+        @keyframes sweep { to { transform: rotate(360deg); } }
+        
+        .target {
+            position: absolute;
+            width: 20px; height: 20px;
+            background: var(--err);
+            border-radius: 50%;
+            box-shadow: 0 0 15px var(--err);
+            cursor: crosshair;
+            transform: translate(-50%, -50%);
+            animation: blink 1s infinite alternate;
+        }
+        @keyframes blink { 0% { opacity: 0.6; } 100% { opacity: 1; } }
+
+        /* --- МЕХАНИКА 2: ШЛЮЗ --- */
+        .gateway-board {
+            display: flex; justify-content: space-between; width: 800px; height: 400px;
+            position: relative;
+        }
+        .gw-zone {
+            width: 200px; height: 100%;
+            border: 1px dashed rgba(0, 242, 255, 0.3);
+            display: flex; flex-direction: column; align-items: center; justify-content: space-around;
+            padding: 20px 0; box-sizing: border-box; cursor: pointer;
+        }
+        .gw-zone:hover { background: rgba(0, 242, 255, 0.05); }
+        .gw-zone.red { border-color: var(--err); background: rgba(255,0,0,0.05); }
+        .gw-zone.red:hover { background: rgba(255,0,0,0.1); }
+        
+        .node {
+            width: 60px; height: 60px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 10px; font-weight: bold; text-align: center;
+            cursor: pointer; transition: 0.2s;
+        }
+        .node.safe { border: 2px solid var(--neon); color: var(--neon); box-shadow: 0 0 10px rgba(0,242,255,0.3); }
+        .node.safe.active { background: rgba(0,242,255,0.2); box-shadow: 0 0 20px var(--neon); }
+        .node.bad { border: 2px solid var(--err); color: var(--err); box-shadow: 0 0 10px rgba(255,51,51,0.3); }
+        .node.bad.active { background: rgba(255,51,51,0.2); box-shadow: 0 0 20px var(--err); }
+
+        /* --- МЕХАНИКА 3-5: ПЕСОЧНИЦА --- */
+        .code-box {
+            border: 1px solid rgba(0, 242, 255, 0.3);
+            padding: 20px; font-size: 14px; line-height: 1.6;
+            margin-bottom: 20px; text-align: left; width: 500px;
+            background: #000; box-shadow: inset 0 0 20px rgba(0,0,0,1);
+        }
+        .code-input {
+            background: transparent; border: none; border-bottom: 2px solid var(--neon);
+            color: var(--neon); font-family: inherit; font-size: 20px;
+            text-align: center; outline: none; padding: 10px; width: 250px;
+            margin-top: 20px; letter-spacing: 2px;
+        }
+        
+        .hash-grid { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+        .hash-row {
+            display: flex; justify-content: space-between; padding: 15px 20px;
+            border: 1px solid rgba(0, 242, 255, 0.2); font-size: 14px;
+            cursor: pointer; transition: 0.2s;
+        }
+        .hash-row:hover { background: rgba(0, 242, 255, 0.1); }
+        .hash-row.corrupted:hover { border-color: var(--err); background: rgba(255, 51, 51, 0.1); }
+
+        /* --- МЕХАНИКА 6: ВЗЛОМ ШИФРА --- */
+        .mastermind-logs { width: 300px; height: 150px; overflow-y: auto; border: 1px solid rgba(0,242,255,0.2); padding: 10px; font-size: 12px; margin-bottom: 20px; text-align: left;}
+        .mm-input { letter-spacing: 10px; font-size: 24px !important; text-transform: uppercase; }
+
+        /* --- МЕХАНИКА 7: ЛОГИЧЕСКАЯ БОМБА --- */
+        .bomb-grid { display: grid; grid-template-columns: repeat(3, 80px); gap: 10px; }
+        .bomb-cell {
+            width: 80px; height: 80px; border: 1px solid rgba(0,242,255,0.3);
+            cursor: pointer; transition: 0.1s; background: rgba(0,0,0,0.5);
+        }
+        .bomb-cell.flash { background: var(--err); box-shadow: 0 0 20px var(--err); }
+        .bomb-cell.correct { background: var(--ok); box-shadow: 0 0 20px var(--ok); border-color: var(--ok); }
+    </style>
+</head>
+<body>
+
+    <div class="header">EDR // СЕКТОР ПРОВЕРКИ ЛОГИКИ</div>
+    <div class="phase-title" id="phaseTitle"></div>
+
+    <div id="game-area">
+        <div class="msg" id="message"></div>
+        <div id="content" style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;"></div>
+    </div>
+
+    <div class="controls">
+        <button onclick="resetGame()">Сброс</button>
+        <button onclick="skipPhase()">Пропустить</button>
+    </div>
+
+    <script>
+        let currentPhase = 1;
+        const MAX_PHASES = 7;
+        let phaseInterval = null;
+
+        const titles = [
+            "ЭТАП 1: РАДАР (ПОИСК СИГНАТУР)",
+            "ЭТАП 2: КАРАНТИННЫЙ ШЛЮЗ",
+            "ЭТАП 3: ПЕСОЧНИЦА - ЛЕГКО",
+            "ЭТАП 4: ПЕСОЧНИЦА - СРЕДНЕ",
+            "ЭТАП 5: ПЕСОЧНИЦА - СЛОЖНО",
+            "ЭТАП 6: ВЗЛОМ ШИФРА (ДЕДУКЦИЯ)",
+            "ЭТАП 7: ЛОГИЧЕСКАЯ БОМБА (ПАМЯТЬ)"
+        ];
+
+        function showMsg(text, type) {
+            const msg = document.getElementById('message');
+            msg.innerText = text;
+            msg.className = `msg show ${type}`;
+            setTimeout(() => msg.classList.remove('show'), 1500);
+        }
+
+        function clearTimers() {
+            if (phaseInterval) clearInterval(phaseInterval);
+        }
+
+        function loadPhase(phase) {
+            clearTimers();
+            const content = document.getElementById('content');
+            content.innerHTML = '';
+            document.getElementById('phaseTitle').innerText = titles[phase - 1] || "ПРОВЕРКА ЗАВЕРШЕНА";
+
+            if (phase === 1) initPhase1(content);
+            if (phase === 2) initPhase2(content);
+            if (phase === 3) initPhase3(content);
+            if (phase === 4) initPhase4(content);
+            if (phase === 5) initPhase5(content);
+            if (phase === 6) initPhase6(content);
+            if (phase === 7) initPhase7(content);
+            if (phase > 7) {
+                content.innerHTML = '<h1 style="color: var(--ok); text-shadow: 0 0 30px var(--ok); font-family: Michroma;">ЛОГИКА ВОССТАНОВЛЕНА</h1><p style="color: var(--neon); opacity: 0.6; margin-top: 20px;">Секторальная проверка успешно завершена.</p>';
+            }
+        }
+
+        function nextPhase() {
+            showMsg("ПРОВЕРКА ПРОЙДЕНА", "ok");
+            currentPhase++;
+            setTimeout(() => loadPhase(currentPhase), 1200);
+        }
+
+        function resetGame() { currentPhase = 1; loadPhase(1); }
+        function skipPhase() { currentPhase++; if (currentPhase > MAX_PHASES) currentPhase = MAX_PHASES + 1; loadPhase(currentPhase); }
+
+        // --- ЭТАП 1: РАДАР ---
+        function initPhase1(container) {
+            const radar = document.createElement('div');
+            radar.className = 'radar-container';
+            radar.innerHTML = '<div class="radar-sweep"></div>';
+            container.appendChild(radar);
+
+            let targetsFound = 0;
+            function spawnTarget() {
+                if (targetsFound >= 3) return;
+                const target = document.createElement('div');
+                target.className = 'target';
+                const angle = Math.random() * Math.PI * 2;
+                const radius = Math.random() * 150;
+                target.style.left = `${200 + Math.cos(angle) * radius}px`;
+                target.style.top = `${200 + Math.sin(angle) * radius}px`;
+                
+                let holdTimer = null;
+                target.onmousedown = (e) => {
+                    e.preventDefault();
+                    holdTimer = setTimeout(() => {
+                        target.remove();
+                        targetsFound++;
+                        if (targetsFound >= 3) { clearInterval(phaseInterval); nextPhase(); }
+                    }, 1000);
+                };
+                target.onmouseup = target.onmouseleave = () => { if (holdTimer) clearTimeout(holdTimer); };
+                radar.appendChild(target);
+                setTimeout(() => { if (target.parentNode) target.remove(); }, 4000);
+            }
+            spawnTarget();
+            phaseInterval = setInterval(spawnTarget, 2000);
+        }
+
+        // --- ЭТАП 2: КАРАНТИННЫЙ ШЛЮЗ ---
+        function initPhase2(container) {
+            const board = document.createElement('div');
+            board.className = 'gateway-board';
+            let selectedNode = null;
+
+            const leftZone = document.createElement('div');
+            leftZone.className = 'gw-zone';
+            leftZone.innerHTML = '<h3>СИСТЕМА</h3>';
+
+            const rightZone = document.createElement('div');
+            rightZone.className = 'gw-zone red';
+            rightZone.innerHTML = '<h3 style="color:var(--err)">КАРАНТИН</h3>';
+
+            const nodes = [
+                { id: 'n1', type: 'safe', label: 'FILE_A' },
+                { id: 'n2', type: 'bad', label: 'VIRUS_B' },
+                { id: 'n3', type: 'safe', label: 'FILE_C' },
+                { id: 'n4', type: 'bad', label: 'VIRUS_D' }
+            ].sort(() => Math.random() - 0.5);
+
+            const centerArea = document.createElement('div');
+            centerArea.style.cssText = 'display:flex; flex-direction:column; gap:20px; justify-content:center; align-items:center; flex-grow:1;';
+            
+            let nodesLeft = nodes.length;
+
+            nodes.forEach(n => {
+                const nodeEl = document.createElement('div');
+                nodeEl.className = `node ${n.type}`;
+                nodeEl.innerText = n.label;
+                nodeEl.dataset.type = n.type;
+                
+                nodeEl.onclick = () => {
+                    if (selectedNode) selectedNode.classList.remove('active');
+                    selectedNode = nodeEl;
+                    nodeEl.classList.add('active');
+                };
+                centerArea.appendChild(nodeEl);
+            });
+
+            const handleZoneClick = (zoneType) => {
+                if (!selectedNode) return;
+                const nodeType = selectedNode.dataset.type;
+                
+                if ((zoneType === 'safe' && nodeType === 'safe') || (zoneType === 'bad' && nodeType === 'bad')) {
+                    selectedNode.remove();
+                    selectedNode = null;
+                    nodesLeft--;
+                    if (nodesLeft === 0) nextPhase();
+                } else {
+                    showMsg("НЕВЕРНЫЙ МАРШРУТ", "err");
+                    selectedNode.classList.remove('active');
+                    selectedNode = null;
+                }
+            };
+
+            leftZone.onclick = () => handleZoneClick('safe');
+            rightZone.onclick = () => handleZoneClick('bad');
+
+            board.appendChild(leftZone);
+            board.appendChild(centerArea);
+            board.appendChild(rightZone);
+            container.appendChild(board);
+        }
+
+        // --- ЭТАП 3: ПЕСОЧНИЦА (ЛЕГКО) ---
+        function initPhase3(container) {
+            container.innerHTML = `
+                <div class="code-box">
+                    <span style="color:#888">// ВЫПОЛНЕНИЕ СКРИПТА В ИЗОЛИРОВАННОЙ СРЕДЕ</span><br><br>
+                    LET X = 10<br>
+                    LOOP 3 TIMES:<br>
+                    &nbsp;&nbsp;X = X * 2 - 5<br>
+                    PRINT X
+                </div>
+                <div>ВВЕДИТЕ РЕЗУЛЬТАТ ВЫПОЛНЕНИЯ (X):</div>
+                <input type="text" id="codeAns3" class="code-input" placeholder="???" autocomplete="off">
+            `;
+            const input = document.getElementById('codeAns3');
+            setTimeout(() => input.focus(), 100);
+            input.oninput = () => { if (input.value.trim() === '45') { input.disabled = true; nextPhase(); } };
+        }
+
+        // --- ЭТАП 4: ПЕСОЧНИЦА (СРЕДНЕ) ---
+        function initPhase4(container) {
+            container.innerHTML = `
+                <div style="margin-bottom: 20px; font-size: 14px; color: #aaa; width:600px; text-align:left;">
+                    > СКАНИРОВАНИЕ ЦЕЛОСТНОСТИ ФАЙЛОВ...<br>
+                    > ОБНАРУЖЕН ПОВРЕЖДЕННЫЙ ХЭШ. НАЖМИТЕ НА ФАЙЛ, ЧЬЯ СИГНАТУРА СОДЕРЖИТ ОШИБКУ (НЕ-HEX СИМВОЛЫ).
+                </div>
+                <div class="hash-grid" style="width: 600px;">
+                    <div class="hash-row" onclick="showMsg('СИГНАТУРА ВЕРНА', 'err')"><span>SYS_KERNEL.DLL</span> <span style="color:var(--ok)">A4F9-2B1C-99D0</span></div>
+                    <div class="hash-row corrupted" onclick="nextPhase()"><span>AUDIO_DRV.SYS</span> <span>F1E2-D3C4-B5A6-ZZZZ</span></div>
+                    <div class="hash-row" onclick="showMsg('СИГНАТУРА ВЕРНА', 'err')"><span>MEM_ALLOC.BIN</span> <span style="color:var(--ok)">1234-5678-90AB</span></div>
+                </div>
+            `;
+        }
+
+        // --- ЭТАП 5: ПЕСОЧНИЦА (СЛОЖНО) ---
+        function initPhase5(container) {
+            container.innerHTML = `
+                <div style="margin-bottom: 20px; font-size: 14px; color: #aaa;">
+                    > ОБНАРУЖЕН ЗАШИФРОВАННЫЙ ПРОТОКОЛ.<br>
+                    > ВОССТАНОВИТЕ ПРОПУЩЕННОЕ ЗВЕНО ПОСЛЕДОВАТЕЛЬНОСТИ.
+                </div>
+                <div style="font-size: 32px; letter-spacing: 10px; color: var(--warn); margin: 30px 0; font-family: 'Michroma';">
+                    2 &nbsp; 3 &nbsp; 5 &nbsp; 7 &nbsp; 11 &nbsp; ? &nbsp; 17
+                </div>
+                <div>ВВЕДИТЕ ПРОПУЩЕННОЕ ЧИСЛО:</div>
+                <input type="text" id="codeAns5" class="code-input" placeholder="???" autocomplete="off">
+            `;
+            const input = document.getElementById('codeAns5');
+            setTimeout(() => input.focus(), 100);
+            input.oninput = () => { if (input.value.trim() === '13') { input.disabled = true; nextPhase(); } };
+        }
+
+        // --- ЭТАП 6: ВЗЛОМ ШИФРА ---
+        function initPhase6(container) {
+            const targetCode = "419"; // Загаданный код
+            container.innerHTML = `
+                <div style="margin-bottom: 20px; font-size: 14px; color: #aaa; text-align:center;">
+                    > ДОСТУП К ЯДРУ ЗАБЛОКИРОВАН.<br>
+                    > ПОДБЕРИТЕ 3-ЗНАЧНЫЙ КОД ДОСТУПА.<br>
+                    > <span style="color:var(--ok)">ЗЕЛЕНЫЙ</span> - ЦИФРА НА СВОЕМ МЕСТЕ. <span style="color:var(--warn)">ЖЕЛТЫЙ</span> - ЦИФРА ЕСТЬ, НО НЕ ТАМ.
+                </div>
+                <div class="mastermind-logs" id="mmLogs">> СИСТЕМА ГОТОВА К ВВОДУ...</div>
+                <input type="text" id="mmInput" class="code-input mm-input" maxlength="3" placeholder="---" autocomplete="off">
+            `;
+
+            const input = document.getElementById('mmInput');
+            const logs = document.getElementById('mmLogs');
+            setTimeout(() => input.focus(), 100);
+
+            input.oninput = () => {
+                if (input.value.length === 3) {
+                    const guess = input.value;
+                    input.value = '';
+                    
+                    let exact = 0;
+                    let wrongPos = 0;
+                    let guessArr = guess.split('');
+                    let targetArr = targetCode.split('');
+                    
+                    // Проверка на точное совпадение
+                    for (let i = 0; i < 3; i++) {
+                        if (guessArr[i] === targetArr[i]) {
+                            exact++;
+                            targetArr[i] = null; // Убираем, чтобы не посчитать дважды
+                            guessArr[i] = null;
+                        }
+                    }
+                    // Проверка на неверную позицию
+                    for (let i = 0; i < 3; i++) {
+                        if (guessArr[i] !== null) {
+                            const idx = targetArr.indexOf(guessArr[i]);
+                            if (idx !== -1) {
+                                wrongPos++;
+                                targetArr[idx] = null;
+                            }
+                        }
+                    }
+
+                    const logMsg = document.createElement('div');
+                    logMsg.innerHTML = `> ВВОД: ${guess} | <span style="color:var(--ok)">ТОЧНО: ${exact}</span> | <span style="color:var(--warn)">НЕ ТАМ: ${wrongPos}</span>`;
+                    logs.appendChild(logMsg);
+                    logs.scrollTop = logs.scrollHeight;
+
+                    if (exact === 3) {
+                        input.disabled = true;
+                        nextPhase();
+                    }
+                }
+            };
+        }
+
+        // --- ЭТАП 7: ЛОГИЧЕСКАЯ БОМБА ---
+        function initPhase7(container) {
+            container.innerHTML = `
+                <div style="margin-bottom: 20px; font-size: 14px; color: #aaa; text-align:center;">
+                    > ОБНАРУЖЕНА ЛОГИЧЕСКАЯ БОМБА.<br>
+                    > ЗАПОМНИТЕ ПАТТЕРН АКТИВАЦИИ И ПОВТОРИТЕ ЕГО.
+                </div>
+                <div class="bomb-grid" id="bombGrid"></div>
+                <div id="bombStatus" style="margin-top: 20px; color: var(--warn); font-size: 18px;">ПОДГОТОВКА...</div>
+            `;
+
+            const grid = document.getElementById('bombGrid');
+            const status = document.getElementById('bombStatus');
+            const cells = [];
+            
+            for (let i = 0; i < 9; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'bomb-cell';
+                cell.dataset.id = i;
+                grid.appendChild(cell);
+                cells.push(cell);
+            }
+
+            let sequence = [];
+            let playerSequence = [];
+            let round = 0;
+            const maxRounds = 3;
+
+            function startRound() {
+                playerSequence = [];
+                sequence = [];
+                status.innerText = `РАУНД ${round + 1} / ${maxRounds}`;
+                
+                // Генерируем случайную последовательность из 3-5 шагов (зависит от раунда)
+                const seqLength = round + 3; 
+                for (let i = 0; i < seqLength; i++) {
+                    sequence.push(Math.floor(Math.random() * 9));
+                }
+
+                // Проигрываем последовательность
+                let i = 0;
+                const playInterval = setInterval(() => {
+                    if (i >= sequence.length) {
+                        clearInterval(playInterval);
+                        status.innerText = "ВАШ ХОД";
+                        return;
+                    }
+                    const cell = cells[sequence[i]];
+                    cell.classList.add('flash');
+                    setTimeout(() => cell.classList.remove('flash'), 400);
+                    i++;
+                }, 600);
+
+                cells.forEach(c => c.onclick = handleCellClick);
+            }
+
+            function handleCellClick(e) {
+                if (status.innerText !== "ВАШ ХОД") return;
+                
+                const clickedId = parseInt(e.target.dataset.id);
+                e.target.classList.add('correct');
+                setTimeout(() => e.target.classList.remove('correct'), 200);
+                
+                playerSequence.push(clickedId);
+                
+                const currentStep = playerSequence.length - 1;
+                if (playerSequence[currentStep] !== sequence[currentStep]) {
+                    // Ошибка
+                    status.innerText = "СБОЙ СИНХРОНИЗАЦИИ";
+                    status.style.color = "var(--err)";
+                    cells.forEach(c => c.onclick = null);
+                    setTimeout(() => {
+                        status.style.color = "var(--warn)";
+                        startRound(); // Перезапуск раунда
+                    }, 1500);
+                    return;
+                }
+
+                if (playerSequence.length === sequence.length) {
+                    // Раунд пройден
+                    cells.forEach(c => c.onclick = null);
+                    round++;
+                    if (round >= maxRounds) {
+                        status.innerText = "БОМБА ОБЕЗВРЕЖЕНА";
+                        status.style.color = "var(--ok)";
+                        setTimeout(nextPhase, 1000);
+                    } else {
+                        status.innerText = "УСПЕХ! СЛЕДУЮЩИЙ РАУНД...";
+                        setTimeout(startRound, 1000);
+                    }
+                }
+            }
+
+            // Запуск после короткой паузы
+            setTimeout(startRound, 1000);
+        }
+
+        // Запуск
+        loadPhase(1);
+    </script>
+</body>
+</html>
