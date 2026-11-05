@@ -159,7 +159,7 @@
             const formattedTitle = node.title.replace(/\n/g, '<br>');
             
             const wordForGlyph = node.title.split('\n')[0].replace(/\[.*?\]/g, '').trim();
-            const glyphSVG = createMapSVG(getMapPath(wordForGlyph));
+            const glyphSVG = createSVG(getPath(wordForGlyph));
 
             el.innerHTML = `
                 <div class="node-glyph">${glyphSVG}</div>
