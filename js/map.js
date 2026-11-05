@@ -154,7 +154,7 @@
                         el.onclick = (e) => {
                             e.preventDefault();
                             localStorage.setItem('s9_edr_gateway_trigger', 'true');
-                            window.location.href = 'edr.html?mode=gateway';
+                            window.location.href = 'edr.html';
                         };
                     }
                 } else {
