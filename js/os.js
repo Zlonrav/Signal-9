@@ -135,7 +135,7 @@
 
                 if (errors >= 3) {
                     localStorage.setItem('s9_os_errors', '0');
-                    // Вместо перезагрузки отправляем в EDR
+                    localStorage.setItem('s9_edr_os_trigger', 'true'); 
                     setTimeout(() => { window.location.href = 'edr.html?mode=os'; }, 1500);
                 }
             }
