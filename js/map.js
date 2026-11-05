@@ -102,7 +102,11 @@
             let lineClass = 'link-locked'; // По умолчанию тусклая
             let isActive = false;
 
-            if (sourceStatus === 'ERROR' || targetStatus === 'ERROR') {
+            // Если хотя бы один узел OFFLINE, линия должна быть тусклой (или скрытой), независимо от ERROR
+            if (sourceStatus === 'OFFLINE' || targetStatus === 'OFFLINE') {
+                lineClass = 'link-locked';
+                isActive = false;
+            } else if (sourceStatus === 'ERROR' || targetStatus === 'ERROR') {
                 lineClass = 'link-error'; // Красная аварийная
                 isActive = true;
             } else if (sourceStatus === 'ONLINE' && targetStatus === 'ONLINE') {
