@@ -73,6 +73,7 @@
                     if(e.target.value === ans.toString()) { 
                         localStorage.setItem('s9_edr_os_passed', 'true');
                         localStorage.removeItem('s9_edr_os_trigger'); // Сжигаем триггер
+                        localStorage.setItem('s9_os_fixed', 'true'); // <--- ТЕПЕРЬ ОС СЧИТАЕТСЯ ПОЧИНЕННОЙ
                         localStorage.setItem('s9_os_errors', '0'); 
                         content.innerHTML = `<h2 style="color: var(--ok);">ЛОГИКА ПОДТВЕРЖДЕНА</h2><p>Возврат в ОС...</p>`;
                         setTimeout(() => { window.location.href = 'os.html'; }, 2000);
