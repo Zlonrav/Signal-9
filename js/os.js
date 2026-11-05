@@ -108,45 +108,40 @@
             if (!qubitEl) return;
 
             let brokenList = JSON.parse(localStorage.getItem('s9_os_broken_qubits') || '[]');
-            let errors = parseInt(localStorage.getItem('s9_os_errors') || '0', 10);
 
             if (qubitEl.classList.contains('broken')) {
+                // Если чиним сломанный
                 qubitEl.classList.remove('broken');
                 qubitEl.classList.add('active');
                 
-                // ДОБАВЛЯЕМ ЗАДЕРЖКУ ПРИ РЕМОНТЕ
                 const randomDelay = (Math.random() * -2).toFixed(2);
                 qubitEl.style.setProperty('--anim-delay', `${randomDelay}s`);
                 
-                // ... дальше твой код ремонта ...
-                
                 brokenList = brokenList.filter(item => item !== coord);
                 localStorage.setItem('s9_os_broken_qubits', JSON.stringify(brokenList));
-                checkAllFixed();
+                
+                // ПРОВЕРКА: Если починили ПОСЛЕДНИЙ кубит (список стал пустым)
+                if (brokenList.length === 0) {
+                    localStorage.setItem('s9_edr_os_trigger', 'true');
+                    if (window.printToConsole) {
+                        window.printToConsole(`<span class="err">[ОС] КРИТИЧЕСКИЙ СБОЙ СИНХРОНИЗАЦИИ ЯДРА. ТРЕБУЕТСЯ ПРОВЕРКА EDR.</span>`);
+                    }
+                    setTimeout(() => { window.location.href = 'edr.html'; }, 2000);
+                }
+
             } else {
+                // Если ломаем рабочий
                 qubitEl.classList.remove('active');
                 qubitEl.classList.add('broken');
                 
                 if (!brokenList.includes(coord)) brokenList.push(coord);
                 localStorage.setItem('s9_os_broken_qubits', JSON.stringify(brokenList));
                 
-                errors++;
-                localStorage.setItem('s9_os_errors', errors.toString());
-
-                if (errors >= 3) {
-                    localStorage.setItem('s9_os_errors', '0');
-                    localStorage.setItem('s9_edr_os_trigger', 'true');
-                    
-                    // Выводим сообщение в консоль
-                    if (window.printToConsole) {
-                        window.printToConsole(`<span class="err">[ОС] ОБНАРУЖЕНА ДЕСТРУКТИВНАЯ ДЕЯТЕЛЬНОСТЬ. ПЕРЕНАПРАВЛЕНИЕ В EDR ДЛЯ ПРОВЕРКИ.</span>`);
-                    }
-                    
-                    // Ждем 2 секунды и переходим без параметров
-                    setTimeout(() => { window.location.href = 'edr.html'; }, 2000);
-                }
+                // Логику 3-х ошибок убрали. Игрок сам увидит, что сломал лишнее.
             }
         });
+
+        // Функцию checkAllFixed мы удалили, так как s9_os_fixed теперь ставится в EDR.
 
         function checkAllFixed() {
             const brokenList = JSON.parse(localStorage.getItem('s9_os_broken_qubits') || '[]');
