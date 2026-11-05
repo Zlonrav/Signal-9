@@ -349,7 +349,10 @@
         });
     }
 
-    bgOverlay.addEventListener('click', () => toggleConsole(false));
+    const closeBtn = document.getElementById('console-close-btn');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => toggleConsole(false));
+    }
 
     input.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
