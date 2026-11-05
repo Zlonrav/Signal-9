@@ -135,8 +135,15 @@
 
                 if (errors >= 3) {
                     localStorage.setItem('s9_os_errors', '0');
-                    localStorage.setItem('s9_edr_os_trigger', 'true'); 
-                    setTimeout(() => { window.location.href = 'edr.html?mode=os'; }, 1500);
+                    localStorage.setItem('s9_edr_os_trigger', 'true');
+                    
+                    // Выводим сообщение в консоль
+                    if (window.printToConsole) {
+                        window.printToConsole(`<span class="err">[ОС] ОБНАРУЖЕНА ДЕСТРУКТИВНАЯ ДЕЯТЕЛЬНОСТЬ. ПЕРЕНАПРАВЛЕНИЕ В EDR ДЛЯ ПРОВЕРКИ.</span>`);
+                    }
+                    
+                    // Ждем 2 секунды и переходим без параметров
+                    setTimeout(() => { window.location.href = 'edr.html'; }, 2000);
                 }
             }
         });
