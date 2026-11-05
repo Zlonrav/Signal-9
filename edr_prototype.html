@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EDR // ПРОТОТИП</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Michroma&display=swap');
+
+        :root {
+            --neon: #00f2ff;
+            --bg: #010306;
+            --err: #ff3333;
+            --ok: #00ff44;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--neon);
+            font-family: 'JetBrains Mono', monospace;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        .header {
+            position: absolute;
+            top: 20px;
+            font-family: 'Michroma', sans-serif;
+            font-size: 16px;
+            letter-spacing: 4px;
+            text-shadow: 0 0 10px var(--neon);
+        }
+
+        .phase-title {
+            position: absolute;
+            top: 60px;
+            font-size: 12px;
+            letter-spacing: 2px;
+            opacity: 0.7;
+        }
+
+        #game-area {
+            width: 800px;
+            height: 500px;
+            border: 1px solid rgba(0, 242, 255, 0.3);
+            background: rgba(2, 10, 15, 0.8);
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.1), inset 0 0 20px rgba(0, 242, 255, 0.05);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            display: flex;
+            gap: 20px;
+        }
+
+        button {
+            background: transparent;
+            border: 1px solid var(--neon);
+            color: var(--neon);
+            padding: 8px 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        button:hover {
+            background: rgba(0, 242, 255, 0.1);
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.3);
+        }
+
+        /* --- Механика 1: Поток --- */
+        .log-stream {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .log-line {
+            position: absolute;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: color 0.2s;
+            padding: 2px 10px;
+        }
+        .log-line:hover { background: rgba(0, 242, 255, 0.2); }
+        .log-line.bad { color: var(--err); text-shadow: 0 0 8px var(--err); }
+        .log-line.safe { color: rgba(255, 255, 255, 0.5); }
+
+        /* --- Механика 2: Граф --- */
+        .graph-container {
+            display: flex;
+            align-items: center;
+            gap: 50px;
+        }
+        .node {
+            width: 80px; height: 80px;
+            border: 2px solid var(--neon);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            text-align: center; font-size: 10px;
+            position: relative;
+        }
+        .node.bad { border-color: var(--err); color: var(--err); cursor: pointer; animation: pulseRed 1s infinite; }
+        .edge {
+            width: 50px; height: 2px; background: rgba(0, 242, 255, 0.3);
+        }
+        .edge.bad { background: var(--err); cursor: pointer; height: 4px; }
+
+        /* --- Механика 3: Песочница --- */
+        .code-box {
+            border: 1px solid rgba(0, 242, 255, 0.3);
+            padding: 20px;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            text-align: left;
+            width: 400px;
+            background: #000;
+        }
+        .code-input {
+            background: transparent; border: none; border-bottom: 1px solid var(--neon);
+            color: var(--neon); font-family: inherit; font-size: 16px;
+            text-align: center; outline: none; padding: 5px; width: 200px;
+        }
+
+        /* --- Механика 4: Сетевой шлюз --- */
+        .gateway-container {
+            display: flex; gap: 40px; width: 100%; justify-content: center;
+        }
+        .gw-column {
+            width: 250px; display: flex; flex-direction: column; gap: 10px;
+        }
+        .gw-header { text-align: center; border-bottom: 1px solid var(--neon); padding-bottom: 5px; margin-bottom: 10px; }
+        .packet {
+            border: 1px solid rgba(0, 242, 255, 0.3); padding: 10px; font-size: 11px; cursor: pointer;
+        }
+        .packet:hover { background: rgba(0, 242, 255, 0.1); }
+        .packet.safe { color: rgba(255, 255, 255, 0.5); cursor: default; }
+        .packet.bad { border-color: var(--err); color: var(--err); }
+
+        /* --- Механика 5: Целостность --- */
+        .files-table {
+            width: 100%; border-collapse: collapse; font-size: 12px;
+        }
+        .files-table th, .files-table td {
+            border: 1px solid rgba(0, 242, 255, 0.2); padding: 8px 15px; text-align: left;
+        }
+        .files-table tr:hover { background: rgba(0, 242, 255, 0.05); cursor: pointer; }
+        .files-table tr.target { color: var(--err); border-color: var(--err); }
+
+        /* --- Механика 6: Процессы --- */
+        .process-list {
+            width: 100%; font-size: 12px;
+        }
+        .process-row {
+            display: flex; justify-content: space-between; padding: 5px 10px;
+            border-bottom: 1px solid rgba(0, 242, 255, 0.1); cursor: pointer;
+        }
+        .process-row:hover { background: rgba(0, 242, 255, 0.1); }
+        .process-row.bad { color: var(--err); font-weight: bold; }
+
+        @keyframes pulseRed {
+            0%, 100% { box-shadow: 0 0 10px rgba(255, 51, 51, 0.2); }
+            50% { box-shadow: 0 0 20px rgba(255, 51, 51, 0.6); }
+        }
+
+        .msg {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 24px; font-weight: bold; z-index: 100;
+            text-shadow: 0 0 10px currentColor; pointer-events: none;
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .msg.show { opacity: 1; }
+        .msg.err { color: var(--err); }
+        .msg.ok { color: var(--ok); }
+    </style>
+</head>
+<body>
+
+    <div class="header">EDR // СЕКТОР ПРОВЕРКИ ЛОГИКИ</div>
+    <div class="phase-title" id="phaseTitle">ЭТАП 1: СИГНАТУРНЫЙ АНАЛИЗ</div>
+
+    <div id="game-area">
+        <div class="msg" id="message"></div>
+        <div id="content" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; position: relative;"></div>
+    </div>
+
+    <div class="controls">
+        <button onclick="resetGame()">Сброс</button>
+        <button onclick="skipPhase()">Пропустить</button>
+    </div>
+
+    <script>
+        let currentPhase = 1;
+        const MAX_PHASES = 6;
+        let phaseInterval = null;
+
+        function showMsg(text, type) {
+            const msg = document.getElementById('message');
+            msg.innerText = text;
+            msg.className = `msg show ${type}`;
+            setTimeout(() => msg.classList.remove('show'), 1500);
+        }
+
+        function loadPhase(phase) {
+            if (phaseInterval) clearInterval(phaseInterval);
+            const content = document.getElementById('content');
+            content.innerHTML = '';
+            document.getElementById('phaseTitle').innerText = `ЭТАП ${phase}: ` + 
+                ["СИГНАТУРНЫЙ АНАЛИЗ", "ПОВЕДЕНЧЕСКИЙ АНАЛИЗ", "ПЕСОЧНИЦА (КОД)", "СЕТЕВОЙ ШЛЮЗ (IDS)", "ПРОВЕРКА ЦЕЛОСТНОСТИ", "ОЧИСТКА ПАМЯТИ"][phase-1];
+
+            if (phase === 1) initPhase1(content);
+            if (phase === 2) initPhase2(content);
+            if (phase === 3) initPhase3(content);
+            if (phase === 4) initPhase4(content);
+            if (phase === 5) initPhase5(content);
+            if (phase === 6) initPhase6(content);
+            if (phase > 6) {
+                document.getElementById('phaseTitle').innerText = "ПРОВЕРКА ЗАВЕРШЕНА";
+                content.innerHTML = '<h1 style="color: var(--ok); text-shadow: 0 0 20px var(--ok);">ЛОГИКА ВОССТАНОВЛЕНА</h1>';
+            }
+        }
+
+        function nextPhase() {
+            showMsg("ПРОВЕРКА ПРОЙДЕНА", "ok");
+            currentPhase++;
+            setTimeout(() => loadPhase(currentPhase), 1000);
+        }
+
+        function resetGame() {
+            currentPhase = 1;
+            loadPhase(1);
+        }
+
+        function skipPhase() {
+            currentPhase++;
+            if (currentPhase > MAX_PHASES) currentPhase = MAX_PHASES + 1;
+            loadPhase(currentPhase);
+        }
+
+        // --- МЕХАНИКА 1: ПОТОК ЛОГОВ ---
+        function initPhase1(container) {
+            const stream = document.createElement('div');
+            stream.className = 'log-stream';
+            container.appendChild(stream);
+            let lines = 0;
+            let found = 0;
+            phaseInterval = setInterval(() => {
+                if (lines > 30) return;
+                const line = document.createElement('div');
+                const isBad = Math.random() > 0.6;
+                line.className = `log-line ${isBad ? 'bad' : 'safe'}`;
+                line.innerText = isBad ? `0x${Math.random().toString(16).slice(2,6).toUpperCase()} | ERR_INVALID_SIG` : `0x${Math.random().toString(16).slice(2,6).toUpperCase()} | SYSTEM_READ_OK`;
+                line.style.top = `${Math.random() * 90}%`;
+                line.style.left = `${100 + Math.random() * 50}%`;
+                
+                line.onclick = () => {
+                    if (isBad) {
+                        line.style.display = 'none';
+                        found++;
+                        if (found >= 3) { clearInterval(phaseInterval); nextPhase(); }
+                    } else {
+                        line.classList.add('bad');
+                        setTimeout(() => line.remove(), 300);
+                    }
+                };
+                stream.appendChild(line);
+                lines++;
+
+                let left = parseFloat(line.style.left);
+                const move = setInterval(() => {
+                    left -= 1;
+                    line.style.left = `${left}%`;
+                    if (left < -20) { clearInterval(move); line.remove(); }
+                }, 30);
+            }, 400);
+        }
+
+        // --- МЕХАНИКА 2: ГРАФ ЗАВИСИМОСТЕЙ ---
+        function initPhase2(container) {
+            const graph = document.createElement('div');
+            graph.className = 'graph-container';
+            
+            let found = false;
+            const badIdx = Math.floor(Math.random() * 3);
+            
+            for (let i = 0; i < 4; i++) {
+                const node = document.createElement('div');
+                node.className = `node ${i === 3 ? 'bad' : ''}`;
+                node.innerText = i === 3 ? 'OVERRIDE' : 'SYS';
+                node.onclick = () => {
+                    if (i === 3 && !found) { found = true; nextPhase(); }
+                };
+                
+                if (i > 0) {
+                    const edge = document.createElement('div');
+                    edge.className = `edge ${i === 3 ? 'bad' : ''}`;
+                    edge.onclick = () => {
+                        if (i === 3 && !found) { found = true; nextPhase(); }
+                    };
+                    graph.appendChild(edge);
+                }
+                graph.appendChild(node);
+            }
+            container.appendChild(graph);
+        }
+
+        // --- МЕХАНИКА 3: ПЕСОЧНИЦА ---
+        function initPhase3(container) {
+            const wrap = document.createElement('div');
+            wrap.style.textAlign = 'center';
+            wrap.innerHTML = `
+                <div class="code-box">
+                    LET X = 10<br>
+                    LOOP 3 TIMES:<br>
+                    &nbsp;&nbsp;X = X * 2 - 5<br>
+                    PRINT X
+                </div>
+                <div>ВВЕДИТЕ РЕЗУЛЬТАТ ВЫПОЛНЕНИЯ ПРОГРАММЫ:</div>
+                <input type="number" id="codeAns" class="code-input" style="margin-top: 15px;" placeholder="X = ?" onkeydown="if(event.key==='Enter') checkCode()">
+                <button onclick="checkCode()" style="margin-top: 15px; font-size: 10px; padding: 5px 15px;">ПОДТВЕРДИТЬ</button>
+            `;
+            container.appendChild(wrap);
+            
+            window.checkCode = () => {
+                const val = document.getElementById('codeAns').value;
+                // X=10 -> (10*2-5)=15 -> (15*2-5)=25 -> (25*2-5)=45
+                if (val === '45') nextPhase();
+                else { showMsg("НЕВЕРНЫЙ ОТВЕТ", "err"); document.getElementById('codeAns').value = ''; }
+            };
+        }
+
+        // --- МЕХАНИКА 4: СЕТЕВОЙ ШЛЮЗ ---
+        function initPhase4(container) {
+            const gw = document.createElement('div');
+            gw.className = 'gateway-container';
+            gw.innerHTML = `
+                <div class="gw-column">
+                    <div class="gw-header">ВХОДЯЩИЕ ПАКЕТЫ</div>
+                    <div class="packet safe">#01 | SRC: 192.168.0.1 | SIZE: 1KB</div>
+                    <div class="packet safe">#02 | SRC: 10.0.0.5 | SIZE: 4KB</div>
+                    <div class="packet bad" onclick="this.style.display='none'; setTimeout(nextPhase, 500)">#03 | SRC: 0.0.0.0 | SIZE: 999TB</div>
+                    <div class="packet safe">#04 | SRC: 10.0.0.8 | SIZE: 2KB</div>
+                </div>
+                <div class="gw-column">
+                    <div class="gw-header" style="color: var(--err); border-color: var(--err);">КАРАНТИН</div>
+                    <div id="quarantine" style="border: 1px dashed var(--err); height: 100px;"></div>
+                </div>
+            `;
+            container.appendChild(gw);
+        }
+
+        // --- МЕХАНИКА 5: ЦЕЛОСТНОСТЬ ---
+        function initPhase5(container) {
+            const table = document.createElement('table');
+            table.className = 'files-table';
+            table.innerHTML = `
+                <tr><th>ФАЙЛ</th><th>ЭТАЛОННЫЙ ХЭШ</th><th>ТЕКУЩИЙ ХЭШ</th></tr>
+                <tr onclick="nextPhase()"><td>sys_core.dll</td><td>AAAA-BBBB-CCCC</td><td>AAAA-BBBB-CCCC</td></tr>
+                <tr class="target" onclick="nextPhase()"><td>kernel_idle.bin</td><td>1234-5678-90AB</td><td>1234-5678-90XX</td></tr>
+                <tr onclick="nextPhase()"><td>audio_drv.sys</td><td>FFFF-1111-2222</td><td>FFFF-1111-2222</td></tr>
+            `;
+            container.appendChild(table);
+        }
+
+        // --- МЕХАНИКА 6: ПРОЦЕССЫ ---
+        function initPhase6(container) {
+            const list = document.createElement('div');
+            list.className = 'process-list';
+            container.appendChild(list);
+            
+            let found = false;
+            phaseInterval = setInterval(() => {
+                if (found) return;
+                list.innerHTML = `
+                    <div class="process-row"><span>PID: 1024 | SYS_KERNEL</span><span>RAM: 128MB</span></div>
+                    <div class="process-row"><span>PID: 2048 | AUDIO_DRV</span><span>RAM: 32MB</span></div>
+                    <div class="process-row bad" onclick="this.style.display='none'; if(!found){found=true; nextPhase();}"><span>PID: 9999 | SYS_KERNEL (v2)</span><span>RAM: 4096MB</span></div>
+                    <div class="process-row"><span>PID: 4096 | SENSOR_01</span><span>RAM: 16MB</span></div>
+                `;
+            }, 1000); // Обновляем список, чтобы он выглядел "живым"
+        }
+
+        // Запуск
+        loadPhase(1);
+    </script>
+</body>
+</html>
