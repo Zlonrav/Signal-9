@@ -41,13 +41,10 @@
                         const isArchiveFixed = localStorage.getItem('s9_archive_fixed') === 'true';
                         
                         if (!isArchiveFixed) {
-                            // Если Архив еще не починен, сохраняем первые 2 (эталонные) 
-                            // и добавляем 8 самых новых.
-                            const manualPhrases = phrases.slice(0, 2);
-                            const newestPhrases = phrases.slice(-8);
-                            phrases = [...manualPhrases, ...newestPhrases];
+                            const refs = phrases.filter(p => p.is_reference);
+                            const others = phrases.filter(p => !p.is_reference);
+                            phrases = [...refs, ...others.slice(-8)];
                         } else {
-                            // Если Архив починен, просто оставляем 10 последних
                             phrases = phrases.slice(phrases.length - 10);
                         }
                     }
