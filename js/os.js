@@ -70,7 +70,7 @@
                     if (!brokenList.includes(coord)) {
                         brokenList.push(coord);
                     }
-                }
+                } 
                 localStorage.setItem('s9_os_broken_qubits', JSON.stringify(brokenList));
             }
 
