@@ -246,15 +246,19 @@
                         if (count < 10) {
                             statusLabel.innerText = `${foundWord} [ЭТАЛОНОВ: ${count}/10]`;
                             statusLabel.style.color = ""; 
+                        } else if (localStorage.getItem('s9_archive_calibrated') === 'true') {
+                            // Если калибровка уже была пройдена ранее, просто показываем текст и ничего не трогаем
+                            statusLabel.innerText = "КАЛИБРОВКА УЖЕ ЗАВЕРШЕНА";
+                            statusLabel.style.color = "#00ff44"; 
                         } else {
+                            // Если калибровка происходит впервые, создаём фразы
                             statusLabel.innerText = "КАЛИБРОВКА ЗАВЕРШЕНА";
                             statusLabel.style.color = "#00ff44"; 
                             localStorage.setItem('s9_archive_calibrated', 'true');
                             
-                            // --- НОВАЯ ЛОГИКА ДЛЯ АРХИВА (ФРАЗЫ) ---
                             localStorage.removeItem('s9_phrases_data');
-                            const phrase1 = TARGET_WORDS.slice(0, 5); // СИСТЕМА, ПАМЯТЬ, КОД, СИГНАЛ, ВЕКТОР
-                            const phrase2 = TARGET_WORDS.slice(5, 10); // АРХИВ, ЗВЕЗДА, ОРБИТА, МОДУЛЬ, ДАННЫЕ
+                            const phrase1 = TARGET_WORDS.slice(0, 5); 
+                            const phrase2 = TARGET_WORDS.slice(5, 10); 
                             const now = Date.now();
                             
                             const phrasesData = [
@@ -263,14 +267,8 @@
                             ];
                             
                             localStorage.setItem('s9_phrases_data', JSON.stringify(phrasesData));
-                            
-                            // Запоминаем, что на момент калибровки у нас 2 фразы
                             localStorage.setItem('s9_archive_baseline_count', '2');
-                            
-                            // ВАЖНО: Время калибровки ставим на 2 секунды ПОЗЖЕ, 
-                            // чтобы эталонные фразы гарантированно считались "старыми"
                             localStorage.setItem('s9_archive_calibration_time', (now + 2000).toString());
-                            // ----------------------------------------
 
                             setTimeout(() => {
                                 window.location.href = 'archive.html';
