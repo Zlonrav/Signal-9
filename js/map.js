@@ -48,19 +48,19 @@
         links: [
             // Крест от центра
             { s: 'hub', t: 'tools' }, { s: 'hub', t: 'map' }, 
-            { s: 'hub', t: 'reactor' }, { s: 'hub', t: 'edr' },
-
-            // Верхние ветки
-            { s: 'tools', t: 'uninitialized' }, { s: 'tools', t: 'res1' },
+            { s: 'hub', t: 'core' }, { s: 'hub', t: 'edr' },
+        
+            // Верхняя ветка
+            { s: 'tools', t: 'os' }, { s: 'tools', t: 'sector00' },
             
             // Левая ветка
-            { s: 'reactor', t: 'telemetry' }, 
+            { s: 'core', t: 'telemetry' }, { s: 'core', t: 'os' }, { s: 'core', t: 'archive' },
             
             // Правая ветка
-            { s: 'edr', t: 'hangar' }, { s: 'edr', t: 'res2' },
+            { s: 'edr', t: 'gateway' }, { s: 'edr', t: 'sector00' }, { s: 'edr', t: 'sectorff' },
             
-            // Низ (связь карты)
-            { s: 'map', t: 'archive' }, { s: 'map', t: 'res2' }
+            // Низ
+            { s: 'map', t: 'archive' }, { s: 'map', t: 'sectorff' }
         ]
     };
 
