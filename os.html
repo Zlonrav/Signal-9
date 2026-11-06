@@ -8,11 +8,15 @@
     <link rel="stylesheet" type="text/css" href="style-tools.css">
     <link rel="stylesheet" type="text/css" href="style-chat-terminal.css">
     <style>
+        /* Принудительно скрываем всё лишнее, что может вылезти из внешних CSS */
         body.tools-page { 
             overflow: hidden; height: 100vh; background-color: #010306; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0;
             background-image: radial-gradient(circle at center, #03101a 0%, #010306 100%);
         }
+
+        /* Прячем старые системные элементы, если они мешают */
+        .chat-system { display: none !important; }
 
         .os-header { 
             position: absolute; top: 25px; left: 50%; transform: translateX(-50%);
@@ -65,22 +69,34 @@
         }
         #os-lockdown.hidden { opacity: 0; pointer-events: none; }
 
-        .captcha-box { text-align: center; }
+        .captcha-box { text-align: center; width: 100%; }
         .captcha-box h2 { color: var(--neon); font-family: 'Michroma', sans-serif; font-size: 16px; margin-bottom: 20px; text-shadow: 0 0 10px var(--neon); }
         .captcha-box p { color: #aaa; font-size: 12px; margin-bottom: 15px; line-height: 1.5; }
         
-        .terminal-input {
-            background: transparent; border: none; border-bottom: 2px solid var(--neon);
-            color: var(--neon); font-family: 'JetBrains Mono', monospace; font-size: 24px;
-            text-align: center; outline: none; padding: 10px; width: 300px;
-            letter-spacing: 4px; transition: border-color 0.2s, box-shadow 0.2s;
-            margin: 15px auto 0; display: block;
+        /* ЖЕСТКО ЗАДАЕМ СТИЛИ ДЛЯ ИНПУТА, ЧТОБЫ ПЕРЕБИТЬ ВСЕ ВНЕШНИЕ */
+        input#captcha-input.terminal-input {
+            background: transparent !important; 
+            border: none !important; 
+            border-bottom: 2px solid var(--neon) !important;
+            color: var(--neon) !important; 
+            font-family: 'JetBrains Mono', monospace !important; 
+            font-size: 24px !important;
+            text-align: center !important; 
+            outline: none !important; 
+            padding: 10px !important; 
+            width: 300px !important;
+            letter-spacing: 4px !important; 
+            transition: border-color 0.2s, box-shadow 0.2s !important;
+            margin: 15px auto 0 !important; 
+            display: block !important;
+            position: static !important;
+            box-shadow: none;
         }
         
         /* ФОКУС: ТОЛЬКО НЕОН, БЕЗ БЕЛОГО */
-        .terminal-input:focus { 
-            border-bottom-color: var(--neon); 
-            box-shadow: 0 5px 10px -5px var(--neon); 
+        input#captcha-input.terminal-input:focus { 
+            border-bottom-color: var(--neon) !important; 
+            box-shadow: 0 5px 10px -5px var(--neon) !important; 
         }
 
         /* --- СЕТКА КУБИТОВ --- */
@@ -128,7 +144,8 @@
 </head>
 <body class="tools-page">
 
-    <div class="chat-system">
+    <!-- Скрываем старый чат, чтобы он не вылезал -->
+    <div class="chat-system" style="display: none;">
         <div id="quest-field" class="question" onclick="handleChatClick()"></div>
         <div id="answer-field" class="answer-field"></div>
     </div>
