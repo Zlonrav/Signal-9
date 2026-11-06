@@ -6,10 +6,7 @@
     const isToolsPage = path.includes('tools.html');
     const isEdrPage = path.includes('edr.html');
 
-    // Проверка на "тюрьму" EDR
-    const isEdrLocked = localStorage.getItem('s9_edr_os_trigger') === 'true' || 
-                        localStorage.getItem('s9_edr_gateway_trigger') === 'true';
-
+    // Стандартная проверка авторизации
     if (!hasAccess && !isLoginPage && !isToolsPage) {
         window.location.replace('login.html');
     }
@@ -18,7 +15,10 @@
         window.location.replace('index.html');
     }
 
-    // Если EDR заблокирован, а игрок пытается уйти с него — возвращаем
+    // Проверка «тюрьмы» EDR
+    const isEdrLocked = localStorage.getItem('s9_edr_os_trigger') === 'true' || localStorage.getItem('s9_edr_gateway_trigger') === 'true';
+    
+    // Если EDR заблокирован, а игрок пытается открыть любую страницу, кроме EDR и логина — возвращаем его
     if (isEdrLocked && !isEdrPage && !isLoginPage) {
         window.location.replace('edr.html');
     }
