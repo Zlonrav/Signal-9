@@ -117,12 +117,14 @@
             // --- ЧИТ ДЛЯ ОС ---
             if (cmd === 'fix_os') {
                 localStorage.setItem('s9_os_captcha', 'true');
-                localStorage.setItem('s9_os_broken_qubits', '[]'); // <-- Очищаем список сломанных кубитов
-                localStorage.setItem('s9_os_fixed', 'true');
+                localStorage.setItem('s9_os_broken_qubits', '[]'); 
                 localStorage.setItem('s9_os_errors', '0');
+                
+                // Имитируем сбой последнего кубита
+                localStorage.setItem('s9_edr_os_trigger', 'true');
 
-                print('<span class="ok">[ЧИТ] ЗАЩИТА ПЕРИМЕТРА ОБОЙДЕНА. ВСЕ КУБИТЫ ПЕРЕКАЛИБРОВАНЫ.</span>');
-                setTimeout(() => { window.location.href = 'os.html'; }, 1500);
+                print('<span class="err">[ОС] КРИТИЧЕСКИЙ СБОЙ СИНХРОНИЗАЦИИ ЯДРА. ТРЕБУЕТСЯ ПРОВЕРКА EDR.</span>');
+                setTimeout(() => { window.location.href = 'edr.html'; }, 2000);
                 return true; 
             }
 
