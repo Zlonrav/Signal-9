@@ -13,7 +13,7 @@
 
         if (isCaptchaPassed) {
             lockdown.classList.add('hidden');
-            if (hint) hint.style.display = 'none'; // Прячем подсказку
+            if (hint) hint.style.display = 'none';
             initQubits();
             
             if (typeof window.startOsModemSound === 'function' && window.audioCtx) {
@@ -60,7 +60,7 @@
             input.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') checkId();
             });
-            input.addEventListener('input', checkId); // Оставляем и авто-проверку
+            input.addEventListener('input', checkId);
         }
 
         // --- 2. КУБИТЫ ---
@@ -102,6 +102,8 @@
                     grid.appendChild(qubit);
                 }
             }
+            // Даем время отрисоваться DOM перед линиями
+            setTimeout(drawTraces, 100);
             setInterval(drawTraces, 6000);
         }
 
@@ -140,13 +142,15 @@
             }
         });
 
-        // --- 4. ТРАССЫ ---
+        // --- 4. ТРАССЫ (СТРОГО МЕЖДУ СОСЕДЯМИ) ---
         function drawTraces() {
             const tracesLayer = document.getElementById('tracesLayer');
-            if (!tracesLayer) return;
+            const container = document.querySelector('.os-container');
+            if (!tracesLayer || !container) return;
+            
             tracesLayer.innerHTML = ''; 
 
-            const neighborOffsets = [
+            const neighbors = [
                 { dr: 0, dc: 1 }, { dr: 0, dc: -1 }, { dr: 1, dc: 0 }, { dr: -1, dc: 0 },
                 { dr: 1, dc: 1 }, { dr: 1, dc: -1 }, { dr: -1, dc: 1 }, { dr: -1, dc: -1 }
             ];
@@ -154,28 +158,46 @@
             let linesDrawn = 0;
             let attempts = 0;
 
+            const containerRect = container.getBoundingClientRect();
+
             while (linesDrawn < 5 && attempts < 100) {
                 attempts++;
+                
                 const r1 = Math.floor(Math.random() * 5) + 1;
                 const c1 = Math.floor(Math.random() * 5) + 1;
-                const offset = neighborOffsets[Math.floor(Math.random() * neighborOffsets.length)];
+                
+                const offset = neighbors[Math.floor(Math.random() * neighbors.length)];
                 const r2 = r1 + offset.dr;
                 const c2 = c1 + offset.dc;
 
                 if (r2 >= 1 && r2 <= 5 && c2 >= 1 && c2 <= 5) {
-                    const STEP = 85; const OFFSET = 35; 
-                    const x1 = (c1 - 1) * STEP + OFFSET; const y1 = (r1 - 1) * STEP + OFFSET;
-                    const x2 = (c2 - 1) * STEP + OFFSET; const y2 = (r2 - 1) * STEP + OFFSET;
+                    const el1 = document.getElementById(`qubit_r${r1}c${c1}`);
+                    const el2 = document.getElementById(`qubit_r${r2}c${c2}`);
 
-                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                    line.setAttribute('x1', x1); line.setAttribute('y1', y1);
-                    line.setAttribute('x2', x2); line.setAttribute('y2', y2);
-                    line.setAttribute('stroke', 'rgba(0, 242, 255, 0.3)'); 
-                    line.setAttribute('stroke-width', '2');
-                    line.setAttribute('stroke-dasharray', '4 8'); 
-                    line.style.animation = 'flow 24s linear infinite'; 
-                    tracesLayer.appendChild(line);
-                    linesDrawn++;
+                    if (el1 && el2) {
+                        const rect1 = el1.getBoundingClientRect();
+                        const rect2 = el2.getBoundingClientRect();
+
+                        // Вычисляем центры относительно контейнера
+                        const x1 = rect1.left - containerRect.left + rect1.width / 2;
+                        const y1 = rect1.top - containerRect.top + rect1.height / 2;
+                        const x2 = rect2.left - containerRect.left + rect2.width / 2;
+                        const y2 = rect2.top - containerRect.top + rect2.height / 2;
+
+                        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        line.setAttribute('x1', x1);
+                        line.setAttribute('y1', y1);
+                        line.setAttribute('x2', x2);
+                        line.setAttribute('y2', y2);
+                        line.setAttribute('stroke', '#00f2ff'); // Яркий неон
+                        line.setAttribute('stroke-width', '2');
+                        line.setAttribute('stroke-dasharray', '4 8'); 
+                        line.style.filter = 'drop-shadow(0 0 6px #00f2ff)';
+                        line.style.animation = 'flow 20s linear infinite'; 
+                        tracesLayer.appendChild(line);
+                        
+                        linesDrawn++;
+                    }
                 }
             }
         }
