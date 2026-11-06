@@ -10,11 +10,16 @@
     if (window.edrScanInterval) clearInterval(window.edrScanInterval);
     if (window.edrLogInterval) clearInterval(window.edrLogInterval);
 
+    // --- 1. ЗАПУСК ПЕСОЧНИЦЫ ---
     if (osTrigger) {
         startSandbox();
-    } else if (gatewayTrigger) {
+    } 
+    // --- 2. ЗАПУСК ВЗЛОМА ШИФРА ---
+    else if (gatewayTrigger) {
         startMastermind();
-    } else {
+    } 
+    // --- 3. РАБОЧИЙ РЕЖИМ ---
+    else {
         if (osPassed && gatewayPassed) {
             initShieldVisual(false);
         } else if (osPassed || gatewayPassed) {
@@ -24,67 +29,207 @@
         }
     }
 
+    // ==========================================
+    // ЛОГИКА ПЕСОЧНИЦЫ (АЛГОРИТМЫ)
+    // ==========================================
     function startSandbox() {
-        let phase = 1;
-        function renderPhase() {
-            if (phase === 1) {
-                let ans = 24;
-                content.innerHTML = `
-                    <div style="color: var(--warn); margin-bottom: 10px;">ЭТАП 1 / 3</div>
-                    <div class="code-box">
-                        <span style="color:#888">// БАЗОВЫЙ ЦИКЛ</span><br><br>
-                        LET X = 3<br>LOOP 3 TIMES:<br>&nbsp;&nbsp;X = X * 2<br>PRINT X
-                    </div>
-                    <div>ВВЕДИТЕ РЕЗУЛЬТАТ:</div>
-                    <input type="text" id="sbAns" class="code-input" autocomplete="off">
+        let currentLevel = 1;
+        let errorCount = 0;
+        let correctAnswer = 0;
+
+        // Генератор случайных чисел
+        const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+        function generateLevel(level) {
+            let htmlCode = '';
+            let ans = 0;
+            errorCount = 0; // Сбрасываем ошибки при новой задаче
+
+            if (level === 1) {
+                // УРОВЕНЬ 1: Цикл + математика
+                const startX = rand(2, 10);
+                const loop = rand(2, 3);
+                const isMult = Math.random() > 0.5;
+                const val = rand(2, 3);
+                
+                ans = startX;
+                for(let i=0; i<loop; i++) {
+                    if (isMult) ans *= val; else ans += val;
+                }
+
+                htmlCode = `
+                    <div class="code-line"><span class="kw">LET</span> <span class="var">X</span> <span class="op">=</span> <span class="num">${startX}</span></div>
+                    <div class="code-line"><span class="kw">LOOP</span> <span class="num">${loop}</span> TIMES:</div>
+                    <div class="code-line indent"><span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">${isMult ? '*' : '+'}</span> <span class="num">${val}</span></div>
+                    <div class="code-line"><span class="kw">PRINT</span> <span class="var">X</span></div>
                 `;
-                document.getElementById('sbAns').oninput = (e) => { if(e.target.value === ans.toString()) { phase++; renderPhase(); } };
-            } else if (phase === 2) {
-                let ans = 22;
-                content.innerHTML = `
-                    <div style="color: var(--warn); margin-bottom: 10px;">ЭТАП 2 / 3</div>
-                    <div class="code-box">
-                        <span style="color:#888">// ЦИКЛ + УСЛОВИЕ</span><br><br>
-                        LET X = 5<br>LOOP 3 TIMES:<br>&nbsp;&nbsp;X = X + 2<br>IF X > 10:<br>&nbsp;&nbsp;X = X * 2<br>PRINT X
-                    </div>
-                    <div>ВВЕДИТЕ РЕЗУЛЬТАТ:</div>
-                    <input type="text" id="sbAns" class="code-input" autocomplete="off">
+            } 
+            else if (level === 2) {
+                // УРОВЕНЬ 2: Цикл + условие
+                const startX = rand(2, 10);
+                const isAdd = Math.random() > 0.5;
+                const val = rand(2, 3);
+                const threshold = rand(10, 15);
+                
+                ans = startX;
+                for(let i=0; i<3; i++) { ans += isAdd ? val : -val; }
+                if (ans > threshold) ans *= 2;
+
+                htmlCode = `
+                    <div class="code-line"><span class="kw">LET</span> <span class="var">X</span> <span class="op">=</span> <span class="num">${startX}</span></div>
+                    <div class="code-line"><span class="kw">LOOP</span> <span class="num">3</span> TIMES:</div>
+                    <div class="code-line indent"><span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">${isAdd ? '+' : '-'}</span> <span class="num">${val}</span></div>
+                    <div class="code-line"><span class="kw">IF</span> <span class="var">X</span> <span class="op">></span> <span class="num">${threshold}</span>:</div>
+                    <div class="code-line indent"><span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">*</span> <span class="num">2</span></div>
+                    <div class="code-line"><span class="kw">PRINT</span> <span class="var">X</span></div>
                 `;
-                document.getElementById('sbAns').oninput = (e) => { if(e.target.value === ans.toString()) { phase++; renderPhase(); } };
-            } else if (phase === 3) {
-                let ans = 88;
-                content.innerHTML = `
-                    <div style="color: var(--warn); margin-bottom: 10px;">ЭТАП 3 / 3</div>
-                    <div class="code-box">
-                        <span style="color:#888">// ВЕТВЛЕНИЕ</span><br><br>
-                        LET X = 2<br>LET Y = 10<br>LOOP 3 TIMES:<br>&nbsp;&nbsp;X = X * 3<br>&nbsp;&nbsp;IF X > 5: Y = Y + X<br>PRINT Y
-                    </div>
-                    <div>ВВЕДИТЕ РЕЗУЛЬТАТ:</div>
-                    <input type="text" id="sbAns" class="code-input" autocomplete="off">
+            } 
+            else if (level === 3) {
+                // УРОВЕНЬ 3: Две переменные + ветвление
+                const startX = rand(2, 5);
+                const startY = rand(5, 10);
+                const isMult = Math.random() > 0.5;
+                const val = rand(2, 3);
+                const threshold = rand(5, 10);
+
+                let x = startX, y = startY;
+                for(let i=0; i<3; i++) {
+                    if(isMult) x *= val; else x += val;
+                    if (x > threshold) y += x;
+                    else y -= 1;
+                }
+                ans = y;
+
+                htmlCode = `
+                    <div class="code-line"><span class="kw">LET</span> <span class="var">X</span> <span class="op">=</span> <span class="num">${startX}</span></div>
+                    <div class="code-line"><span class="kw">LET</span> <span class="var">Y</span> <span class="op">=</span> <span class="num">${startY}</span></div>
+                    <div class="code-line"><span class="kw">LOOP</span> <span class="num">3</span> TIMES:</div>
+                    <div class="code-line indent"><span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">${isMult ? '*' : '+'}</span> <span class="num">${val}</span></div>
+                    <div class="code-line indent"><span class="kw">IF</span> <span class="var">X</span> <span class="op">></span> <span class="num">${threshold}</span>:</div>
+                    <div class="code-line indent" style="padding-left: 50px;"><span class="var">Y</span> <span class="op">=</span> <span class="var">Y</span> <span class="op">+</span> <span class="var">X</span></div>
+                    <div class="code-line indent"><span class="kw">ELSE</span>:</div>
+                    <div class="code-line indent" style="padding-left: 50px;"><span class="var">Y</span> <span class="op">=</span> <span class="var">Y</span> <span class="op">-</span> <span class="num">1</span></div>
+                    <div class="code-line"><span class="kw">PRINT</span> <span class="var">Y</span></div>
                 `;
-                document.getElementById('sbAns').oninput = (e) => { 
-                    if(e.target.value === ans.toString()) { 
-                        localStorage.setItem('s9_edr_os_passed', 'true');
-                        localStorage.removeItem('s9_edr_os_trigger');
-                        localStorage.setItem('s9_os_fixed', 'true');
-                        localStorage.setItem('s9_os_errors', '0'); 
-                        content.innerHTML = `<h2 style="color: var(--ok);">ЛОГИКА ПОДТВЕРЖДЕНА</h2><p>Возврат в ОС...</p>`;
-                        setTimeout(() => { window.location.href = 'os.html'; }, 2000);
-                    } 
-                };
             }
-            setTimeout(() => { const inp = document.getElementById('sbAns'); if(inp) inp.focus(); }, 100);
+
+            correctAnswer = ans;
+
+            // Рендерим интерфейс
+            content.innerHTML = `
+                <div class="terminal-box">
+                    <div style="color: var(--neon); margin-bottom: 15px; font-size: 12px; letter-spacing: 2px;">// ВЫПОЛНЕНИЕ СКРИПТА В ИЗОЛИРОВАННОЙ СРЕДЕ</div>
+                    <div id="codeOutput" style="margin-bottom: 20px;"></div>
+                    
+                    <div class="input-area">
+                        <div style="margin-bottom: 10px; color: #aaa;">ЭТАП ${level} / 3 — ВВЕДИТЕ РЕЗУЛЬТАТ:</div>
+                        <input type="text" id="sbAnswer" class="terminal-input" autocomplete="off" inputmode="numeric" pattern="[0-9]*">
+                        <button id="sbBtn" class="mobile-btn">ВЫПОЛНИТЬ</button>
+                        <div id="sbStatus" class="status-msg"></div>
+                    </div>
+                </div>
+            `;
+
+            // Печатаем код по строчкам с эффектом
+            const codeOutput = document.getElementById('codeOutput');
+            const lines = htmlCode.trim().split('\n');
+            let lineIdx = 0;
+            
+            function typeLine() {
+                if (lineIdx < lines.length) {
+                    const div = document.createElement('div');
+                    div.innerHTML = lines[lineIdx];
+                    // Добавляем классы к строке
+                    div.className = lines[lineIdx].includes('indent') ? 'code-line indent' : 'code-line';
+                    codeOutput.appendChild(div);
+                    
+                    if (typeof window.playTypeSound === 'function') window.playTypeSound();
+                    
+                    lineIdx++;
+                    setTimeout(typeLine, 200);
+                } else {
+                    document.getElementById('sbAnswer').focus();
+                }
+            }
+            typeLine();
+
+            // Логика ввода
+            const input = document.getElementById('sbAnswer');
+            const status = document.getElementById('sbStatus');
+            const btn = document.getElementById('sbBtn');
+
+            function checkAnswer() {
+                const val = input.value.trim();
+                if (!val) return;
+
+                if (parseInt(val, 10) === correctAnswer) {
+                    // УСПЕХ
+                    status.innerText = "> ЛОГИКА ПОДТВЕРЖДЕНА.";
+                    status.style.color = "#00ff44";
+                    input.disabled = true;
+                    if(btn) btn.disabled = true;
+                    
+                    setTimeout(() => {
+                        if (currentLevel < 3) {
+                            currentLevel++;
+                            generateLevel(currentLevel);
+                        } else {
+                            // Конец Песочницы
+                            localStorage.setItem('s9_edr_os_passed', 'true');
+                            localStorage.removeItem('s9_edr_os_trigger');
+                            localStorage.setItem('s9_os_fixed', 'true');
+                            localStorage.setItem('s9_os_errors', '0');
+                            content.innerHTML = `<h2 style="color: #00ff44; font-family: Michroma; text-shadow: 0 0 10px #00ff44;">ЛОГИКА ВОССТАНОВЛЕНА</h2><p style="color: var(--neon);">Возврат в ОС...</p>`;
+                            setTimeout(() => { window.location.href = 'os.html'; }, 2000);
+                        }
+                    }, 1500);
+
+                } else {
+                    // ОШИБКА
+                    errorCount++;
+                    input.classList.add('shake');
+                    input.value = '';
+                    
+                    setTimeout(() => { input.classList.remove('shake'); }, 400);
+
+                    if (errorCount >= 3) {
+                        status.innerText = "> СБРОС ПАМЯТИ. ГЕНЕРАЦИЯ НОВОГО ЗАДАНИЯ...";
+                        status.style.color = "#ff3333";
+                        input.disabled = true;
+                        if(btn) btn.disabled = true;
+                        setTimeout(() => { generateLevel(currentLevel); }, 2000);
+                    } else {
+                        status.innerText = `> ОШИБКА ${errorCount}/3. ПОПРОБУЙТЕ СНОВА.`;
+                        status.style.color = "#ff3333";
+                    }
+                }
+            }
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    checkAnswer();
+                }
+            });
+
+            if (btn) {
+                btn.addEventListener('click', checkAnswer);
+            }
         }
-        renderPhase();
+
+        generateLevel(1);
     }
 
+    // ==========================================
+    // ЛОГИКА ВЗЛОМА ШИФРА
+    // ==========================================
     function startMastermind() {
         const targetCode = Array.from({length: 5}, () => Math.floor(Math.random() * 10)).join('');
         content.innerHTML = `
             <div style="margin-bottom: 15px; color: var(--neon); text-align:center;">
                 > ДОСТУП К ШЛЮЗУ ЗАБЛОКИРОВАН.<br>
                 > ПОДБЕРИТЕ 5-ЗНАЧНЫЙ КОД.<br>
-                > <span style="color:var(--ok)">ЗЕЛЕНЫЙ</span> - ЦИФРА НА СВОЕМ МЕСТЕ. <span style="color:var(--warn)">ЖЕЛТЫЙ</span> - ЕСТЬ, НО НЕ ТАМ.
+                > <span style="color:#00ff44">ЗЕЛЕНЫЙ</span> - ЦИФРА НА СВОЕМ МЕСТЕ. <span style="color:#ffaa00">ЖЕЛТЫЙ</span> - ЕСТЬ, НО НЕ ТАМ.
             </div>
             <div class="mm-logs" id="mmLogs">> СИСТЕМА ГОТОВА К ВВОДУ...</div>
             <div class="mm-inputs" id="mmInputs">
@@ -105,14 +250,14 @@
             for(let i=0; i<5; i++) { if (guessArr[i] !== null) { const idx = targetArr.indexOf(guessArr[i]); if (idx !== -1) { wrongPos++; targetArr[idx] = null; } } }
 
             const log = document.getElementById('mmLogs');
-            log.innerHTML += `<div>> ВВОД: ${guess} | <span style="color:var(--ok)">ТОЧНО: ${exact}</span> | <span style="color:var(--warn)">НЕ ТАМ: ${wrongPos}</span></div>`;
+            log.innerHTML += `<div>> ВВОД: ${guess} | <span style="color:#00ff44">ТОЧНО: ${exact}</span> | <span style="color:#ffaa00">НЕ ТАМ: ${wrongPos}</span></div>`;
             log.scrollTop = log.scrollHeight;
 
             if (exact === 5) {
                 localStorage.setItem('s9_edr_gateway_passed', 'true');
                 localStorage.removeItem('s9_edr_gateway_trigger');
                 document.getElementById('mmBtn').disabled = true;
-                content.innerHTML = `<h2 style="color: var(--ok);">ШЛЮЗ РАЗБЛОКИРОВАН</h2><p>Возврат на Карту...</p>`;
+                content.innerHTML = `<h2 style="color: #00ff44;">ШЛЮЗ РАЗБЛОКИРОВАН</h2><p>Возврат на Карту...</p>`;
                 setTimeout(() => { window.location.href = 'map.html'; }, 2000);
             } else {
                 inputs.forEach(i => i.value = '');
@@ -122,8 +267,10 @@
         setTimeout(() => document.querySelector('#mmInputs input').focus(), 100);
     }
 
+    // ==========================================
+    // РАБОЧИЙ РЕЖИМ (ЩИТ)
+    // ==========================================
     function initShieldVisual(isPartial = false, moduleName = '') {
-        // Генерируем HTML без лишних надписей
         content.innerHTML = `
             <div class="main-layout">
                 <div class="shield-wrapper">
@@ -183,7 +330,6 @@
             if (logBox.children.length > 40) logBox.removeChild(logBox.firstChild);
         }
 
-        // Заполняем лог при старте
         for(let i=0; i<25; i++) {
             addLog("> SYS_MONITOR: BACKGROUND PROCESS OK");
         }
