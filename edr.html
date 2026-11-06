@@ -20,14 +20,15 @@
             text-shadow: 0 0 20px var(--neon); z-index: 100; pointer-events: none;
         }
 
-        /* Увеличили контейнер, чтобы влезли Щит и Логи */
+        /* Сдвигаем контейнер вниз, чтобы не наезжать на чат */
         .edr-container {
-            position: relative; width: 1050px; height: 650px;
+            position: relative; width: 1050px; height: 600px;
             border: 1px solid rgba(0, 242, 255, 0.3);
             background: rgba(2, 10, 15, 0.9);
             box-shadow: 0 0 40px rgba(0, 242, 255, 0.1), inset 0 0 30px rgba(0, 242, 255, 0.05);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             padding: 20px; box-sizing: border-box; border-radius: 4px; z-index: 10;
+            margin-top: 60px; /* Отступ сверху для журнала */
         }
 
         /* --- СТИЛИ ДЛЯ ПЕСОЧНИЦЫ (АЛГОРИТМЫ) --- */
@@ -47,7 +48,7 @@
         }
 
         /* --- СТИЛИ ДЛЯ МАСТЕРМАЙНДА (ВЗЛОМ ШИФРА) --- */
-        .mm-logs { width: 350px; height: 200px; overflow-y: auto; border: 1px solid rgba(0,242,255,0.2); padding: 10px; font-size: 12px; margin-bottom: 20px; text-align: left;}
+        .mm-logs { width: 350px; height: 200px; overflow-y: auto; border: 1px solid rgba(0,242,255,0.2); padding: 10px; font-size: 12px; margin-bottom: 20px; text-align: left; font-family: monospace;}
         .mm-inputs { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
         .mm-inputs input {
             width: 40px; height: 50px; background: transparent; border: 1px solid var(--neon);
@@ -62,13 +63,13 @@
             align-items: stretch;
             justify-content: center;
             width: 100%;
-            max-width: 1200px;
-            height: 600px;
+            max-width: 1000px;
+            height: 100%;
         }
 
         .shield-wrapper {
             position: relative;
-            width: 500px;
+            width: 450px;
             height: 100%;
             display: flex;
             align-items: center;
@@ -93,32 +94,36 @@
             gap: 2px;
         }
 
+        /* --- БАЗОВЫЙ ЦВЕТ ЯЧЕЙКИ --- */
         .shield-cell {
             background: rgba(0, 242, 255, 0.03);
             border: 1px solid rgba(0, 242, 255, 0.05);
             transition: background 1.5s ease-out, box-shadow 1.5s ease-out, border-color 0.2s;
         }
 
+        /* --- ПОДСВЕТКА СКАНИРОВАНИЯ (СИНИЙ) --- */
         .shield-cell.scanning {
-            background: rgba(0, 242, 255, 0.6);
-            box-shadow: 0 0 12px rgba(0, 242, 255, 0.6);
-            border-color: var(--neon);
-            transition: none;
+            background: rgba(0, 242, 255, 0.6) !important;
+            box-shadow: 0 0 12px rgba(0, 242, 255, 0.6) !important;
+            border-color: var(--neon) !important;
+            transition: none !important;
         }
 
+        /* --- ПОДСВЕТКА УГРОЗЫ (КРАСНЫЙ) --- */
         .shield-cell.threat {
-            background: var(--err);
-            box-shadow: 0 0 15px var(--err);
-            border-color: var(--err);
-            transition: none;
+            background: var(--err) !important;
+            box-shadow: 0 0 15px var(--err) !important;
+            border-color: var(--err) !important;
+            transition: none !important;
             animation: threatBlink 1s infinite;
         }
 
+        /* --- ПОДСВЕТКА УСТРАНЕНИЯ (ЗЕЛЕНЫЙ) --- */
         .shield-cell.cleared {
-            background: var(--ok);
-            box-shadow: 0 0 15px var(--ok);
-            border-color: var(--ok);
-            transition: all 0.5s ease-in;
+            background: var(--ok) !important;
+            box-shadow: 0 0 15px var(--ok) !important;
+            border-color: var(--ok) !important;
+            transition: all 0.5s ease-in !important;
         }
 
         @keyframes threatBlink {
@@ -128,10 +133,10 @@
 
         /* --- ПРАВАЯ ПАНЕЛЬ --- */
         .side-panel {
-            width: 400px;
+            width: 380px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 15px;
             height: 100%;
         }
 
@@ -140,7 +145,7 @@
             justify-content: space-between;
             background: rgba(0, 20, 30, 0.6);
             border: 1px solid rgba(0, 242, 255, 0.2);
-            padding: 15px;
+            padding: 10px;
             border-radius: 4px;
             flex-shrink: 0;
         }
@@ -158,7 +163,7 @@
         }
 
         .counter-value {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: bold;
             font-family: 'Michroma', sans-serif;
         }
@@ -194,8 +199,10 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        .log-line.warn { color: var(--err); }
-        .log-line.ok { color: var(--ok); }
+        
+        /* --- ПОДСВЕТКА ЛОГОВ --- */
+        .log-line.warn { color: var(--err) !important; text-shadow: 0 0 5px rgba(255, 51, 51, 0.5); }
+        .log-line.ok { color: var(--ok) !important; text-shadow: 0 0 5px rgba(0, 255, 68, 0.5); }
 
         @keyframes fadeIn {
             from { opacity: 0; transform: translateX(-10px); }
@@ -205,7 +212,8 @@
 </head>
 <body class="tools-page">
 
-    <div class="chat-system" style="display: none !important;">
+    <!-- ВОЗВРАЩАЕМ ЖУРНАЛ КАК ЕСТЬ -->
+    <div class="chat-system">
         <div id="quest-field" class="question" onclick="handleChatClick()"></div>
         <div id="answer-field" class="answer-field"></div>
     </div>
