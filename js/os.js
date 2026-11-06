@@ -141,19 +141,6 @@
             }
         });
 
-        // Функцию checkAllFixed мы удалили, так как s9_os_fixed теперь ставится в EDR.
-
-        function checkAllFixed() {
-            const brokenList = JSON.parse(localStorage.getItem('s9_os_broken_qubits') || '[]');
-            if (brokenList.length === 0) {
-                localStorage.setItem('s9_os_fixed', 'true');
-                if (typeof window.updateQuestion === 'function') {
-                    window.currentChatStep = 0;
-                    window.updateQuestion();
-                }
-            }
-        }
-
         // --- 4. ТРАССЫ (СТРОГО 5 ШТУК И ТОЛЬКО МЕЖДУ СОСЕДЯМИ) ---
         function drawTraces() {
             const tracesLayer = document.getElementById('tracesLayer');
