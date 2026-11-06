@@ -116,14 +116,20 @@
             }
             // --- ЧИТ ДЛЯ ОС ---
             if (cmd === 'fix_os') {
+                // Снимаем блокировку ID
                 localStorage.setItem('s9_os_captcha', 'true');
+                
+                // Имитируем починку всех кубитов
                 localStorage.setItem('s9_os_broken_qubits', '[]'); 
                 localStorage.setItem('s9_os_errors', '0');
                 
-                // Имитируем сбой последнего кубита
+                // Страховка: удаляем старый флаг починки, если он остался
+                localStorage.removeItem('s9_os_fixed');
+                
+                // ВЫДАЕМ ТРИГГЕР СБОЯ НА ПОСЛЕДНЕМ КУБИТЕ
                 localStorage.setItem('s9_edr_os_trigger', 'true');
-
-                print('<span class="err">[ОС] КРИТИЧЕСКИЙ СБОЙ СИНХРОНИЗАЦИИ ЯДРА. ТРЕБУЕТСЯ ПРОВЕРКА EDR.</span>');
+                
+                print('<span class="err">[ЧИТ] ВЫЗВАН СБОЙ. ПЕРЕХОД В EDR ДЛЯ ПРОВЕРКИ ЛОГИКИ.</span>');
                 setTimeout(() => { window.location.href = 'edr.html'; }, 2000);
                 return true; 
             }
