@@ -1,6 +1,7 @@
 // js/edr.js
 (function() {
     const content = document.getElementById('edrContent');
+    const hint = document.getElementById('edr-hint');
     
     const osPassed = localStorage.getItem('s9_edr_os_passed') === 'true';
     const gatewayPassed = localStorage.getItem('s9_edr_gateway_passed') === 'true';
@@ -20,6 +21,7 @@
     } 
     // --- 3. РАБОЧИЙ РЕЖИМ ---
     else {
+        if (hint) hint.style.display = 'none';
         if (osPassed && gatewayPassed) {
             initShieldVisual(false);
         } else if (osPassed || gatewayPassed) {
@@ -33,6 +35,7 @@
     // ЛОГИКА ПЕСОЧНИЦЫ (АЛГОРИТМЫ)
     // ==========================================
     function startSandbox() {
+        if (hint) hint.style.display = 'block';
         let currentLevel = 1;
         let errorCount = 0;
         let correctAnswer = 0;
@@ -45,16 +48,11 @@
             errorCount = 0;
 
             if (level === 1) {
-                // УРОВЕНЬ 1: Усложненный цикл (две операции) - СРЕДНИЙ
                 const startX = rand(2, 5);
                 const addVal = rand(2, 4);
                 const multVal = rand(2, 3);
-                
                 ans = startX;
-                for(let i=0; i<3; i++) {
-                    ans += addVal;
-                    ans *= multVal;
-                }
+                for(let i=0; i<3; i++) { ans += addVal; ans *= multVal; }
 
                 htmlCode = `
                     <div class="code-line"><span class="kw">LET</span> <span class="var">X</span> <span class="op">=</span> <span class="num">${startX}</span></div>
@@ -65,16 +63,11 @@
                 `;
             } 
             else if (level === 2) {
-                // УРОВЕНЬ 2: Цикл и условие (всегда средний) - СРЕДНИЙ
                 const startX = rand(4, 8);
                 const addVal = rand(2, 4);
                 const threshold = rand(12, 15);
-                
                 ans = startX;
-                for(let i=0; i<3; i++) { 
-                    ans += addVal; 
-                    if (ans > threshold) ans *= 2;
-                }
+                for(let i=0; i<3; i++) { ans += addVal; if (ans > threshold) ans *= 2; }
 
                 htmlCode = `
                     <div class="code-line"><span class="kw">LET</span> <span class="var">X</span> <span class="op">=</span> <span class="num">${startX}</span></div>
@@ -86,21 +79,15 @@
                 `;
             } 
             else if (level === 3) {
-                // УРОВЕНЬ 3: Сложное ветвление ELSE IF - СЛОЖНЫЙ
                 const startX = rand(2, 4);
                 const startY = rand(5, 10);
                 const multVal = rand(2, 3);
-
                 let x = startX, y = startY;
                 for(let i=0; i<3; i++) {
                     x *= multVal;
-                    if (x > 10) {
-                        y += x;
-                    } else if (x > 5) {
-                        y *= 2;
-                    } else {
-                        y -= 1;
-                    }
+                    if (x > 10) y += x;
+                    else if (x > 5) y *= 2;
+                    else y -= 1;
                 }
                 ans = y;
 
@@ -122,11 +109,11 @@
             correctAnswer = ans;
 
             content.innerHTML = `
-                <div class="terminal-box">
+                <div style="width: 600px; text-align: left;">
                     <div style="color: var(--neon); margin-bottom: 15px; font-size: 12px; letter-spacing: 2px;">// ВЫПОЛНЕНИЕ СКРИПТА В ИЗОЛИРОВАННОЙ СРЕДЕ</div>
                     <div id="codeOutput" style="margin-bottom: 20px;"></div>
                     
-                    <div class="input-area">
+                    <div style="text-align: center;">
                         <div style="margin-bottom: 10px; color: #aaa;">ЭТАП ${level} / 3 — ВВЕДИТЕ РЕЗУЛЬТАТ:</div>
                         <input type="text" id="sbAnswer" class="terminal-input" autocomplete="off" inputmode="numeric" pattern="[0-9]*">
                         <button id="sbBtn" class="mobile-btn">ВЫПОЛНИТЬ</button>
@@ -143,16 +130,12 @@
                 if (lineIdx < lines.length) {
                     const div = document.createElement('div');
                     div.innerHTML = lines[lineIdx].trim(); 
-                    
                     if (lines[lineIdx].includes('class="code-line indent"')) {
                         div.className = 'code-line indent';
-                        if(lines[lineIdx].includes('style="padding-left: 50px;"')) {
-                            div.style.paddingLeft = '50px';
-                        }
+                        if(lines[lineIdx].includes('style="padding-left: 50px;"')) div.style.paddingLeft = '50px';
                     } else {
                         div.className = 'code-line';
                     }
-                    
                     codeOutput.appendChild(div);
                     if (typeof window.playTypeSound === 'function') window.playTypeSound();
                     lineIdx++;
@@ -176,11 +159,13 @@
                     status.style.color = "#00ff44";
                     input.disabled = true;
                     if(btn) btn.disabled = true;
+                    if(hint) hint.style.display = 'none';
                     
                     setTimeout(() => {
                         if (currentLevel < 3) {
                             currentLevel++;
                             generateLevel(currentLevel);
+                            if(hint) hint.style.display = 'block';
                         } else {
                             localStorage.setItem('s9_edr_os_passed', 'true');
                             localStorage.removeItem('s9_edr_os_trigger');
@@ -190,12 +175,10 @@
                             setTimeout(() => { window.location.href = 'os.html'; }, 2000);
                         }
                     }, 1500);
-
                 } else {
                     errorCount++;
                     input.classList.add('shake');
                     input.value = '';
-                    
                     setTimeout(() => { input.classList.remove('shake'); }, 400);
 
                     if (errorCount >= 3) {
@@ -203,7 +186,8 @@
                         status.style.color = "#ff3333";
                         input.disabled = true;
                         if(btn) btn.disabled = true;
-                        setTimeout(() => { generateLevel(currentLevel); }, 2000);
+                        if(hint) hint.style.display = 'none';
+                        setTimeout(() => { generateLevel(currentLevel); if(hint) hint.style.display = 'block'; }, 2000);
                     } else {
                         status.innerText = `> ОШИБКА ${errorCount}/3. ПОПРОБУЙТЕ СНОВА.`;
                         status.style.color = "#ff3333";
@@ -211,12 +195,9 @@
                 }
             }
 
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') { e.preventDefault(); checkAnswer(); }
-            });
+            input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); checkAnswer(); } });
             if (btn) btn.addEventListener('click', checkAnswer);
         }
-
         generateLevel(1);
     }
 
@@ -224,6 +205,7 @@
     // ЛОГИКА ВЗЛОМА ШИФРА
     // ==========================================
     function startMastermind() {
+        if (hint) hint.style.display = 'block';
         const targetCode = Array.from({length: 5}, () => Math.floor(Math.random() * 10)).join('');
         content.innerHTML = `
             <div style="margin-bottom: 15px; color: var(--neon); text-align:center;">
@@ -235,11 +217,11 @@
             <div class="mm-inputs" id="mmInputs">
                 <input type="text" maxlength="1" oninput="moveFocus(this)"><input type="text" maxlength="1" oninput="moveFocus(this)"><input type="text" maxlength="1" oninput="moveFocus(this)"><input type="text" maxlength="1" oninput="moveFocus(this)"><input type="text" maxlength="1" oninput="moveFocus(this)">
             </div>
-            <button id="mmBtn" style="background:transparent; border:1px solid var(--neon); color:var(--neon); padding:10px 20px; cursor:pointer;">ПРОВЕРИТЬ</button>
+            <button id="mmBtn" class="mobile-btn" style="display: block;">ПРОВЕРИТЬ</button>
         `;
         window.moveFocus = (el) => { if (el.value.length === 1 && el.nextElementSibling) el.nextElementSibling.focus(); };
 
-        document.getElementById('mmBtn').onclick = () => {
+        const checkCode = () => {
             const inputs = document.querySelectorAll('#mmInputs input');
             let guess = ''; inputs.forEach(i => guess += i.value);
             if (guess.length !== 5) return;
@@ -254,9 +236,9 @@
             log.scrollTop = log.scrollHeight;
 
             if (exact === 5) {
+                if (hint) hint.style.display = 'none';
                 localStorage.setItem('s9_edr_gateway_passed', 'true');
                 localStorage.removeItem('s9_edr_gateway_trigger');
-                document.getElementById('mmBtn').disabled = true;
                 content.innerHTML = `<h2 style="color: #00ff44;">ШЛЮЗ РАЗБЛОКИРОВАН</h2><p>Возврат на Карту...</p>`;
                 setTimeout(() => { window.location.href = 'map.html'; }, 2000);
             } else {
@@ -264,6 +246,23 @@
                 inputs[0].focus();
             }
         };
+
+        document.getElementById('mmBtn').onclick = checkCode;
+        
+        // Ввод по Enter для каждого инпута
+        document.querySelectorAll('#mmInputs input').forEach((inp, idx, arr) => {
+            inp.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (idx < 4 && inp.value.length === 1) {
+                        arr[idx+1].focus();
+                    } else {
+                        checkCode();
+                    }
+                }
+            });
+        });
+
         setTimeout(() => document.querySelector('#mmInputs input').focus(), 100);
     }
 
@@ -330,9 +329,7 @@
             if (logBox.children.length > 40) logBox.removeChild(logBox.firstChild);
         }
 
-        for(let i=0; i<25; i++) {
-            addLog("> SYS_MONITOR: BACKGROUND PROCESS OK");
-        }
+        for(let i=0; i<25; i++) addLog("> SYS_MONITOR: BACKGROUND PROCESS OK");
 
         window.edrScanInterval = setInterval(() => {
             const idx = Math.floor(Math.random() * cells.length);
