@@ -45,7 +45,7 @@
             errorCount = 0;
 
             if (level === 1) {
-                // УРОВЕНЬ 1: Усложненный цикл (две операции)
+                // УРОВЕНЬ 1: Усложненный цикл (две операции) - СРЕДНИЙ
                 const startX = rand(2, 5);
                 const addVal = rand(2, 4);
                 const multVal = rand(2, 3);
@@ -65,40 +65,42 @@
                 `;
             } 
             else if (level === 2) {
-                // УРОВЕНЬ 2: IF ВНУТРИ цикла
-                const startX = rand(2, 10);
-                const isAdd = Math.random() > 0.5;
-                const val = rand(2, 3);
-                const threshold = rand(10, 15);
+                // УРОВЕНЬ 2: Цикл и условие (всегда средний) - СРЕДНИЙ
+                const startX = rand(4, 8);
+                const addVal = rand(2, 4);
+                const threshold = rand(12, 15);
                 
                 ans = startX;
                 for(let i=0; i<3; i++) { 
-                    ans += isAdd ? val : -val; 
-                    if (ans > threshold) ans *= 2; // Проверка на каждом шаге
+                    ans += addVal; 
+                    if (ans > threshold) ans *= 2;
                 }
 
                 htmlCode = `
                     <div class="code-line"><span class="kw">LET</span> <span class="var">X</span> <span class="op">=</span> <span class="num">${startX}</span></div>
                     <div class="code-line"><span class="kw">LOOP</span> <span class="num">3</span> TIMES:</div>
-                    <div class="code-line indent"><span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">${isAdd ? '+' : '-'}</span> <span class="num">${val}</span></div>
+                    <div class="code-line indent"><span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">+</span> <span class="num">${addVal}</span></div>
                     <div class="code-line indent"><span class="kw">IF</span> <span class="var">X</span> <span class="op">></span> <span class="num">${threshold}</span>:</div>
                     <div class="code-line indent" style="padding-left: 50px;"><span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">*</span> <span class="num">2</span></div>
                     <div class="code-line"><span class="kw">PRINT</span> <span class="var">X</span></div>
                 `;
             } 
             else if (level === 3) {
-                // УРОВЕНЬ 3: Ветвление IF/ELSE внутри цикла
-                const startX = rand(2, 5);
+                // УРОВЕНЬ 3: Сложное ветвление ELSE IF - СЛОЖНЫЙ
+                const startX = rand(2, 4);
                 const startY = rand(5, 10);
-                const isMult = Math.random() > 0.5;
-                const val = rand(2, 3);
-                const threshold = rand(5, 10);
+                const multVal = rand(2, 3);
 
                 let x = startX, y = startY;
                 for(let i=0; i<3; i++) {
-                    if(isMult) x *= val; else x += val;
-                    if (x > threshold) y += x;
-                    else y -= 1;
+                    x *= multVal;
+                    if (x > 10) {
+                        y += x;
+                    } else if (x > 5) {
+                        y *= 2;
+                    } else {
+                        y -= 1;
+                    }
                 }
                 ans = y;
 
@@ -106,9 +108,11 @@
                     <div class="code-line"><span class="kw">LET</span> <span class="var">X</span> <span class="op">=</span> <span class="num">${startX}</span></div>
                     <div class="code-line"><span class="kw">LET</span> <span class="var">Y</span> <span class="op">=</span> <span class="num">${startY}</span></div>
                     <div class="code-line"><span class="kw">LOOP</span> <span class="num">3</span> TIMES:</div>
-                    <div class="code-line indent"><span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">${isMult ? '*' : '+'}</span> <span class="num">${val}</span></div>
-                    <div class="code-line indent"><span class="kw">IF</span> <span class="var">X</span> <span class="op">></span> <span class="num">${threshold}</span>:</div>
+                    <div class="code-line indent"><span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">*</span> <span class="num">${multVal}</span></div>
+                    <div class="code-line indent"><span class="kw">IF</span> <span class="var">X</span> <span class="op">></span> <span class="num">10</span>:</div>
                     <div class="code-line indent" style="padding-left: 50px;"><span class="var">Y</span> <span class="op">=</span> <span class="var">Y</span> <span class="op">+</span> <span class="var">X</span></div>
+                    <div class="code-line indent"><span class="kw">ELSE IF</span> <span class="var">X</span> <span class="op">></span> <span class="num">5</span>:</div>
+                    <div class="code-line indent" style="padding-left: 50px;"><span class="var">Y</span> <span class="op">=</span> <span class="var">Y</span> <span class="op">*</span> <span class="num">2</span></div>
                     <div class="code-line indent"><span class="kw">ELSE</span>:</div>
                     <div class="code-line indent" style="padding-left: 50px;"><span class="var">Y</span> <span class="op">=</span> <span class="var">Y</span> <span class="op">-</span> <span class="num">1</span></div>
                     <div class="code-line"><span class="kw">PRINT</span> <span class="var">Y</span></div>
