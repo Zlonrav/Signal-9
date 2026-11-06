@@ -49,20 +49,19 @@
         }
 
         .code-line { margin-bottom: 5px; color: #ccc; font-size: 15px; }
-        .code-line.indent { padding-left: 25px; }
+        
+        /* КЛАСС ОТСТУПА (БЕЗ ЛИНИЙ) */
+        .indent { padding-left: 25px; }
         
         /* Подсветка синтаксиса */
-        .kw { color: #ffaa00; font-weight: bold; } /* Ключевые слова (LET, LOOP, IF) */
-        .num { color: #00ff44; } /* Числа */
-        .var { color: #00f2ff; } /* Переменные */
-        .op { color: #fff; } /* Операторы */
+        .kw { color: #ffaa00; font-weight: bold; }
+        .num { color: #00ff44; }
+        .var { color: #00f2ff; }
+        .op { color: #fff; }
 
         .input-area {
-            margin-top: 30px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
+            margin-top: 30px; display: flex; flex-direction: column;
+            align-items: center; width: 100%;
         }
 
         .terminal-input {
@@ -75,7 +74,6 @@
         
         .terminal-input:focus { border-bottom-color: #fff; box-shadow: 0 5px 10px -5px #fff; }
 
-        /* Анимация ошибки (тряска) */
         @keyframes shake {
             0% { transform: translateX(0); }
             25% { transform: translateX(-10px); }
@@ -86,82 +84,28 @@
         .shake { animation: shake 0.4s; border-bottom-color: #ff3333 !important; color: #ff3333 !important; }
 
         .mobile-btn {
-            display: none;
-            background: transparent;
-            border: 1px solid var(--neon);
-            color: var(--neon);
-            padding: 10px 30px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 14px;
-            margin-top: 15px;
-            cursor: pointer;
+            display: none; background: transparent; border: 1px solid var(--neon); color: var(--neon);
+            padding: 10px 30px; font-family: 'JetBrains Mono', monospace; font-size: 14px;
+            margin-top: 15px; cursor: pointer;
         }
         @media (max-width: 768px) { .mobile-btn { display: block; } }
 
         .status-msg { margin-top: 15px; font-size: 14px; height: 20px; font-weight: bold; }
 
-        /* --- СТИЛИ ДЛЯ МАСТЕРМАЙНДА --- */
+        /* --- МАСТЕРМАЙНД --- */
         .mm-logs { width: 350px; height: 200px; overflow-y: auto; border: 1px solid rgba(0,242,255,0.2); padding: 10px; font-size: 12px; margin-bottom: 20px; text-align: left; font-family: monospace;}
         .mm-inputs { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
-        .mm-inputs input {
-            width: 40px; height: 50px; background: transparent; border: 1px solid var(--neon);
-            color: var(--neon); font-size: 24px; text-align: center; font-family: monospace;
-            outline: none; text-transform: uppercase;
-        }
+        .mm-inputs input { width: 40px; height: 50px; background: transparent; border: 1px solid var(--neon); color: var(--neon); font-size: 24px; text-align: center; font-family: monospace; outline: none; }
 
-        /* --- СТИЛИ ДЛЯ РАБОЧЕГО РЕЖИМА (ЩИТ) --- */
-        .main-layout {
-            display: flex; gap: 40px; align-items: stretch; justify-content: center;
-            width: 100%; max-width: 1000px; height: 100%;
-        }
-
-        .shield-wrapper {
-            position: relative; width: 450px; height: 100%;
-            display: flex; align-items: center; justify-content: center;
-            animation: shieldPulse 3s infinite alternate;
-        }
-
-        @keyframes shieldPulse {
-            0% { filter: drop-shadow(0 0 1px var(--neon)) drop-shadow(0 0 10px rgba(0, 242, 255, 0.2)); }
-            100% { filter: drop-shadow(0 0 1px var(--neon)) drop-shadow(0 0 30px rgba(0, 242, 255, 0.6)); }
-        }
-
-        .shield-shape {
-            width: 100%; height: 100%;
-            background: rgba(0, 20, 30, 0.8);
-            clip-path: polygon(50% 0%, 100% 10%, 100% 75%, 50% 100%, 0% 75%, 0% 10%);
-            display: grid; grid-template-columns: repeat(14, 1fr); grid-template-rows: repeat(16, 1fr);
-            gap: 2px;
-        }
-
-        .shield-cell {
-            background: rgba(0, 242, 255, 0.03);
-            border: 1px solid rgba(0, 242, 255, 0.05);
-            transition: background 1.5s ease-out, box-shadow 1.5s ease-out, border-color 0.2s;
-        }
-
-        .shield-cell.scanning {
-            background: rgba(0, 242, 255, 0.8) !important;
-            box-shadow: 0 0 15px #00f2ff !important;
-            border-color: #00f2ff !important;
-            transition: none !important;
-        }
-
-        .shield-cell.threat {
-            background: #ff3333 !important;
-            box-shadow: 0 0 20px #ff3333 !important;
-            border-color: #ff3333 !important;
-            transition: none !important;
-            animation: threatBlink 1s infinite;
-        }
-
-        .shield-cell.cleared {
-            background: #00ff44 !important;
-            box-shadow: 0 0 20px #00ff44 !important;
-            border-color: #00ff44 !important;
-            transition: all 0.5s ease-in !important;
-        }
-
+        /* --- РАБОЧИЙ РЕЖИМ (ЩИТ) --- */
+        .main-layout { display: flex; gap: 40px; align-items: stretch; justify-content: center; width: 100%; max-width: 1000px; height: 100%; }
+        .shield-wrapper { position: relative; width: 450px; height: 100%; display: flex; align-items: center; justify-content: center; animation: shieldPulse 3s infinite alternate; }
+        @keyframes shieldPulse { 0% { filter: drop-shadow(0 0 1px var(--neon)) drop-shadow(0 0 10px rgba(0, 242, 255, 0.2)); } 100% { filter: drop-shadow(0 0 1px var(--neon)) drop-shadow(0 0 30px rgba(0, 242, 255, 0.6)); } }
+        .shield-shape { width: 100%; height: 100%; background: rgba(0, 20, 30, 0.8); clip-path: polygon(50% 0%, 100% 10%, 100% 75%, 50% 100%, 0% 75%, 0% 10%); display: grid; grid-template-columns: repeat(14, 1fr); grid-template-rows: repeat(16, 1fr); gap: 2px; }
+        .shield-cell { background: rgba(0, 242, 255, 0.03); border: 1px solid rgba(0, 242, 255, 0.05); transition: background 1.5s ease-out, box-shadow 1.5s ease-out, border-color 0.2s; }
+        .shield-cell.scanning { background: rgba(0, 242, 255, 0.8) !important; box-shadow: 0 0 15px #00f2ff !important; border-color: #00f2ff !important; transition: none !important; }
+        .shield-cell.threat { background: #ff3333 !important; box-shadow: 0 0 20px #ff3333 !important; border-color: #ff3333 !important; transition: none !important; animation: threatBlink 1s infinite; }
+        .shield-cell.cleared { background: #00ff44 !important; box-shadow: 0 0 20px #00ff44 !important; border-color: #00ff44 !important; transition: all 0.5s ease-in !important; }
         @keyframes threatBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
         .side-panel { width: 380px; display: flex; flex-direction: column; gap: 15px; height: 100%; }
