@@ -165,7 +165,6 @@
                     </div>
                 </div>
             </div>
-            ${isPartial ? `<div style="position: absolute; bottom: 10px; color: var(--warn); font-size: 10px; letter-spacing: 2px;">ПРОТОКОЛ ${moduleName}: ОЖИДАНИЕ ВТОРОГО ТРИГГЕРА</div>` : ''}
         `;
 
         const grid = document.getElementById('shieldGrid');
