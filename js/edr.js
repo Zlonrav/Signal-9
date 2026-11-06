@@ -37,15 +37,16 @@
         let errorCount = 0;
         let correctAnswer = 0;
 
+        // Генератор случайных чисел
         const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
         function generateLevel(level) {
             let htmlCode = '';
             let ans = 0;
-            errorCount = 0;
+            errorCount = 0; // Сбрасываем ошибки при новой задаче
 
             if (level === 1) {
-                // УРОВЕНЬ 1: Простой цикл
+                // УРОВЕНЬ 1: Цикл + математика
                 const startX = rand(2, 10);
                 const loop = rand(2, 3);
                 const isMult = Math.random() > 0.5;
@@ -59,34 +60,32 @@
                 htmlCode = `
                     <div class="code-line"><span class="kw">LET</span> <span class="var">X</span> <span class="op">=</span> <span class="num">${startX}</span></div>
                     <div class="code-line"><span class="kw">LOOP</span> <span class="num">${loop}</span> TIMES:</div>
-                    <div class="code-line indent-1"><span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">${isMult ? '*' : '+'}</span> <span class="num">${val}</span></div>
+                    <div class="code-line indent"><span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">${isMult ? '*' : '+'}</span> <span class="num">${val}</span></div>
                     <div class="code-line"><span class="kw">PRINT</span> <span class="var">X</span></div>
                 `;
             } 
             else if (level === 2) {
-                // УРОВЕНЬ 2: Цикл, а внутри IF (Ответ 52 в примере)
+                // УРОВЕНЬ 2: Цикл + условие
                 const startX = rand(2, 10);
                 const isAdd = Math.random() > 0.5;
                 const val = rand(2, 3);
                 const threshold = rand(10, 15);
                 
                 ans = startX;
-                for(let i=0; i<3; i++) { 
-                    ans += isAdd ? val : -val; 
-                    if (ans > threshold) ans *= 2;
-                }
+                for(let i=0; i<3; i++) { ans += isAdd ? val : -val; }
+                if (ans > threshold) ans *= 2;
 
                 htmlCode = `
                     <div class="code-line"><span class="kw">LET</span> <span class="var">X</span> <span class="op">=</span> <span class="num">${startX}</span></div>
                     <div class="code-line"><span class="kw">LOOP</span> <span class="num">3</span> TIMES:</div>
-                    <div class="code-line indent-1"><span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">${isAdd ? '+' : '-'}</span> <span class="num">${val}</span></div>
-                    <div class="code-line indent-1"><span class="kw">IF</span> <span class="var">X</span> <span class="op">></span> <span class="num">${threshold}</span>:</div>
-                    <div class="code-line indent-2"><span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">*</span> <span class="num">2</span></div>
+                    <div class="code-line indent"><span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">${isAdd ? '+' : '-'}</span> <span class="num">${val}</span></div>
+                    <div class="code-line"><span class="kw">IF</span> <span class="var">X</span> <span class="op">></span> <span class="num">${threshold}</span>:</div>
+                    <div class="code-line indent"><span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">*</span> <span class="num">2</span></div>
                     <div class="code-line"><span class="kw">PRINT</span> <span class="var">X</span></div>
                 `;
             } 
             else if (level === 3) {
-                // УРОВЕНЬ 3: Ветвление внутри цикла
+                // УРОВЕНЬ 3: Две переменные + ветвление
                 const startX = rand(2, 5);
                 const startY = rand(5, 10);
                 const isMult = Math.random() > 0.5;
@@ -105,17 +104,18 @@
                     <div class="code-line"><span class="kw">LET</span> <span class="var">X</span> <span class="op">=</span> <span class="num">${startX}</span></div>
                     <div class="code-line"><span class="kw">LET</span> <span class="var">Y</span> <span class="op">=</span> <span class="num">${startY}</span></div>
                     <div class="code-line"><span class="kw">LOOP</span> <span class="num">3</span> TIMES:</div>
-                    <div class="code-line indent-1"><span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">${isMult ? '*' : '+'}</span> <span class="num">${val}</span></div>
-                    <div class="code-line indent-1"><span class="kw">IF</span> <span class="var">X</span> <span class="op">></span> <span class="num">${threshold}</span>:</div>
-                    <div class="code-line indent-2"><span class="var">Y</span> <span class="op">=</span> <span class="var">Y</span> <span class="op">+</span> <span class="var">X</span></div>
-                    <div class="code-line indent-1"><span class="kw">ELSE</span>:</div>
-                    <div class="code-line indent-2"><span class="var">Y</span> <span class="op">=</span> <span class="var">Y</span> <span class="op">-</span> <span class="num">1</span></div>
+                    <div class="code-line indent"><span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">${isMult ? '*' : '+'}</span> <span class="num">${val}</span></div>
+                    <div class="code-line indent"><span class="kw">IF</span> <span class="var">X</span> <span class="op">></span> <span class="num">${threshold}</span>:</div>
+                    <div class="code-line indent" style="padding-left: 50px;"><span class="var">Y</span> <span class="op">=</span> <span class="var">Y</span> <span class="op">+</span> <span class="var">X</span></div>
+                    <div class="code-line indent"><span class="kw">ELSE</span>:</div>
+                    <div class="code-line indent" style="padding-left: 50px;"><span class="var">Y</span> <span class="op">=</span> <span class="var">Y</span> <span class="op">-</span> <span class="num">1</span></div>
                     <div class="code-line"><span class="kw">PRINT</span> <span class="var">Y</span></div>
                 `;
             }
 
             correctAnswer = ans;
 
+            // Рендерим интерфейс
             content.innerHTML = `
                 <div class="terminal-box">
                     <div style="color: var(--neon); margin-bottom: 15px; font-size: 12px; letter-spacing: 2px;">// ВЫПОЛНЕНИЕ СКРИПТА В ИЗОЛИРОВАННОЙ СРЕДЕ</div>
@@ -130,6 +130,7 @@
                 </div>
             `;
 
+            // Печатаем код по строчкам с эффектом
             const codeOutput = document.getElementById('codeOutput');
             const lines = htmlCode.trim().split('\n');
             let lineIdx = 0;
@@ -137,14 +138,13 @@
             function typeLine() {
                 if (lineIdx < lines.length) {
                     const div = document.createElement('div');
-                    // Убираем возможные лишние пробелы в начале строки из шаблона
-                    div.innerHTML = lines[lineIdx].trim(); 
-                    // Восстанавливаем классы из шаблона
-                    const classMatch = lines[lineIdx].match(/class="([^"]*)"/);
-                    if (classMatch) div.className = classMatch[1];
-                    
+                    div.innerHTML = lines[lineIdx];
+                    // Добавляем классы к строке
+                    div.className = lines[lineIdx].includes('indent') ? 'code-line indent' : 'code-line';
                     codeOutput.appendChild(div);
+                    
                     if (typeof window.playTypeSound === 'function') window.playTypeSound();
+                    
                     lineIdx++;
                     setTimeout(typeLine, 200);
                 } else {
@@ -153,6 +153,7 @@
             }
             typeLine();
 
+            // Логика ввода
             const input = document.getElementById('sbAnswer');
             const status = document.getElementById('sbStatus');
             const btn = document.getElementById('sbBtn');
@@ -162,6 +163,7 @@
                 if (!val) return;
 
                 if (parseInt(val, 10) === correctAnswer) {
+                    // УСПЕХ
                     status.innerText = "> ЛОГИКА ПОДТВЕРЖДЕНА.";
                     status.style.color = "#00ff44";
                     input.disabled = true;
@@ -172,6 +174,7 @@
                             currentLevel++;
                             generateLevel(currentLevel);
                         } else {
+                            // Конец Песочницы
                             localStorage.setItem('s9_edr_os_passed', 'true');
                             localStorage.removeItem('s9_edr_os_trigger');
                             localStorage.setItem('s9_os_fixed', 'true');
@@ -182,6 +185,7 @@
                     }, 1500);
 
                 } else {
+                    // ОШИБКА
                     errorCount++;
                     input.classList.add('shake');
                     input.value = '';
@@ -202,9 +206,15 @@
             }
 
             input.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') { e.preventDefault(); checkAnswer(); }
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    checkAnswer();
+                }
             });
-            if (btn) btn.addEventListener('click', checkAnswer);
+
+            if (btn) {
+                btn.addEventListener('click', checkAnswer);
+            }
         }
 
         generateLevel(1);
@@ -331,6 +341,7 @@
             if (!cell.classList.contains('threat') && !cell.classList.contains('cleared')) {
                 cell.classList.add('scanning');
                 setTimeout(() => cell.classList.remove('scanning'), 100);
+
                 totalScanned++;
                 elScanned.innerText = formatNumber(totalScanned);
             }
@@ -352,10 +363,12 @@
                     setTimeout(() => {
                         threatCell.classList.remove('threat');
                         threatCell.classList.add('cleared');
+                        
                         activeThreats--;
                         totalCleared++;
                         elThreats.innerText = formatNumber(activeThreats);
                         elCleared.innerText = formatNumber(totalCleared);
+                        
                         addLog(`> PID: THREAT NEUTRALIZED. RESUMING SCAN.`, 'ok');
                         setTimeout(() => threatCell.classList.remove('cleared'), 1000);
                     }, 1500);
