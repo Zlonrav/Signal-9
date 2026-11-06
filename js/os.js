@@ -97,7 +97,6 @@
                 }
             }
 
-            checkAllFixed();
             setInterval(drawTraces, 6000); // Трассы раз в 6 секунд
         }
 
