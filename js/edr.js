@@ -45,21 +45,22 @@
             errorCount = 0;
 
             if (level === 1) {
-                // УРОВЕНЬ 1: Простой цикл
-                const startX = rand(2, 10);
-                const loop = rand(2, 3);
-                const isMult = Math.random() > 0.5;
-                const val = rand(2, 3);
+                // УРОВЕНЬ 1: Усложненный цикл (две операции)
+                const startX = rand(2, 5);
+                const addVal = rand(2, 4);
+                const multVal = rand(2, 3);
                 
                 ans = startX;
-                for(let i=0; i<loop; i++) {
-                    if (isMult) ans *= val; else ans += val;
+                for(let i=0; i<3; i++) {
+                    ans += addVal;
+                    ans *= multVal;
                 }
 
                 htmlCode = `
                     <div class="code-line"><span class="kw">LET</span> <span class="var">X</span> <span class="op">=</span> <span class="num">${startX}</span></div>
-                    <div class="code-line"><span class="kw">LOOP</span> <span class="num">${loop}</span> TIMES:</div>
-                    <div class="code-line indent"><span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">${isMult ? '*' : '+'}</span> <span class="num">${val}</span></div>
+                    <div class="code-line"><span class="kw">LOOP</span> <span class="num">3</span> TIMES:</div>
+                    <div class="code-line indent"><span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">+</span> <span class="num">${addVal}</span></div>
+                    <div class="code-line indent"><span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">*</span> <span class="num">${multVal}</span></div>
                     <div class="code-line"><span class="kw">PRINT</span> <span class="var">X</span></div>
                 `;
             } 
@@ -139,7 +140,6 @@
                     const div = document.createElement('div');
                     div.innerHTML = lines[lineIdx].trim(); 
                     
-                    // Применяем классы отступа из строки
                     if (lines[lineIdx].includes('class="code-line indent"')) {
                         div.className = 'code-line indent';
                         if(lines[lineIdx].includes('style="padding-left: 50px;"')) {
