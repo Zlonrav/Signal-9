@@ -37,16 +37,15 @@
         let errorCount = 0;
         let correctAnswer = 0;
 
-        // Генератор случайных чисел
         const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
         function generateLevel(level) {
             let htmlCode = '';
             let ans = 0;
-            errorCount = 0; // Сбрасываем ошибки при новой задаче
+            errorCount = 0;
 
             if (level === 1) {
-                // УРОВЕНЬ 1: Цикл + математика
+                // УРОВЕНЬ 1: Простой цикл
                 const startX = rand(2, 10);
                 const loop = rand(2, 3);
                 const isMult = Math.random() > 0.5;
@@ -57,6 +56,7 @@
                     if (isMult) ans *= val; else ans += val;
                 }
 
+                // Для 1-го уровня отступ только у действия внутри цикла
                 htmlCode = `
                     <div class="code-line"><span class="kw">LET</span> <span class="var">X</span> <span class="op">=</span> <span class="num">${startX}</span></div>
                     <div class="code-line"><span class="kw">LOOP</span> <span class="num">${loop}</span> TIMES:</div>
@@ -65,7 +65,7 @@
                 `;
             } 
             else if (level === 2) {
-                // УРОВЕНЬ 2: Цикл + условие
+                // УРОВЕНЬ 2: Цикл, затем IF (проверка после цикла)
                 const startX = rand(2, 10);
                 const isAdd = Math.random() > 0.5;
                 const val = rand(2, 3);
@@ -75,6 +75,7 @@
                 for(let i=0; i<3; i++) { ans += isAdd ? val : -val; }
                 if (ans > threshold) ans *= 2;
 
+                // Отступы: действие в цикле, и действие внутри IF
                 htmlCode = `
                     <div class="code-line"><span class="kw">LET</span> <span class="var">X</span> <span class="op">=</span> <span class="num">${startX}</span></div>
                     <div class="code-line"><span class="kw">LOOP</span> <span class="num">3</span> TIMES:</div>
@@ -85,7 +86,7 @@
                 `;
             } 
             else if (level === 3) {
-                // УРОВЕНЬ 3: Две переменные + ветвление
+                // УРОВЕНЬ 3: Ветвление IF/ELSE внутри цикла
                 const startX = rand(2, 5);
                 const startY = rand(5, 10);
                 const isMult = Math.random() > 0.5;
@@ -100,6 +101,8 @@
                 }
                 ans = y;
 
+                // В 3-м уровне много вложенности: 
+                // внутри LOOP выполняется X=..., затем IF, внутри IF действие с Y.
                 htmlCode = `
                     <div class="code-line"><span class="kw">LET</span> <span class="var">X</span> <span class="op">=</span> <span class="num">${startX}</span></div>
                     <div class="code-line"><span class="kw">LET</span> <span class="var">Y</span> <span class="op">=</span> <span class="num">${startY}</span></div>
@@ -115,7 +118,6 @@
 
             correctAnswer = ans;
 
-            // Рендерим интерфейс
             content.innerHTML = `
                 <div class="terminal-box">
                     <div style="color: var(--neon); margin-bottom: 15px; font-size: 12px; letter-spacing: 2px;">// ВЫПОЛНЕНИЕ СКРИПТА В ИЗОЛИРОВАННОЙ СРЕДЕ</div>
@@ -130,7 +132,6 @@
                 </div>
             `;
 
-            // Печатаем код по строчкам с эффектом
             const codeOutput = document.getElementById('codeOutput');
             const lines = htmlCode.trim().split('\n');
             let lineIdx = 0;
@@ -138,13 +139,21 @@
             function typeLine() {
                 if (lineIdx < lines.length) {
                     const div = document.createElement('div');
-                    div.innerHTML = lines[lineIdx];
-                    // Добавляем классы к строке
-                    div.className = lines[lineIdx].includes('indent') ? 'code-line indent' : 'code-line';
+                    div.innerHTML = lines[lineIdx].trim(); 
+                    
+                    // Применяем класс indent, если он есть в строке
+                    if (lines[lineIdx].includes('class="code-line indent"')) {
+                        div.className = 'code-line indent';
+                        // Если есть инлайн-стиль (для 3-го уровня), копируем и его
+                        if(lines[lineIdx].includes('style="padding-left: 50px;"')) {
+                            div.style.paddingLeft = '50px';
+                        }
+                    } else {
+                        div.className = 'code-line';
+                    }
+                    
                     codeOutput.appendChild(div);
-                    
                     if (typeof window.playTypeSound === 'function') window.playTypeSound();
-                    
                     lineIdx++;
                     setTimeout(typeLine, 200);
                 } else {
@@ -153,7 +162,6 @@
             }
             typeLine();
 
-            // Логика ввода
             const input = document.getElementById('sbAnswer');
             const status = document.getElementById('sbStatus');
             const btn = document.getElementById('sbBtn');
@@ -163,7 +171,6 @@
                 if (!val) return;
 
                 if (parseInt(val, 10) === correctAnswer) {
-                    // УСПЕХ
                     status.innerText = "> ЛОГИКА ПОДТВЕРЖДЕНА.";
                     status.style.color = "#00ff44";
                     input.disabled = true;
@@ -174,7 +181,6 @@
                             currentLevel++;
                             generateLevel(currentLevel);
                         } else {
-                            // Конец Песочницы
                             localStorage.setItem('s9_edr_os_passed', 'true');
                             localStorage.removeItem('s9_edr_os_trigger');
                             localStorage.setItem('s9_os_fixed', 'true');
@@ -185,7 +191,6 @@
                     }, 1500);
 
                 } else {
-                    // ОШИБКА
                     errorCount++;
                     input.classList.add('shake');
                     input.value = '';
@@ -206,15 +211,9 @@
             }
 
             input.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    checkAnswer();
-                }
+                if (e.key === 'Enter') { e.preventDefault(); checkAnswer(); }
             });
-
-            if (btn) {
-                btn.addEventListener('click', checkAnswer);
-            }
+            if (btn) btn.addEventListener('click', checkAnswer);
         }
 
         generateLevel(1);
@@ -341,7 +340,6 @@
             if (!cell.classList.contains('threat') && !cell.classList.contains('cleared')) {
                 cell.classList.add('scanning');
                 setTimeout(() => cell.classList.remove('scanning'), 100);
-
                 totalScanned++;
                 elScanned.innerText = formatNumber(totalScanned);
             }
@@ -363,12 +361,10 @@
                     setTimeout(() => {
                         threatCell.classList.remove('threat');
                         threatCell.classList.add('cleared');
-                        
                         activeThreats--;
                         totalCleared++;
                         elThreats.innerText = formatNumber(activeThreats);
                         elCleared.innerText = formatNumber(totalCleared);
-                        
                         addLog(`> PID: THREAT NEUTRALIZED. RESUMING SCAN.`, 'ok');
                         setTimeout(() => threatCell.classList.remove('cleared'), 1000);
                     }, 1500);
