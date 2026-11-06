@@ -56,7 +56,6 @@
                     if (isMult) ans *= val; else ans += val;
                 }
 
-                // Для 1-го уровня отступ только у действия внутри цикла
                 htmlCode = `
                     <div class="code-line"><span class="kw">LET</span> <span class="var">X</span> <span class="op">=</span> <span class="num">${startX}</span></div>
                     <div class="code-line"><span class="kw">LOOP</span> <span class="num">${loop}</span> TIMES:</div>
@@ -65,23 +64,24 @@
                 `;
             } 
             else if (level === 2) {
-                // УРОВЕНЬ 2: Цикл, затем IF (проверка после цикла)
+                // УРОВЕНЬ 2: IF ВНУТРИ цикла
                 const startX = rand(2, 10);
                 const isAdd = Math.random() > 0.5;
                 const val = rand(2, 3);
                 const threshold = rand(10, 15);
                 
                 ans = startX;
-                for(let i=0; i<3; i++) { ans += isAdd ? val : -val; }
-                if (ans > threshold) ans *= 2;
+                for(let i=0; i<3; i++) { 
+                    ans += isAdd ? val : -val; 
+                    if (ans > threshold) ans *= 2; // Проверка на каждом шаге
+                }
 
-                // Отступы: действие в цикле, и действие внутри IF
                 htmlCode = `
                     <div class="code-line"><span class="kw">LET</span> <span class="var">X</span> <span class="op">=</span> <span class="num">${startX}</span></div>
                     <div class="code-line"><span class="kw">LOOP</span> <span class="num">3</span> TIMES:</div>
                     <div class="code-line indent"><span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">${isAdd ? '+' : '-'}</span> <span class="num">${val}</span></div>
-                    <div class="code-line"><span class="kw">IF</span> <span class="var">X</span> <span class="op">></span> <span class="num">${threshold}</span>:</div>
-                    <div class="code-line indent"><span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">*</span> <span class="num">2</span></div>
+                    <div class="code-line indent"><span class="kw">IF</span> <span class="var">X</span> <span class="op">></span> <span class="num">${threshold}</span>:</div>
+                    <div class="code-line indent" style="padding-left: 50px;"><span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">*</span> <span class="num">2</span></div>
                     <div class="code-line"><span class="kw">PRINT</span> <span class="var">X</span></div>
                 `;
             } 
@@ -101,8 +101,6 @@
                 }
                 ans = y;
 
-                // В 3-м уровне много вложенности: 
-                // внутри LOOP выполняется X=..., затем IF, внутри IF действие с Y.
                 htmlCode = `
                     <div class="code-line"><span class="kw">LET</span> <span class="var">X</span> <span class="op">=</span> <span class="num">${startX}</span></div>
                     <div class="code-line"><span class="kw">LET</span> <span class="var">Y</span> <span class="op">=</span> <span class="num">${startY}</span></div>
@@ -141,10 +139,9 @@
                     const div = document.createElement('div');
                     div.innerHTML = lines[lineIdx].trim(); 
                     
-                    // Применяем класс indent, если он есть в строке
+                    // Применяем классы отступа из строки
                     if (lines[lineIdx].includes('class="code-line indent"')) {
                         div.className = 'code-line indent';
-                        // Если есть инлайн-стиль (для 3-го уровня), копируем и его
                         if(lines[lineIdx].includes('style="padding-left: 50px;"')) {
                             div.style.paddingLeft = '50px';
                         }
