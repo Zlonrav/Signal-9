@@ -2,38 +2,28 @@
 (function() {
     const content = document.getElementById('edrContent');
     
-    // Флаги прохождения
     const osPassed = localStorage.getItem('s9_edr_os_passed') === 'true';
     const gatewayPassed = localStorage.getItem('s9_edr_gateway_passed') === 'true';
-    
-    // Триггеры (разрешения на вход)
     const osTrigger = localStorage.getItem('s9_edr_os_trigger') === 'true';
     const gatewayTrigger = localStorage.getItem('s9_edr_gateway_trigger') === 'true';
 
-    // Очистка старых интервалов при перезагрузке (на всякий случай)
     if (window.edrScanInterval) clearInterval(window.edrScanInterval);
     if (window.edrLogInterval) clearInterval(window.edrLogInterval);
 
-    // --- 1. ЗАПУСК ПЕСОЧНИЦЫ (ЕСЛИ ЕСТЬ ТРИГГЕР) ---
     if (osTrigger) {
         startSandbox();
-    } 
-    // --- 2. ЗАПУСК ВЗЛОМА ШИФРА (ЕСЛИ ЕСТЬ ТРИГГЕР) ---
-    else if (gatewayTrigger) {
+    } else if (gatewayTrigger) {
         startMastermind();
-    } 
-    // --- 3. РАБОЧИЙ РЕЖИМ ---
-    else {
+    } else {
         if (osPassed && gatewayPassed) {
-            initShieldVisual(false); // Полный режим
+            initShieldVisual(false);
         } else if (osPassed || gatewayPassed) {
-            initShieldVisual(true, osPassed ? 'ОС' : 'ШЛЮЗ'); // Частичный режим (ожидание)
+            initShieldVisual(true, osPassed ? 'ОС' : 'ШЛЮЗ');
         } else {
             window.location.replace('404.html');
         }
     }
 
-    // --- ЛОГИКА ПЕСОЧНИЦЫ ---
     function startSandbox() {
         let phase = 1;
         function renderPhase() {
@@ -88,7 +78,6 @@
         renderPhase();
     }
 
-    // --- ЛОГИКА ВЗЛОМА ШИФРА ---
     function startMastermind() {
         const targetCode = Array.from({length: 5}, () => Math.floor(Math.random() * 10)).join('');
         content.innerHTML = `
@@ -133,17 +122,13 @@
         setTimeout(() => document.querySelector('#mmInputs input').focus(), 100);
     }
 
-    // --- РАБОЧИЙ РЕЖИМ (ЩИТ) ---
     function initShieldVisual(isPartial = false, moduleName = '') {
-        // Генерируем HTML
+        // Генерируем HTML без лишних надписей
         content.innerHTML = `
             <div class="main-layout">
-                <!-- ЩИТ -->
                 <div class="shield-wrapper">
                     <div class="shield-shape" id="shieldGrid"></div>
                 </div>
-
-                <!-- ПАНЕЛЬ СТАТИСТИКИ -->
                 <div class="side-panel">
                     <div class="counters">
                         <div class="counter-box">
@@ -159,7 +144,6 @@
                             <div class="counter-value" id="cnt-cleared">0</div>
                         </div>
                     </div>
-
                     <div class="log-container">
                         <div class="log-box" id="logBox"></div>
                     </div>
@@ -170,10 +154,7 @@
         const grid = document.getElementById('shieldGrid');
         const logBox = document.getElementById('logBox');
         
-        let totalScanned = 0;
-        let activeThreats = 0;
-        let totalCleared = 0;
-
+        let totalScanned = 0, activeThreats = 0, totalCleared = 0;
         const elScanned = document.getElementById('cnt-scanned');
         const elThreats = document.getElementById('cnt-threats');
         const elCleared = document.getElementById('cnt-cleared');
@@ -185,10 +166,8 @@
         }
 
         const cells = [];
-        const cols = 14;
-        const rows = 16;
+        const cols = 14, rows = 16;
 
-        // Создаем ячейки
         for (let i = 0; i < cols * rows; i++) {
             const cell = document.createElement('div');
             cell.className = 'shield-cell';
@@ -196,21 +175,20 @@
             cells.push(cell);
         }
 
-        // Функция логов
         function addLog(text, type = '') {
             const line = document.createElement('div');
             line.className = `log-line ${type}`;
             line.innerText = text;
             logBox.appendChild(line);
-
-            if (logBox.children.length > 40) {
-                logBox.removeChild(logBox.firstChild);
-            }
+            if (logBox.children.length > 40) logBox.removeChild(logBox.firstChild);
         }
 
-        // Главный цикл сканирования
+        // Заполняем лог при старте
+        for(let i=0; i<25; i++) {
+            addLog("> SYS_MONITOR: BACKGROUND PROCESS OK");
+        }
+
         window.edrScanInterval = setInterval(() => {
-            // Сканирование
             const idx = Math.floor(Math.random() * cells.length);
             const cell = cells[idx];
 
@@ -222,14 +200,12 @@
                 elScanned.innerText = formatNumber(totalScanned);
             }
 
-            // Угроза
             if (Math.random() > 0.96) {
                 const threatIdx = Math.floor(Math.random() * cells.length);
                 const threatCell = cells[threatIdx];
 
                 if (!threatCell.classList.contains('threat') && !threatCell.classList.contains('cleared') && !threatCell.classList.contains('scanning')) {
                     threatCell.classList.add('threat');
-                    
                     activeThreats++;
                     elThreats.innerText = formatNumber(activeThreats);
 
@@ -254,8 +230,6 @@
             }
         }, 50);
 
-        // Фоновые логи
-        // Фоновые логи
         window.edrLogInterval = setInterval(() => {
             if (Math.random() > 0.6) {
                 const messages = [
@@ -266,13 +240,7 @@
                     "> CHECKING HASH SIGNATURES...",
                     "> ALL SYSTEMS SECURE"
                 ];
-                
-                // В режиме ожидания иногда (с шансом 20%) добавляем напоминание
-                if (isPartial && Math.random() > 0.8) {
-                     addLog("> EDR MONITOR: WAITING FOR SECOND TRIGGER...", "warn");
-                } else {
-                     addLog(messages[Math.floor(Math.random() * messages.length)]);
-                }
+                addLog(messages[Math.floor(Math.random() * messages.length)]);
             }
         }, 1000);
     }
