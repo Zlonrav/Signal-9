@@ -3,6 +3,13 @@
     if (window.TERMINAL_INITIALIZED) return;
     window.TERMINAL_INITIALIZED = true;
 
+    // Блокировка консоли, если активен режим EDR
+    const isEdrLocked = localStorage.getItem('s9_edr_os_trigger') === 'true' || localStorage.getItem('s9_edr_gateway_trigger') === 'true';
+    if (isEdrLocked) return;
+
+    const page = window.location.pathname.split('/').pop() || 'index.html';
+    if (page === '404.html') return;
+
     const page = window.location.pathname.split('/').pop() || 'index.html';
     if (page === '404.html') return;
 
