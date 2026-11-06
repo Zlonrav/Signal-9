@@ -2,17 +2,16 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <script src="js/auth.js"></script> 
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>СИГНАЛ-9 // ОПЕРАЦИОННАЯ СИСТЕМА</title>
-    
     <link rel="stylesheet" type="text/css" href="style.css">
     <link rel="stylesheet" type="text/css" href="style-tools.css">
     <link rel="stylesheet" type="text/css" href="style-chat-terminal.css">
-        <style>
+    <style>
         body.tools-page { 
             overflow: hidden; height: 100vh; background-color: #010306; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0;
+            background-image: radial-gradient(circle at center, #03101a 0%, #010306 100%);
         }
 
         .os-header { 
@@ -22,121 +21,109 @@
             text-shadow: 0 0 20px var(--neon); z-index: 100; pointer-events: none;
         }
 
-        .os-container {
-            position: relative;
-            width: 400px; 
-            height: 400px;
-            z-index: 10;
+        /* --- ЕДИНЫЙ ТЕРМИНАЛ --- */
+        .terminal-wrapper {
+            position: relative; width: 1050px; height: 600px;
+            background: #000; border: 1px solid rgba(0, 242, 255, 0.3);
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.1), inset 0 0 20px rgba(0,0,0,1);
+            border-radius: 4px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; overflow: hidden; z-index: 10;
         }
 
-        #tracesLayer {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            pointer-events: none;
-            overflow: visible; 
+        .terminal-wrapper::before {
+            content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2; background-size: 100% 2px, 3px 100%; pointer-events: none;
         }
+
+        .terminal-wrapper::after {
+            content: ''; position: absolute; top: -1px; left: -1px; right: -1px; bottom: -1px;
+            pointer-events: none;
+            background: 
+                linear-gradient(to right, var(--neon) 15px, transparent 15px) 0 0,
+                linear-gradient(to bottom, var(--neon) 15px, transparent 15px) 0 0,
+                linear-gradient(to left, var(--neon) 15px, transparent 15px) 100% 0,
+                linear-gradient(to bottom, var(--neon) 15px, transparent 15px) 100% 0,
+                linear-gradient(to right, var(--neon) 15px, transparent 15px) 0 100%,
+                linear-gradient(to top, var(--neon) 15px, transparent 15px) 0 100%,
+                linear-gradient(to left, var(--neon) 15px, transparent 15px) 100% 100%,
+                linear-gradient(to top, var(--neon) 15px, transparent 15px) 100% 100%;
+            background-repeat: no-repeat; background-size: 2px 15px, 15px 2px; opacity: 0.8;
+        }
+
+        .terminal-hint {
+            position: absolute; bottom: 15px; right: 20px;
+            color: #555; font-size: 10px; letter-spacing: 1px; font-family: 'JetBrains Mono', monospace;
+            z-index: 100;
+        }
+
+        /* --- БЛОКИРОВКА (КАПЧА) --- */
+        #os-lockdown {
+            position: absolute; inset: 0; z-index: 20; display: flex;
+            flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.5s ease; background: transparent;
+        }
+        #os-lockdown.hidden { opacity: 0; pointer-events: none; }
+
+        .captcha-box { text-align: center; }
+        .captcha-box h2 { color: var(--neon); font-family: 'Michroma', sans-serif; font-size: 16px; margin-bottom: 20px; text-shadow: 0 0 10px var(--neon); }
+        .captcha-box p { color: #aaa; font-size: 12px; margin-bottom: 15px; line-height: 1.5; }
+        
+        .terminal-input {
+            background: transparent; border: none; border-bottom: 2px solid var(--neon);
+            color: var(--neon); font-family: 'JetBrains Mono', monospace; font-size: 24px;
+            text-align: center; outline: none; padding: 10px; width: 300px;
+            letter-spacing: 4px; transition: border-color 0.2s, box-shadow 0.2s;
+            margin: 15px auto 0; display: block;
+        }
+        
+        /* ФОКУС: ТОЛЬКО НЕОН, БЕЗ БЕЛОГО */
+        .terminal-input:focus { 
+            border-bottom-color: var(--neon); 
+            box-shadow: 0 5px 10px -5px var(--neon); 
+        }
+
+        /* --- СЕТКА КУБИТОВ --- */
+        .os-container {
+            position: relative; width: 400px; height: 400px; z-index: 10;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        #tracesLayer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; overflow: visible; }
 
         .qubit-grid {
-            position: relative;
-            z-index: 5;
-            display: grid;
-            grid-template-columns: repeat(5, 70px);
-            grid-template-rows: repeat(5, 70px);
-            gap: 15px;
-            perspective: 1000px; /* ВОЗВРАЩАЕМ 3D */
+            position: relative; z-index: 5; display: grid;
+            grid-template-columns: repeat(5, 70px); grid-template-rows: repeat(5, 70px);
+            gap: 15px; perspective: 1000px;
         }
 
         .qubit {
-            width: 70px; height: 70px;
-            background: rgba(2, 10, 15, 0.85);
-            border: 1px solid rgba(0, 242, 255, 0.3);
-            border-radius: 8px;
+            width: 70px; height: 70px; background: rgba(2, 10, 15, 0.85);
+            border: 1px solid rgba(0, 242, 255, 0.3); border-radius: 8px;
             display: flex; align-items: center; justify-content: center;
-            transition: all 0.3s ease;
-            position: relative;
-            /* ВОЗВРАЩАЕМ ОБЪЕМ */
+            transition: all 0.3s ease; position: relative;
             transform: rotateX(10deg) rotateY(-10deg);
-            box-shadow: 2px 2px 10px rgba(0,0,0,0.5);
-            animation: pulseBorder 3s infinite alternate; 
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.5); animation: pulseBorder 3s infinite alternate; 
         }
 
-        .qubit.active { 
-            border-color: var(--neon); 
-            box-shadow: 0 0 15px rgba(0, 242, 255, 0.2), 2px 2px 10px rgba(0,0,0,0.5); 
-        }
-        
+        .qubit.active { border-color: var(--neon); box-shadow: 0 0 15px rgba(0, 242, 255, 0.2), 2px 2px 10px rgba(0,0,0,0.5); }
         .qubit.active::after {
-            content: '';
-            position: absolute;
-            width: 25px; height: 25px;
-            border: 2px solid var(--neon);
-            border-radius: 50%;
-            /* Разделяем анимацию на свойства, чтобы delay точно применился */
-            animation-name: pulse;
-            animation-duration: 2s;
-            animation-iteration-count: infinite;
-            animation-timing-function: ease-in-out; 
-            animation-delay: var(--anim-delay, 0s); 
+            content: ''; position: absolute; width: 25px; height: 25px;
+            border: 2px solid var(--neon); border-radius: 50%;
+            animation-name: pulse; animation-duration: 2s; animation-iteration-count: infinite;
+            animation-timing-function: ease-in-out; animation-delay: var(--anim-delay, 0s); 
         }
 
         .qubit.broken { 
-            border-color: #ff3333; 
-            box-shadow: 0 0 15px rgba(255, 51, 51, 0.2), 2px 2px 10px rgba(0,0,0,0.5); 
-            animation: shake 1.5s infinite; 
-            background: rgba(15, 2, 2, 0.85);
+            border-color: #ff3333; box-shadow: 0 0 15px rgba(255, 51, 51, 0.2), 2px 2px 10px rgba(0,0,0,0.5); 
+            animation: shake 1.5s infinite; background: rgba(15, 2, 2, 0.85);
         }
-        .qubit.broken::after { content: 'ERR'; color: #ff3333; font-weight: bold; font-size: 12px; }
+        .qubit.broken::after { content: 'ERR'; color: #ff3333; font-weight: bold; font-size: 12px; border: none; animation: none; width: auto; height: auto; }
 
-        /* Анимации */
-        @keyframes pulse {
-            0%   { transform: scale(0.8); opacity: 0; }
-            20%  { transform: scale(1);   opacity: 1; }
-            80%  { transform: scale(1.2); opacity: 1; }
-            100% { transform: scale(1.5); opacity: 0; }
-        }
-
-        @keyframes pulseBorder {
-            0% { border-color: rgba(0, 242, 255, 0.3); }
-            100% { border-color: rgba(0, 242, 255, 0.8); }
-        }
-
-        /* Шейк с сохранением 3D-поворота */
-        @keyframes shake { 
-            0% { transform: rotateX(10deg) rotateY(-10deg) translate(1px, 1px); } 
-            20% { transform: rotateX(10deg) rotateY(-10deg) translate(-1px, -1px); } 
-            40% { transform: rotateX(10deg) rotateY(-10deg) translate(1px, 1px); } 
-            60% { transform: rotateX(10deg) rotateY(-10deg) translate(-1px, 1px); } 
-            80% { transform: rotateX(10deg) rotateY(-10deg) translate(1px, -1px); } 
-            100% { transform: rotateX(10deg) rotateY(-10deg) translate(1px, 1px); } 
-        }
-
-        #os-lockdown {
-            position: fixed; inset: 0; z-index: 99999;
-            background: rgba(0, 5, 10, 0.95); backdrop-filter: blur(10px);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: opacity 0.5s ease;
-        }
-        #os-lockdown.hidden { opacity: 0; pointer-events: none; }
-        .captcha-box {
-            border: 1px solid var(--neon); background: #020508; padding: 30px; text-align: center;
-            box-shadow: 0 0 30px rgba(0, 242, 255, 0.1);
-        }
-        .captcha-box h2 { color: var(--neon); font-family: 'Michroma', sans-serif; font-size: 16px; margin-bottom: 20px; }
-        .captcha-box p { color: #aaa; font-family: 'JetBrains Mono', monospace; font-size: 12px; margin-bottom: 20px; line-height: 1.5; }
-        #captcha-input {
-            background: transparent !important; border: none !important; 
-            border-bottom: 2px solid var(--neon) !important; color: var(--neon) !important; 
-            font-family: 'JetBrains Mono', monospace !important; font-size: 16px !important; 
-            text-align: center !important; outline: none !important; padding: 10px !important; 
-            width: 300px !important; margin: 15px auto 0 auto !important; display: block !important;
-            text-transform: uppercase !important; letter-spacing: 3px !important; position: static !important;
-        }
-        @keyframes flow {
-            to { stroke-dashoffset: -100; }
-        }
+        @keyframes pulse { 0% { transform: scale(0.8); opacity: 0; } 20% { transform: scale(1); opacity: 1; } 80% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
+        @keyframes pulseBorder { 0% { border-color: rgba(0, 242, 255, 0.3); } 100% { border-color: rgba(0, 242, 255, 0.8); } }
+        @keyframes shake { 0% { transform: rotateX(10deg) rotateY(-10deg) translate(1px, 1px); } 20% { transform: rotateX(10deg) rotateY(-10deg) translate(-1px, -1px); } 40% { transform: rotateX(10deg) rotateY(-10deg) translate(1px, 1px); } 60% { transform: rotateX(10deg) rotateY(-10deg) translate(-1px, 1px); } 80% { transform: rotateX(10deg) rotateY(-10deg) translate(1px, -1px); } 100% { transform: rotateX(10deg) rotateY(-10deg) translate(1px, 1px); } }
+        @keyframes flow { to { stroke-dashoffset: -100; } }
     </style>
 </head>
 <body class="tools-page">
@@ -150,28 +137,32 @@
     <div id="scanner-line"></div>
     <div id="overlay-noise"></div>
 
+    <div class="os-header">ОПЕРАЦИОННАЯ СИСТЕМА // СЕКТОР 01</div>
+    
+    <div class="terminal-wrapper">
+        <div id="os-lockdown">
+            <div class="captcha-box">
+                <h2>ВЕРИФИКАЦИЯ ЦЕЛОСТНОСТИ</h2>
+                <p>ОБНАРУЖЕН ВНЕШНИЙ ЗАПРОС. ДЛЯ ДОСТУПА К ЯДРУ ВВЕДИТЕ ВАШ УНИКАЛЬНЫЙ ИДЕНТИФИКАТОР.</p>
+                <p>ПОЛУЧИТЕ ЕГО В КОНСОЛИ КОМАНДОЙ <span class="cmd-text">self --id</span></p>
+                <input type="text" id="captcha-input" class="terminal-input" autocomplete="off" spellcheck="false" placeholder="0x...">
+            </div>
+        </div>
+
+        <div class="os-container">
+            <svg id="tracesLayer" width="100%" height="100%"></svg>
+            <div class="qubit-grid" id="qubitGrid"></div>
+        </div>
+        
+        <div class="terminal-hint" id="os-hint">[ENTER] - ВЫПОЛНИТЬ</div>
+    </div>
+
     <div class="audio-control-fixed" id="audio-toggle">
         <span id="audio-status-icon">○</span>
         <span id="audio-status">АУДИОДАТЧИКИ: ВЫКЛ</span>
     </div>
 
-        <button id="console-toggle-btn" style="position: fixed; bottom: 25px; right: 25px; z-index: 100000; background: rgba(0, 20, 30, 0.5); border: 1px solid rgba(0, 242, 255, 0.3); color: var(--neon); padding: 8px 12px; font-family: monospace; font-size: 14px; cursor: pointer; transition: 0.3s;" onmouseover="this.style.background='rgba(0, 242, 255, 0.1)'" onmouseout="this.style.background='rgba(0, 20, 30, 0.5)'">&gt;_</button>
-
-    <div class="os-header">ОПЕРАЦИОННАЯ СИСТЕМА // СЕКТОР 01</div>
-    
-    <div class="os-container">
-        <svg id="tracesLayer" width="100%" height="100%"></svg>
-        <div class="qubit-grid" id="qubitGrid"></div>
-    </div>
-
-    <div id="os-lockdown">
-        <div class="captcha-box">
-            <h2>ВЕРИФИКАЦИЯ ЦЕЛОСТНОСТИ</h2>
-            <p>ОБНАРУЖЕН ВНЕШНИЙ ЗАПРОС. ДЛЯ ДОСТУПА К ЯДРУ ВВЕДИТЕ ВАШ УНИКАЛЬНЫЙ ИДЕНТИФИКАТОР.</p>
-            <p>ПОЛУЧИТЕ ЕГО В КОНСОЛИ КОМАНДОЙ <span class="cmd-text">self --id</span></p>
-            <input type="text" id="captcha-input" autocomplete="off" spellcheck="false" placeholder="0x...">
-        </div>
-    </div>
+    <button id="console-toggle-btn" style="position: fixed; bottom: 25px; right: 25px; z-index: 100000; background: rgba(0, 20, 30, 0.5); border: 1px solid rgba(0, 242, 255, 0.3); color: var(--neon); padding: 8px 12px; font-family: monospace; font-size: 14px; cursor: pointer; transition: 0.3s;" onmouseover="this.style.background='rgba(0, 242, 255, 0.1)'" onmouseout="this.style.background='rgba(0, 20, 30, 0.5)'">&gt;_</button>
 
     <script src="js/loader.js"></script>
     <script src="js/os.js"></script>
