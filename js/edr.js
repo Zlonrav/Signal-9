@@ -255,6 +255,7 @@
         }, 50);
 
         // Фоновые логи
+        // Фоновые логи
         window.edrLogInterval = setInterval(() => {
             if (Math.random() > 0.6) {
                 const messages = [
@@ -265,7 +266,13 @@
                     "> CHECKING HASH SIGNATURES...",
                     "> ALL SYSTEMS SECURE"
                 ];
-                addLog(messages[Math.floor(Math.random() * messages.length)]);
+                
+                // В режиме ожидания иногда (с шансом 20%) добавляем напоминание
+                if (isPartial && Math.random() > 0.8) {
+                     addLog("> EDR MONITOR: WAITING FOR SECOND TRIGGER...", "warn");
+                } else {
+                     addLog(messages[Math.floor(Math.random() * messages.length)]);
+                }
             }
         }, 1000);
     }
