@@ -10,9 +10,6 @@
     const page = window.location.pathname.split('/').pop() || 'index.html';
     if (page === '404.html') return;
 
-    const page = window.location.pathname.split('/').pop() || 'index.html';
-    if (page === '404.html') return;
-
     // 1. ВНЕДРЯЕМ СТИЛИ
     const style = document.createElement('style');
     style.innerHTML = `
