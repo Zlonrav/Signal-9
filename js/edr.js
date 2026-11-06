@@ -11,15 +11,12 @@
     if (window.edrScanInterval) clearInterval(window.edrScanInterval);
     if (window.edrLogInterval) clearInterval(window.edrLogInterval);
 
-    // --- 1. ЗАПУСК ПЕСОЧНИЦЫ ---
     if (osTrigger) {
         startSandbox();
     } 
-    // --- 2. ЗАПУСК ВЗЛОМА ШИФРА ---
     else if (gatewayTrigger) {
         startMastermind();
     } 
-    // --- 3. РАБОЧИЙ РЕЖИМ ---
     else {
         if (hint) hint.style.display = 'none';
         if (osPassed && gatewayPassed) {
@@ -32,7 +29,7 @@
     }
 
     // ==========================================
-    // ЛОГИКА ПЕСОЧНИЦЫ (АЛГОРИТМЫ)
+    // ЛОГИКА ПЕСОЧНИЦЫ
     // ==========================================
     function startSandbox() {
         if (hint) hint.style.display = 'block';
@@ -74,7 +71,7 @@
                     <div class="code-line"><span class="kw">LOOP</span> <span class="num">3</span> TIMES:</div>
                     <div class="code-line indent"><span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">+</span> <span class="num">${addVal}</span></div>
                     <div class="code-line indent"><span class="kw">IF</span> <span class="var">X</span> <span class="op">></span> <span class="num">${threshold}</span>:</div>
-                    <div class="code-line indent" style="padding-left: 50px;"><span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">*</span> <span class="num">2</span></div>
+                    <div class="code-line indent" style="padding-left: 40px;"><span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">*</span> <span class="num">2</span></div>
                     <div class="code-line"><span class="kw">PRINT</span> <span class="var">X</span></div>
                 `;
             } 
@@ -97,24 +94,25 @@
                     <div class="code-line"><span class="kw">LOOP</span> <span class="num">3</span> TIMES:</div>
                     <div class="code-line indent"><span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">*</span> <span class="num">${multVal}</span></div>
                     <div class="code-line indent"><span class="kw">IF</span> <span class="var">X</span> <span class="op">></span> <span class="num">10</span>:</div>
-                    <div class="code-line indent" style="padding-left: 50px;"><span class="var">Y</span> <span class="op">=</span> <span class="var">Y</span> <span class="op">+</span> <span class="var">X</span></div>
+                    <div class="code-line indent" style="padding-left: 40px;"><span class="var">Y</span> <span class="op">=</span> <span class="var">Y</span> <span class="op">+</span> <span class="var">X</span></div>
                     <div class="code-line indent"><span class="kw">ELSE IF</span> <span class="var">X</span> <span class="op">></span> <span class="num">5</span>:</div>
-                    <div class="code-line indent" style="padding-left: 50px;"><span class="var">Y</span> <span class="op">=</span> <span class="var">Y</span> <span class="op">*</span> <span class="num">2</span></div>
+                    <div class="code-line indent" style="padding-left: 40px;"><span class="var">Y</span> <span class="op">=</span> <span class="var">Y</span> <span class="op">*</span> <span class="num">2</span></div>
                     <div class="code-line indent"><span class="kw">ELSE</span>:</div>
-                    <div class="code-line indent" style="padding-left: 50px;"><span class="var">Y</span> <span class="op">=</span> <span class="var">Y</span> <span class="op">-</span> <span class="num">1</span></div>
+                    <div class="code-line indent" style="padding-left: 40px;"><span class="var">Y</span> <span class="op">=</span> <span class="var">Y</span> <span class="op">-</span> <span class="num">1</span></div>
                     <div class="code-line"><span class="kw">PRINT</span> <span class="var">Y</span></div>
                 `;
             }
 
             correctAnswer = ans;
 
+            // Убрали width: 600px, сделали адаптивным под 600px рамку
             content.innerHTML = `
-                <div style="width: 600px; text-align: left;">
-                    <div style="color: var(--neon); margin-bottom: 15px; font-size: 12px; letter-spacing: 2px;">// ВЫПОЛНЕНИЕ СКРИПТА В ИЗОЛИРОВАННОЙ СРЕДЕ</div>
-                    <div id="codeOutput" style="margin-bottom: 20px;"></div>
+                <div style="width: 100%; max-width: 480px; text-align: left; box-sizing: border-box;">
+                    <div style="color: var(--neon); margin-bottom: 10px; font-size: 10px; letter-spacing: 1px;">// ВЫПОЛНЕНИЕ СКРИПТА В ИЗОЛИРОВАННОЙ СРЕДЕ</div>
+                    <div id="codeOutput" style="margin-bottom: 15px;"></div>
                     
                     <div style="text-align: center;">
-                        <div style="margin-bottom: 10px; color: #aaa;">ЭТАП ${level} / 3 — ВВЕДИТЕ РЕЗУЛЬТАТ:</div>
+                        <div style="margin-bottom: 8px; color: #aaa; font-size: 11px;">ЭТАП ${level} / 3 — ВВЕДИТЕ РЕЗУЛЬТАТ:</div>
                         <input type="text" id="sbAnswer" class="terminal-input" autocomplete="off" inputmode="numeric" pattern="[0-9]*">
                         <button id="sbBtn" class="mobile-btn">ВЫПОЛНИТЬ</button>
                         <div id="sbStatus" class="status-msg"></div>
@@ -132,14 +130,14 @@
                     div.innerHTML = lines[lineIdx].trim(); 
                     if (lines[lineIdx].includes('class="code-line indent"')) {
                         div.className = 'code-line indent';
-                        if(lines[lineIdx].includes('style="padding-left: 50px;"')) div.style.paddingLeft = '50px';
+                        if(lines[lineIdx].includes('style="padding-left: 40px;"')) div.style.paddingLeft = '40px';
                     } else {
                         div.className = 'code-line';
                     }
                     codeOutput.appendChild(div);
                     if (typeof window.playTypeSound === 'function') window.playTypeSound();
                     lineIdx++;
-                    setTimeout(typeLine, 200);
+                    setTimeout(typeLine, 150);
                 } else {
                     document.getElementById('sbAnswer').focus();
                 }
@@ -208,7 +206,7 @@
         if (hint) hint.style.display = 'block';
         const targetCode = Array.from({length: 5}, () => Math.floor(Math.random() * 10)).join('');
         content.innerHTML = `
-            <div style="margin-bottom: 15px; color: var(--neon); text-align:center;">
+            <div style="margin-bottom: 15px; color: var(--neon); text-align:center; font-size: 12px; line-height: 1.5;">
                 > ДОСТУП К ШЛЮЗУ ЗАБЛОКИРОВАН.<br>
                 > ПОДБЕРИТЕ 5-ЗНАЧНЫЙ КОД.<br>
                 > <span style="color:#00ff44">ЗЕЛЕНЫЙ</span> - ЦИФРА НА СВОЕМ МЕСТЕ. <span style="color:#ffaa00">ЖЕЛТЫЙ</span> - ЕСТЬ, НО НЕ ТАМ.
@@ -249,7 +247,6 @@
 
         document.getElementById('mmBtn').onclick = checkCode;
         
-        // Ввод по Enter для каждого инпута
         document.querySelectorAll('#mmInputs input').forEach((inp, idx, arr) => {
             inp.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
@@ -326,10 +323,10 @@
             line.className = `log-line ${type}`;
             line.innerText = text;
             logBox.appendChild(line);
-            if (logBox.children.length > 40) logBox.removeChild(logBox.firstChild);
+            if (logBox.children.length > 35) logBox.removeChild(logBox.firstChild);
         }
 
-        for(let i=0; i<25; i++) addLog("> SYS_MONITOR: BACKGROUND PROCESS OK");
+        for(let i=0; i<20; i++) addLog("> SYS_MONITOR: BACKGROUND OK");
 
         window.edrScanInterval = setInterval(() => {
             const idx = Math.floor(Math.random() * cells.length);
@@ -363,7 +360,7 @@
                         totalCleared++;
                         elThreats.innerText = formatNumber(activeThreats);
                         elCleared.innerText = formatNumber(totalCleared);
-                        addLog(`> PID: THREAT NEUTRALIZED. RESUMING SCAN.`, 'ok');
+                        addLog(`> PID: THREAT NEUTRALIZED.`, 'ok');
                         setTimeout(() => threatCell.classList.remove('cleared'), 1000);
                     }, 1500);
                 }
