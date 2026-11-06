@@ -10,6 +10,10 @@
     const osTrigger = localStorage.getItem('s9_edr_os_trigger') === 'true';
     const gatewayTrigger = localStorage.getItem('s9_edr_gateway_trigger') === 'true';
 
+    // Очистка старых интервалов при перезагрузке (на всякий случай)
+    if (window.edrScanInterval) clearInterval(window.edrScanInterval);
+    if (window.edrLogInterval) clearInterval(window.edrLogInterval);
+
     // --- 1. ЗАПУСК ПЕСОЧНИЦЫ (ЕСЛИ ЕСТЬ ТРИГГЕР) ---
     if (osTrigger) {
         startSandbox();
@@ -21,11 +25,10 @@
     // --- 3. РАБОЧИЙ РЕЖИМ ---
     else {
         if (osPassed && gatewayPassed) {
-            showFullWorkingMode();
+            initShieldVisual(false); // Полный режим
         } else if (osPassed || gatewayPassed) {
-            showPartialWorkingMode(osPassed ? 'ОС' : 'ШЛЮЗ');
+            initShieldVisual(true, osPassed ? 'ОС' : 'ШЛЮЗ'); // Частичный режим (ожидание)
         } else {
-            // Если нет ни триггеров, ни пройденных квестов — 404
             window.location.replace('404.html');
         }
     }
@@ -72,8 +75,8 @@
                 document.getElementById('sbAns').oninput = (e) => { 
                     if(e.target.value === ans.toString()) { 
                         localStorage.setItem('s9_edr_os_passed', 'true');
-                        localStorage.removeItem('s9_edr_os_trigger'); // Сжигаем триггер
-                        localStorage.setItem('s9_os_fixed', 'true'); // <--- ТЕПЕРЬ ОС СЧИТАЕТСЯ ПОЧИНЕННОЙ
+                        localStorage.removeItem('s9_edr_os_trigger');
+                        localStorage.setItem('s9_os_fixed', 'true');
                         localStorage.setItem('s9_os_errors', '0'); 
                         content.innerHTML = `<h2 style="color: var(--ok);">ЛОГИКА ПОДТВЕРЖДЕНА</h2><p>Возврат в ОС...</p>`;
                         setTimeout(() => { window.location.href = 'os.html'; }, 2000);
@@ -118,7 +121,7 @@
 
             if (exact === 5) {
                 localStorage.setItem('s9_edr_gateway_passed', 'true');
-                localStorage.removeItem('s9_edr_gateway_trigger'); // Сжигаем триггер
+                localStorage.removeItem('s9_edr_gateway_trigger');
                 document.getElementById('mmBtn').disabled = true;
                 content.innerHTML = `<h2 style="color: var(--ok);">ШЛЮЗ РАЗБЛОКИРОВАН</h2><p>Возврат на Карту...</p>`;
                 setTimeout(() => { window.location.href = 'map.html'; }, 2000);
@@ -130,30 +133,146 @@
         setTimeout(() => document.querySelector('#mmInputs input').focus(), 100);
     }
 
-    // --- РАБОЧИЙ РЕЖИМ ---
-    function showFullWorkingMode() {
+    // --- РАБОЧИЙ РЕЖИМ (ЩИТ) ---
+    function initShieldVisual(isPartial = false, moduleName = '') {
+        // Генерируем HTML
         content.innerHTML = `
-            <div class="radar-container"><div class="radar-sweep"></div></div>
-            <h2 style="color: var(--ok); text-shadow: 0 0 10px var(--ok); margin: 0 0 10px 0;">СИСТЕМА АКТИВНА</h2>
-            <p style="color: var(--neon); opacity: 0.7; margin-bottom: 15px;">УГРОЗ НЕ ОБНАРУЖЕНО. МОНИТОРИНГ В ФОНОВОМ РЕЖИМЕ.</p>
-            <div class="logs-container" id="edrLogs"></div>
-        `;
-        const logs = document.getElementById('edrLogs');
-        const messages = ["> SCANNING MEMORY: 0 THREATS", "> NETWORK GATEWAY: SECURED", "> KERNEL INTEGRITY: 100%", "> EDR MONITOR: ALL SYSTEMS CLEAN"];
-        let i = 0;
-        setInterval(() => { logs.innerHTML += `${messages[i % messages.length]}<br>`; logs.scrollTop = logs.scrollHeight; i++; }, 1500);
-    }
+            <div class="main-layout">
+                <!-- ЩИТ -->
+                <div class="shield-wrapper">
+                    <div class="shield-shape" id="shieldGrid"></div>
+                </div>
 
-    function showPartialWorkingMode(moduleName) {
-        content.innerHTML = `
-            <div class="radar-container"><div class="radar-sweep"></div></div>
-            <h2 style="color: var(--ok); text-shadow: 0 0 10px var(--ok); margin: 0 0 10px 0;">ПРОТОКОЛ ${moduleName} АКТИВЕН</h2>
-            <p style="color: var(--neon); opacity: 0.7; margin-bottom: 15px;">ОЖИДАНИЕ ВТОРОГО ТРИГГЕРА ДЛЯ ПОЛНОЙ АКТИВАЦИИ.</p>
-            <div class="logs-container" id="edrLogs"></div>
+                <!-- ПАНЕЛЬ СТАТИСТИКИ -->
+                <div class="side-panel">
+                    <div class="counters">
+                        <div class="counter-box">
+                            <div class="counter-label">ПРОВЕРЕНО</div>
+                            <div class="counter-value" id="cnt-scanned">0</div>
+                        </div>
+                        <div class="counter-box">
+                            <div class="counter-label">УГРОЗЫ</div>
+                            <div class="counter-value" id="cnt-threats">0</div>
+                        </div>
+                        <div class="counter-box">
+                            <div class="counter-label">УСТРАНЕНО</div>
+                            <div class="counter-value" id="cnt-cleared">0</div>
+                        </div>
+                    </div>
+
+                    <div class="log-container">
+                        <div class="log-box" id="logBox"></div>
+                    </div>
+                </div>
+            </div>
+            ${isPartial ? `<div style="position: absolute; bottom: 10px; color: var(--warn); font-size: 10px; letter-spacing: 2px;">ПРОТОКОЛ ${moduleName}: ОЖИДАНИЕ ВТОРОГО ТРИГГЕРА</div>` : ''}
         `;
-        const logs = document.getElementById('edrLogs');
-        const messages = ["> EDR MONITOR: WAITING FOR GATEWAY...", "> KERNEL INTEGRITY: 100%", "> SCANNING MEMORY: 0 THREATS"];
-        let i = 0;
-        setInterval(() => { logs.innerHTML += `${messages[i % messages.length]}<br>`; logs.scrollTop = logs.scrollHeight; i++; }, 1500);
+
+        const grid = document.getElementById('shieldGrid');
+        const logBox = document.getElementById('logBox');
+        
+        let totalScanned = 0;
+        let activeThreats = 0;
+        let totalCleared = 0;
+
+        const elScanned = document.getElementById('cnt-scanned');
+        const elThreats = document.getElementById('cnt-threats');
+        const elCleared = document.getElementById('cnt-cleared');
+
+        function formatNumber(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toString();
+        }
+
+        const cells = [];
+        const cols = 14;
+        const rows = 16;
+
+        // Создаем ячейки
+        for (let i = 0; i < cols * rows; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'shield-cell';
+            grid.appendChild(cell);
+            cells.push(cell);
+        }
+
+        // Функция логов
+        function addLog(text, type = '') {
+            const line = document.createElement('div');
+            line.className = `log-line ${type}`;
+            line.innerText = text;
+            logBox.appendChild(line);
+
+            if (logBox.children.length > 40) {
+                logBox.removeChild(logBox.firstChild);
+            }
+        }
+
+        // Заполняем лог при старте
+        for(let i=0; i<25; i++) {
+            addLog(isPartial ? "> EDR MONITOR: WAITING FOR SECOND TRIGGER..." : "> SYS_MONITOR: BACKGROUND PROCESS OK");
+        }
+
+        // Главный цикл сканирования
+        window.edrScanInterval = setInterval(() => {
+            // Сканирование
+            const idx = Math.floor(Math.random() * cells.length);
+            const cell = cells[idx];
+
+            if (!cell.classList.contains('threat') && !cell.classList.contains('cleared')) {
+                cell.classList.add('scanning');
+                setTimeout(() => cell.classList.remove('scanning'), 100);
+
+                totalScanned++;
+                elScanned.innerText = formatNumber(totalScanned);
+            }
+
+            // Угроза
+            if (Math.random() > 0.96) {
+                const threatIdx = Math.floor(Math.random() * cells.length);
+                const threatCell = cells[threatIdx];
+
+                if (!threatCell.classList.contains('threat') && !threatCell.classList.contains('cleared') && !threatCell.classList.contains('scanning')) {
+                    threatCell.classList.add('threat');
+                    
+                    activeThreats++;
+                    elThreats.innerText = formatNumber(activeThreats);
+
+                    const r = Math.floor(threatIdx / cols) + 1;
+                    const c = (threatIdx % cols) + 1;
+
+                    addLog(`> PID ${Math.floor(Math.random()*9000)+1000}: WARNING! THREAT AT [${r},${c}]`, 'warn');
+
+                    setTimeout(() => {
+                        threatCell.classList.remove('threat');
+                        threatCell.classList.add('cleared');
+                        
+                        activeThreats--;
+                        totalCleared++;
+                        elThreats.innerText = formatNumber(activeThreats);
+                        elCleared.innerText = formatNumber(totalCleared);
+                        
+                        addLog(`> PID: THREAT NEUTRALIZED. RESUMING SCAN.`, 'ok');
+                        setTimeout(() => threatCell.classList.remove('cleared'), 1000);
+                    }, 1500);
+                }
+            }
+        }, 50);
+
+        // Фоновые логи
+        window.edrLogInterval = setInterval(() => {
+            if (Math.random() > 0.6) {
+                const messages = [
+                    "> SCANNING KERNEL SPACE... 100%",
+                    "> CHECKING INTEGRITY: SYS_CORE.DLL",
+                    "> MEMORY BLOCK 0x4F2A: CLEAN",
+                    "> NETWORK GATEWAY: PING OK",
+                    "> CHECKING HASH SIGNATURES...",
+                    "> ALL SYSTEMS SECURE"
+                ];
+                addLog(messages[Math.floor(Math.random() * messages.length)]);
+            }
+        }, 1000);
     }
 })();
