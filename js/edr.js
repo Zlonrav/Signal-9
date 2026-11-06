@@ -208,11 +208,6 @@
             }
         }
 
-        // Заполняем лог при старте
-        for(let i=0; i<25; i++) {
-            addLog(isPartial ? "> EDR MONITOR: WAITING FOR SECOND TRIGGER..." : "> SYS_MONITOR: BACKGROUND PROCESS OK");
-        }
-
         // Главный цикл сканирования
         window.edrScanInterval = setInterval(() => {
             // Сканирование
