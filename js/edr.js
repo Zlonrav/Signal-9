@@ -105,14 +105,13 @@
 
             correctAnswer = ans;
 
-            // Убрали width: 600px, сделали адаптивным под 600px рамку
             content.innerHTML = `
-                <div style="width: 100%; max-width: 480px; text-align: left; box-sizing: border-box;">
-                    <div style="color: var(--neon); margin-bottom: 10px; font-size: 10px; letter-spacing: 1px;">// ВЫПОЛНЕНИЕ СКРИПТА В ИЗОЛИРОВАННОЙ СРЕДЕ</div>
+                <div style="width: 100%; max-width: 450px; text-align: left; box-sizing: border-box;">
+                    <div style="color: var(--neon); margin-bottom: 10px; font-size: 11px; letter-spacing: 1px;">// ВЫПОЛНЕНИЕ СКРИПТА В ИЗОЛИРОВАННОЙ СРЕДЕ</div>
                     <div id="codeOutput" style="margin-bottom: 15px;"></div>
                     
                     <div style="text-align: center;">
-                        <div style="margin-bottom: 8px; color: #aaa; font-size: 11px;">ЭТАП ${level} / 3 — ВВЕДИТЕ РЕЗУЛЬТАТ:</div>
+                        <div style="margin-bottom: 8px; color: #aaa; font-size: 12px;">ЭТАП ${level} / 3 — ВВЕДИТЕ РЕЗУЛЬТАТ:</div>
                         <input type="text" id="sbAnswer" class="terminal-input" autocomplete="off" inputmode="numeric" pattern="[0-9]*">
                         <button id="sbBtn" class="mobile-btn">ВЫПОЛНИТЬ</button>
                         <div id="sbStatus" class="status-msg"></div>
