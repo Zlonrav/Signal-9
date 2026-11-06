@@ -23,9 +23,9 @@
             text-shadow: 0 0 20px var(--neon); z-index: 100; pointer-events: none;
         }
 
-        /* --- ЕДИНЫЙ ТЕРМИНАЛ --- */
+        /* --- ЕДИНЫЙ ТЕРМИНАЛ (АДАПТИВНЫЙ) --- */
         .terminal-wrapper {
-            position: relative; width: 600px; height: 500px;
+            position: relative; width: 90%; max-width: 1000px; height: 85vh; max-height: 700px;
             background: #000; border: 1px solid rgba(0, 242, 255, 0.3);
             box-shadow: 0 0 30px rgba(0, 242, 255, 0.1), inset 0 0 20px rgba(0,0,0,1);
             border-radius: 4px; display: flex; flex-direction: column;
@@ -38,24 +38,16 @@
             z-index: 2; background-size: 100% 2px, 3px 100%; pointer-events: none;
         }
 
-        .terminal-wrapper::after {
-            content: ''; position: absolute; top: -1px; left: -1px; right: -1px; bottom: -1px;
-            pointer-events: none;
-            background: 
-                linear-gradient(to right, var(--neon) 15px, transparent 15px) 0 0,
-                linear-gradient(to bottom, var(--neon) 15px, transparent 15px) 0 0,
-                linear-gradient(to left, var(--neon) 15px, transparent 15px) 100% 0,
-                linear-gradient(to bottom, var(--neon) 15px, transparent 15px) 100% 0,
-                linear-gradient(to right, var(--neon) 15px, transparent 15px) 0 100%,
-                linear-gradient(to top, var(--neon) 15px, transparent 15px) 0 100%,
-                linear-gradient(to left, var(--neon) 15px, transparent 15px) 100% 100%,
-                linear-gradient(to top, var(--neon) 15px, transparent 15px) 100% 100%;
-            background-repeat: no-repeat; background-size: 2px 15px, 15px 2px; opacity: 0.8;
-        }
+        /* --- ИДЕАЛЬНЫЕ УГОЛКИ --- */
+        .corner { position: absolute; width: 20px; height: 20px; border: 2px solid var(--neon); z-index: 10; pointer-events: none; opacity: 0.8; }
+        .corner-tl { top: -1px; left: -1px; border-right: none; border-bottom: none; }
+        .corner-tr { top: -1px; right: -1px; border-left: none; border-bottom: none; }
+        .corner-bl { bottom: -1px; left: -1px; border-right: none; border-top: none; }
+        .corner-br { bottom: -1px; right: -1px; border-left: none; border-top: none; }
 
         .terminal-hint {
             position: absolute; bottom: 10px; right: 15px;
-            color: #555; font-size: 9px; letter-spacing: 1px; font-family: 'JetBrains Mono', monospace;
+            color: #555; font-size: 10px; letter-spacing: 1px; font-family: 'JetBrains Mono', monospace;
             z-index: 100;
         }
 
@@ -67,15 +59,15 @@
         #os-lockdown.hidden { opacity: 0; pointer-events: none; }
 
         .captcha-box { text-align: center; width: 100%; }
-        .captcha-box h2 { color: var(--neon); font-family: 'Michroma', sans-serif; font-size: 14px; margin-bottom: 15px; text-shadow: 0 0 10px var(--neon); }
-        .captcha-box p { color: #aaa; font-size: 11px; margin-bottom: 10px; line-height: 1.4; }
+        .captcha-box h2 { color: var(--neon); font-family: 'Michroma', sans-serif; font-size: 16px; margin-bottom: 20px; text-shadow: 0 0 10px var(--neon); }
+        .captcha-box p { color: #aaa; font-size: 12px; margin-bottom: 15px; line-height: 1.5; }
         
         input#captcha-input.terminal-input {
             background: transparent !important; border: none !important; border-bottom: 2px solid var(--neon) !important;
-            color: var(--neon) !important; font-family: 'JetBrains Mono', monospace !important; font-size: 20px !important;
-            text-align: center !important; outline: none !important; padding: 8px !important; width: 250px !important;
+            color: var(--neon) !important; font-family: 'JetBrains Mono', monospace !important; font-size: 24px !important;
+            text-align: center !important; outline: none !important; padding: 10px !important; width: 300px !important;
             letter-spacing: 4px !important; transition: border-color 0.2s, box-shadow 0.2s !important;
-            margin: 10px auto 0 !important; display: block !important;
+            margin: 15px auto 0 !important; display: block !important;
             position: static !important; box-shadow: none;
         }
         
@@ -84,42 +76,42 @@
             box-shadow: 0 5px 10px -5px var(--neon) !important; 
         }
 
-        /* --- СЕТКА КУБИТОВ (УМЕНЬШЕНА) --- */
+        /* --- АДАПТИВНАЯ СЕТКА КУБИТОВ --- */
         .os-container {
-            position: relative; width: 350px; height: 350px; z-index: 10;
-            display: flex; align-items: center; justify-content: center;
+            position: relative; width: 80%; max-width: 400px; aspect-ratio: 1 / 1;
+            z-index: 10; display: flex; align-items: center; justify-content: center;
         }
 
         #tracesLayer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; overflow: visible; }
 
         .qubit-grid {
             position: relative; z-index: 5; display: grid;
-            grid-template-columns: repeat(5, 60px); grid-template-rows: repeat(5, 60px);
-            gap: 12px; perspective: 1000px;
+            grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(5, 1fr);
+            gap: 3%; width: 100%; height: 100%; perspective: 1000px;
         }
 
         .qubit {
-            width: 60px; height: 60px; background: rgba(2, 10, 15, 0.85);
-            border: 1px solid rgba(0, 242, 255, 0.3); border-radius: 6px;
+            width: 100%; height: 100%; background: rgba(2, 10, 15, 0.85);
+            border: 1px solid rgba(0, 242, 255, 0.3); border-radius: 8px;
             display: flex; align-items: center; justify-content: center;
             transition: all 0.3s ease; position: relative;
             transform: rotateX(10deg) rotateY(-10deg);
-            box-shadow: 2px 2px 8px rgba(0,0,0,0.5); animation: pulseBorder 3s infinite alternate; 
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.5); animation: pulseBorder 3s infinite alternate; 
         }
 
-        .qubit.active { border-color: var(--neon); box-shadow: 0 0 10px rgba(0, 242, 255, 0.2), 2px 2px 8px rgba(0,0,0,0.5); }
+        .qubit.active { border-color: var(--neon); box-shadow: 0 0 15px rgba(0, 242, 255, 0.2), 2px 2px 10px rgba(0,0,0,0.5); }
         .qubit.active::after {
-            content: ''; position: absolute; width: 20px; height: 20px;
+            content: ''; position: absolute; width: 30%; height: 30%;
             border: 2px solid var(--neon); border-radius: 50%;
             animation-name: pulse; animation-duration: 2s; animation-iteration-count: infinite;
             animation-timing-function: ease-in-out; animation-delay: var(--anim-delay, 0s); 
         }
 
         .qubit.broken { 
-            border-color: #ff3333; box-shadow: 0 0 10px rgba(255, 51, 51, 0.2), 2px 2px 8px rgba(0,0,0,0.5); 
+            border-color: #ff3333; box-shadow: 0 0 15px rgba(255, 51, 51, 0.2), 2px 2px 10px rgba(0,0,0,0.5); 
             animation: shake 1.5s infinite; background: rgba(15, 2, 2, 0.85);
         }
-        .qubit.broken::after { content: 'ERR'; color: #ff3333; font-weight: bold; font-size: 10px; border: none; animation: none; width: auto; height: auto; }
+        .qubit.broken::after { content: 'ERR'; color: #ff3333; font-weight: bold; font-size: 12px; border: none; animation: none; width: auto; height: auto; }
 
         @keyframes pulse { 0% { transform: scale(0.8); opacity: 0; } 20% { transform: scale(1); opacity: 1; } 80% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
         @keyframes pulseBorder { 0% { border-color: rgba(0, 242, 255, 0.3); } 100% { border-color: rgba(0, 242, 255, 0.8); } }
@@ -141,6 +133,11 @@
     <div class="os-header">ОПЕРАЦИОННАЯ СИСТЕМА // СЕКТОР 01</div>
     
     <div class="terminal-wrapper">
+        <div class="corner corner-tl"></div>
+        <div class="corner corner-tr"></div>
+        <div class="corner corner-bl"></div>
+        <div class="corner corner-br"></div>
+
         <div id="os-lockdown">
             <div class="captcha-box">
                 <h2>ВЕРИФИКАЦИЯ ЦЕЛОСТНОСТИ</h2>
@@ -151,7 +148,7 @@
         </div>
 
         <div class="os-container">
-            <svg id="tracesLayer" width="100%" height="100%"></svg>
+            <svg id="tracesLayer"></svg>
             <div class="qubit-grid" id="qubitGrid"></div>
         </div>
         
