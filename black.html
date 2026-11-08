@@ -5,462 +5,244 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>СИГНАЛ-9 // ОБЪЕКТ GARGANTUA</title>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            user-select: none;
-        }
-
         body, html {
-            width: 100%;
-            height: 100%;
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            background-color: #010204;
             overflow: hidden;
-            background-color: #030202;
-            font-family: 'Courier New', Courier, monospace;
-            color: #ff9900;
+            font-family: 'JetBrains Mono', monospace;
+            color: #00f2ff;
         }
+        #canvas-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1;
+        }
+        .scanner-grid {
+            position: absolute; inset: 0;
+            background-image: 
+                linear-gradient(rgba(0, 242, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 242, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: 2; pointer-events: none;
+            mask-image: radial-gradient(circle at center, transparent 40%, black 100%);
+            -webkit-mask-image: radial-gradient(circle at center, transparent 40%, black 100%);
+        }
+        .hud-overlay {
+            position: absolute; inset: 0; z-index: 4; pointer-events: none;
+            display: flex; flex-direction: column; justify-content: space-between;
+            padding: 40px; box-sizing: border-box;
+        }
+        .hud-top {
+            display: flex; justify-content: space-between; align-items: flex-start;
+            text-transform: uppercase; letter-spacing: 3px; font-size: 12px;
+            text-shadow: 0 0 10px #00f2ff;
+        }
+        .data-panel {
+            position: absolute; right: 40px; top: 50%; transform: translateY(-50%);
+            width: 250px; z-index: 4; font-size: 10px; line-height: 1.8;
+        }
+        .data-row { display: flex; justify-content: space-between; border-bottom: 1px solid rgba(0,242,255,0.1); padding: 4px 0; }
+        .data-label { color: #888; }
+        .data-val { color: #ffaa00; text-shadow: 0 0 5px #ffaa00; }
+        .data-val.warning { color: #ff3333; text-shadow: 0 0 5px #ff3333; animation: blink 1s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+		.alert-text {
+  color: #ff3333;
+  text-shadow: 0 0 4px #ff3333, 0 0 12px rgba(255, 51, 51, 0.6);
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+}
+.param-value {
+  color: #ff9900;
+  text-shadow: 0 0 4px #ff9900;
+}
 
-        /* Эффект мерцания CRT и сканирующих линий */
-        body::before {
-            content: " ";
-            display: block;
-            position: fixed;
-            top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.35) 50%), 
-                        linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
-            z-index: 999;
-            background-size: 100% 4px, 6px 100%;
-            pointer-events: none;
-        }
-
-        body::after {
-            content: " ";
-            display: block;
-            position: fixed;
-            top: 0; left: 0; bottom: 0; right: 0;
-            background: rgba(18, 16, 16, 0.1);
-            opacity: 0;
-            z-index: 998;
-            pointer-events: none;
-            animation: flicker 0.15s infinite;
-        }
-
-        @keyframes flicker {
-            0% { opacity: 0.18; }
-            50% { opacity: 0.22; }
-            100% { opacity: 0.18; }
-        }
-
-        /* Сетка интерфейса */
-        .interface {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            padding: 30px;
-            display: grid;
-            grid-template-columns: 350px 1fr 380px;
-            grid-template-rows: 80px 1fr 60px;
-            z-index: 10;
-            pointer-events: none;
-        }
-
-        .panel {
-            pointer-events: auto;
-        }
-
-        /* Левая панель */
-        .left-panel {
-            grid-column: 1;
-            grid-row: 1 / 3;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .header-title {
-            font-size: 20px;
-            font-weight: bold;
-            letter-spacing: 2px;
-            color: #ffaa00;
-            text-shadow: 0 0 8px rgba(255, 170, 0, 0.6);
-        }
-
-        .sub-title {
-            font-size: 13px;
-            color: #885500;
-            margin-top: 5px;
-        }
-
-        .alert-box {
-            border: 1px solid #ff3333;
-            background: rgba(255, 51, 51, 0.05);
-            padding: 15px;
-            margin-top: 10px;
-            box-shadow: inset 0 0 10px rgba(255, 51, 51, 0.1);
-            animation: pulse-border 2s infinite alternate;
-        }
-
-        @keyframes pulse-border {
-            0% { border-color: rgba(255, 51, 51, 0.4); box-shadow: inset 0 0 5px rgba(255, 51, 51, 0.05); }
-            100% { border-color: rgba(255, 51, 51, 1); box-shadow: inset 0 0 15px rgba(255, 51, 51, 0.2); }
-        }
-
-        .alert-text {
-            color: #ff3333;
-            font-size: 12px;
-            font-weight: bold;
-            text-shadow: 0 0 8px rgba(255, 51, 51, 0.6);
-            letter-spacing: 1px;
-            line-height: 1.4;
-        }
-
-        /* Правая панель */
-        .right-panel {
-            grid-column: 3;
-            grid-row: 1 / 3;
-            text-align: right;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-        }
-
-        .object-meta {
-            margin-bottom: 40px;
-        }
-
-        .object-name {
-            font-size: 22px;
-            font-weight: bold;
-            color: #ffffff;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-        }
-
-        .object-class {
-            font-size: 12px;
-            color: #ff5500;
-            margin-top: 5px;
-            text-shadow: 0 0 5px rgba(255, 85, 0, 0.5);
-        }
-
-        .telemetry-table {
-            border-collapse: collapse;
-            width: 100%;
-            font-size: 13px;
-        }
-
-        .telemetry-table td {
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(255, 153, 0, 0.1);
-        }
-
-        .param-label {
-            color: #885500;
-            text-align: left;
-        }
-
-        .param-value {
-            color: #ff9900;
-            font-weight: bold;
-            text-shadow: 0 0 6px rgba(255, 153, 0, 0.5);
-        }
-
-        .param-value.critical {
-            color: #ff3333;
-            text-shadow: 0 0 6px rgba(255, 51, 51, 0.5);
-        }
-
-        /* Статус-бар */
-        .bottom-bar {
-            grid-column: 1 / 4;
-            grid-row: 3;
-            border-top: 1px solid rgba(255, 153, 0, 0.2);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 11px;
-            color: #664400;
-        }
-
-        .canvas-container {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: 1;
-        }
-
-        canvas {
-            width: 100%; height: 100%;
-            display: block;
-        }
     </style>
 </head>
 <body>
-    <div class="canvas-container">
-        <canvas id="blackHoleCanvas"></canvas>
-    </div>
 
-    <div class="interface">
-        <div class="panel left-panel">
+    <div id="canvas-container"><canvas id="blackhole"></canvas></div>
+    <div class="scanner-grid"></div>
+
+    <div class="hud-overlay">
+        <div class="hud-top">
             <div>
-                <div class="header-title">СИГНАЛ-9</div>
-                <div class="sub-title">СПЕКТРАЛЬНЫЙ АНАЛИЗ // СЕКТОР 07</div>
+                СПЕКТРАЛЬНЫЙ АНАЛИЗ // СЕКТОР 07<br>
+                <span style="color: #ff3333;">ОБНАРУЖЕН ИСТОЧНИК ГАММА-ИЗЛУЧЕНИЯ</span>
             </div>
-            <div class="alert-box">
-                <div class="alert-text">КРИТИЧЕСКИЙ УРОВЕНЬ<br>ОБНАРУЖЕН ИСТОЧНИК ЖЕСТКОГО ГАММА-ИЗЛУЧЕНИЯ</div>
+            <div style="text-align: right;">
+                ОБЪЕКТ: GARGANTUA<br>
+                КЛАСС: KERR BLACK HOLE
             </div>
-        </div>
-
-        <div class="panel right-panel">
-            <div class="object-meta">
-                <div class="object-name">ОБЪЕКТ: GARGANTUA</div>
-                <div class="object-class">КЛАСС: KERR BLACK HOLE (ВРАЩАЮЩАЯСЯ)</div>
-            </div>
-            <table class="telemetry-table">
-                <tr>
-                    <td class="param-label">МАССА (M☉)</td>
-                    <td class="param-value">1.0 × 10⁸</td>
-                </tr>
-                <tr>
-                    <td class="param-label">СПИН (a)</td>
-                    <td class="param-value" id="spinValue">0.99992</td>
-                </tr>
-                <tr>
-                    <td class="param-label">ГОРИЗОНТ (Rs)</td>
-                    <td class="param-value">~ 1.496 × 10⁸ км</td>
-                </tr>
-                <tr>
-                    <td class="param-label">ТЕМП. ДИСКА</td>
-                    <td class="param-value critical">ЭКСТРЕМАЛЬНАЯ</td>
-                </tr>
-            </table>
-        </div>
-
-        <div class="bottom-bar">
-            <div>ВРЕМЕННОЙ СДВИГ ВБЛИЗИ ОБЪЕКТА: 1 ЧАС = 7 ЛЕТ ЗЕМНОГО ВРЕМЕНИ</div>
-            <div id="timestamp">СИСТЕМНОЕ ВРЕМЯ: --.--.---- // --:--:--</div>
         </div>
     </div>
-    <!-- 
-       Заменяем внешнее сетевое подключение на динамический инжектор скрипта.
-       Это гарантирует обход CORS на локальных хостах и изолированных доменах (.local).
-    -->
+
+    <div class="data-panel">
+        <div class="data-row"><span class="data-label">МАССА (M☉):</span> <span class="data-val">1.0 x 10^8</span></div>
+        <div class="data-row"><span class="data-label">СПИН (a):</span> <span class="data-val">0.999</span></div>
+        <div class="data-row"><span class="data-label">ГОРИЗОНТ (Rs):</span> <span class="data-val">~ 3.0 x 10^8 км</span></div>
+        <div class="data-row"><span class="data-label">ТЕМП. ДИСКА:</span> <span class="data-val warning">ЭКСТРЕМАЛЬНАЯ</span></div>
+    </div>
+
     <script>
-    (function injectEngine() {
-        const script = document.createElement('script');
-        // Используем резервный отказоустойчивый зеркальный CDN для Three.js
-        script.src = 'https://jsdelivr.net';
-        script.crossOrigin = 'anonymous';
-        script.referrerPolicy = 'no-referrer';
+        const canvas = document.getElementById('blackhole');
+        const ctx = canvas.getContext('2d', { alpha: false });
+        let width, height, cx, cy;
+
+        let stars = [];
+        let particles = [];
         
-        script.onload = () => {
-            if (typeof THREE !== 'undefined') {
-                runSimulation();
+        // --- ПАРАМЕТРЫ ДИСКА ---
+        const shadowRadius = 120;      // Радиус горизонта событий (черная тень)
+        const photonRingRadius = 125;  // Радиус фотонного кольца
+        const diskOuterRadius = 550;   // Внешний край диска
+        const tilt = -0.05;            // Почти горизонтальный наклон
+        const perspective = 0.12;      // Сплющивание (эллипс)
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            cx = width / 2;
+            cy = height / 2;
+            initScene();
+        }
+
+        function initScene() {
+            stars = [];
+            for (let i = 0; i < 300; i++) {
+                stars.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    size: Math.random() * 1.5,
+                    alpha: Math.random() * 0.8 + 0.2
+                });
             }
-        };
 
-        // На случай сбоев сети или оффлайн-режима — резервный опрос
-        script.onerror = () => {
-            console.warn("Сетевой CDN заблокирован CORS/Firewall. Переключение на локальный контекст.");
-        };
-
-        document.head.appendChild(script);
-    })();
-
-    function runSimulation() {
-        // --- ИНИЦИАЛИЗАЦИЯ СЦЕНЫ THREE.JS ---
-        const canvas = document.getElementById('blackHoleCanvas');
-        const scene = new THREE.Scene();
-        
-        // Камера с широким углом обзора для имитации космического масштаба
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.z = 15;
-
-        const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, powerPreference: "high-performance" });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-        // --- ГЕНЕРАЦИЯ ЗВЕЗДНОГО ПОЛЯ ---
-        const starsGeometry = new THREE.BufferGeometry();
-        const starsCount = 1500;
-        const starPositions = new Float32Array(starsCount * 3);
-
-        for(let i = 0; i < starsCount * 3; i++) {
-            starPositions[i] = (Math.random() - 0.5) * 100;
-        }
-
-        starsGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-        const starsMaterial = new THREE.PointsMaterial({
-            color: 0xffffff,
-            size: 0.05,
-            transparent: true,
-            opacity: 0.6
-        });
-        const starField = new THREE.Points(starsGeometry, starsMaterial);
-        scene.add(starField);
-
-        // --- ЦЕНТРАЛЬНЫЙ ГОРИЗОНТ СОБЫТИЙ ---
-        const holeGeometry = new THREE.SphereGeometry(2.2, 64, 64);
-        const holeMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
-        const blackHoleMesh = new THREE.Mesh(holeGeometry, holeMaterial);
-        scene.add(blackHoleMesh);
-
-        window.blackHoleCore = { scene, camera, renderer, blackHoleMesh, starField };
-    }
-    </script>
-    <script>
-    // Ждем, пока базовая сцена инициализируется инжектором из Части 2
-    (function initDiskShader() {
-        if (typeof THREE === 'undefined' || !window.blackHoleCore) {
-            setTimeout(initDiskShader, 30);
-            return;
-        }
-
-        const { scene } = window.blackHoleCore;
-
-        // --- ШЕЙДЕР АККРЕЦИОННОГО ДИСКА С ЭФФЕКТОМ ДОПЛЕРА ---
-        const diskGeometry = new THREE.TorusGeometry(6.0, 3.2, 96, 160);
-
-        const diskMaterial = new THREE.ShaderMaterial({
-            transparent: true,
-            side: THREE.DoubleSide,
-            depthWrite: false,
-            blending: THREE.AdditiveBlending,
-            uniforms: {
-                uTime: { value: 0 },
-                uHoleRadius: { value: 2.2 }
-            },
-            vertexShader: `
-                uniform float uTime;
-                uniform float uHoleRadius;
-                varying vec2 vUv;
-                varying vec3 vPosition;
-
-                void main() {
-                    vUv = uv;
-                    vPosition = position;
-                    
-                    vec3 pos = position;
-                    float dist = length(pos.xy);
-                    
-                    // Моделирование гравитационного линзирования (загибание диска)
-                    if (pos.z < 0.0) {
-                        pos.z -= pow(uHoleRadius / dist, 2.0) * 2.5;
-                    } else {
-                        pos.z += pow(uHoleRadius / dist, 2.0) * 1.2;
-                    }
-                    
-                    gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-                }
-            `,
-            fragmentShader: `
-                uniform float uTime;
-                uniform float uHoleRadius;
-                varying vec3 vPosition;
+            particles = [];
+            // Создаем частицы газа
+            for (let i = 0; i < 4500; i++) {
+                // Сгущаем частицы к центру
+                const r = shadowRadius + Math.pow(Math.random(), 1.8) * (diskOuterRadius - shadowRadius);
+                const angle = Math.random() * Math.PI * 2;
                 
-                float noise(vec2 p) {
-                    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
-                }
-
-                void main() {
-                    float dist = length(vPosition.xy);
-                    
-                    if (dist < uHoleRadius + 0.1 || dist > 9.5) discard;
-
-                    float angle = atan(vPosition.y, vPosition.x);
-                    float plasma = sin(dist * 4.0 - uTime * 2.5 + angle * 3.0) * 0.5 + 0.5;
-                    plasma += sin(dist * 8.0 + uTime * 1.5 - angle * 5.0) * 0.25;
-
-                    vec3 coreColor = vec3(1.0, 0.55, 0.08); // Горячее ядро
-                    vec3 outerColor = vec3(0.9, 0.22, 0.0); // Остывающий край
-                    float colorMix = (dist - uHoleRadius) / 7.0;
-                    vec3 finalColor = mix(coreColor, outerColor, colorMix);
-
-                    // Релятивистский эффект Доплера (асимметрия вращения Керра)
-                    float dopplerFactor = -vPosition.x / dist;
-                    if (vPosition.x < 0.0) {
-                        finalColor = mix(finalColor, vec3(1.0, 0.95, 0.85), dopplerFactor * 0.45);
-                    }
-                    
-                    float intensity = (1.0 - colorMix) * (0.4 + plasma * 0.6);
-                    intensity *= (1.0 + dopplerFactor * 0.65);
-
-                    float alpha = smoothstep(uHoleRadius + 0.1, uHoleRadius + 0.8, dist) * smoothstep(9.5, 7.5, dist);
-
-                    gl_FragColor = vec4(finalColor * intensity * 1.6, alpha * 0.95);
-                }
-            `
-        });
-
-        const accretionDisk = new THREE.Mesh(diskGeometry, diskMaterial);
-        accretionDisk.rotation.x = Math.PI / 2.15; 
-        accretionDisk.rotation.y = 0.05;
-        scene.add(accretionDisk);
-
-        window.blackHoleCore.diskMaterial = diskMaterial;
-    })();
-    </script>
-    <script>
-    // Запуск анимационной петли и интерфейсной логики телеметрии
-    (function startLoop() {
-        if (typeof THREE === 'undefined' || !window.blackHoleCore || !window.blackHoleCore.diskMaterial) {
-            setTimeout(startLoop, 30);
-            return;
-        }
-
-        const { scene, camera, renderer, blackHoleMesh, starField, diskMaterial } = window.blackHoleCore;
-        const clock = new THREE.Clock();
-
-        // Основной цикл отрисовки
-        function animate() {
-            requestAnimationFrame(animate);
-
-            const elapsedTime = clock.getElapsedTime();
-
-            // Передача времени в фрагментный шейдер для завихрений плазмы
-            diskMaterial.uniforms.uTime.value = elapsedTime;
-
-            // Динамическое вращение объектов сцены
-            blackHoleMesh.rotation.y = elapsedTime * 0.05;
-            starField.rotation.y = elapsedTime * 0.005;
-
-            renderer.render(scene, camera);
-
-            // Имитация шума датчиков телеметрии на фронтенде
-            if (Math.random() > 0.82) {
-                const noise = (Math.random() - 0.5) * 0.00004;
-                const baseSpin = 0.99992;
-                document.getElementById('spinValue').innerText = (baseSpin + noise).toFixed(5);
+                particles.push({
+                    r: r,
+                    angle: angle,
+                    speed: (2 / Math.sqrt(r)) * 0.08, // Внутренние вращаются быстрее
+                    size: Math.random() * 5 + 1, //1.5 + 0.5 Стандарт
+                    color: getPlasmaColor(r)
+                });
             }
         }
 
-        // Синхронизация системных часов терминала
-        function updateTimestamp() {
-            const now = new Date();
-            const day = String(now.getDate()).padStart(2, '0');
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const year = now.getFullYear();
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            
-            document.getElementById('timestamp').innerText = 
-                `СИСТЕМНОЕ ВРЕМЯ: ${day}.${month}.${year} // ${hours}:${minutes}:${seconds}`;
+        function getPlasmaColor(r) {
+            const factor = (r - shadowRadius) / (diskOuterRadius - shadowRadius);
+            // Белый центр -> Золотой -> Оранжевый -> Темно-красный
+            if (factor < 0.05) return 'rgba(255, 255, 255, 0.9)';
+            if (factor < 0.2) return 'rgba(255, 230, 180, 0.7)';
+            if (factor < 0.4) return 'rgba(255, 150, 50, 0.5)';
+            if (factor < 0.7) return 'rgba(200, 60, 10, 0.3)';
+            return 'rgba(100, 20, 0, 0.1)';
         }
-        setInterval(updateTimestamp, 1000);
-        updateTimestamp();
 
-        // Автоматический ресайз под любые экраны и адаптивные разрешения
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        });
+        function draw() {
+            ctx.globalCompositeOperation = 'source-over'; // Сброс режима наложения
+            ctx.fillStyle = '#010204';
+            ctx.fillRect(0, 0, width, height);;
 
-        // Старт
-        animate();
-    })();
+            // 1. ФОН (Звезды)
+            stars.forEach(s => {
+                ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha})`;
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // Обновляем позиции всех частиц один раз за кадр
+            particles.forEach(p => {
+                p.angle -= p.speed;
+                // Полярные координаты в декартовы
+                let px = Math.cos(p.angle) * p.r;
+                let py = Math.sin(p.angle) * p.r;
+                
+                // Применяем наклон и перспективу
+                p.renderX = cx + (px * Math.cos(tilt) - py * Math.sin(tilt));
+                p.renderY = cy + (px * Math.sin(tilt) + py * Math.cos(tilt)) * perspective;
+                
+                // Определяем, находится ли частица ЗА дырой или ПЕРЕД ней.
+                // py < 0 означает верхнюю половину орбиты (сзади)
+                p.isBack = py < 0; 
+            });
+
+            ctx.globalCompositeOperation = 'lighter'; // Режим свечения
+
+            // 2. ЗАДНЯЯ ЧАСТЬ ДИСКА (Уходит за дыру)
+            particles.forEach(p => {
+                if (!p.isBack) return;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                // Вытягиваем частицы по горизонтали для эффекта скорости
+                ctx.ellipse(p.renderX, p.renderY, p.size * 4, p.size, tilt, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // 3. СВЕЧЕНИЕ (Гало вокруг дыры)
+            ctx.globalCompositeOperation = 'screen';
+            const outerGlow = ctx.createRadialGradient(cx, cy, shadowRadius, cx, cy, 350);
+            outerGlow.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+            outerGlow.addColorStop(0.1, 'rgba(255, 200, 100, 0.5)');
+            outerGlow.addColorStop(0.3, 'rgba(255, 80, 0, 0.2)');
+            outerGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = outerGlow;
+            ctx.beginPath();
+            ctx.arc(cx, cy, 350, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 4. ТЕНЬ ЧЕРНОЙ ДЫРЫ
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.beginPath();
+            ctx.arc(cx, cy, shadowRadius, 0, Math.PI * 2);
+            ctx.fillStyle = '#000000';
+            ctx.fill();
+
+            // 5. ФОТОННОЕ КОЛЬЦО (Яркий ободок света)
+            ctx.beginPath();
+            ctx.arc(cx, cy, photonRingRadius, 0, Math.PI * 2);
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.5;
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#ffccaa';
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            // 6. ПЕРЕДНЯЯ ЧАСТЬ ДИСКА (Проходит перед дырой)
+            ctx.globalCompositeOperation = 'lighter';
+            particles.forEach(p => {
+                if (p.isBack) return; // Рисуем только передние
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                // Спереди делаем их более плоскими и быстрыми
+                ctx.ellipse(p.renderX, p.renderY, p.size * 5, p.size * 1.5, tilt, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // 7. ЯРКИЕ ВСПОЛОХИ НА ПЕРЕДНЕМ ПЛАНЕ (Плазменные струи)
+            for (let i = 0; i < 30; i++) {
+                const r = shadowRadius + Math.random() * 150;
+                const startAngle = 0.1 + Math.random() * 0.8; // Нижняя дуга (спереди)
+                const endAngle = Math.PI - 0.1 - Math.random() * 0.8;
+                
+                ctx.beginPath();
+                ctx.ellipse(cx, cy, r, r * perspective, tilt, startAngle, endAngle);
+                ctx.strokeStyle = `rgba(255, ${150 + Math.random()*100}, 50, ${0.05 + Math.random()*0.15})`;
+                ctx.lineWidth = Math.random() * 2;
+                ctx.stroke();
+            }
+
+            requestAnimationFrame(draw);
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+        requestAnimationFrame(draw);
     </script>
 </body>
 </html>

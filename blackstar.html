@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>СИГНАЛ-9 // ОБЪЕКТ GARGANTUA</title>
+<style>
+    :root{
+        --cyan:#00f2ff;
+        --amber:#ffaa00;
+        --danger:#ff3333;
+    }
+    *{box-sizing:border-box;}
+    body, html {
+        margin: 0; padding: 0; width: 100%; height: 100%;
+        background-color: #010204;
+        overflow: hidden;
+        font-family: 'JetBrains Mono','Consolas','Courier New',monospace;
+        color: var(--cyan);
+        cursor: crosshair;
+        -webkit-font-smoothing: antialiased;
+    }
+    #canvas-container {
+        position: absolute; inset: 0; z-index: 1;
+    }
+    canvas { display:block; }
+
+    /* ---------- Сканер-сетка ---------- */
+    .scanner-grid {
+        position: absolute; inset: 0; z-index: 2; pointer-events: none;
+        background-image:
+            linear-gradient(rgba(0,242,255,0.028) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0,242,255,0.028) 1px, transparent 1px);
+        background-size: 50px 50px;
+        mask-image: radial-gradient(circle at center, transparent 35%, black 95%);
+        -webkit-mask-image: radial-gradient(circle at center, transparent 35%, black 95%);
+    }
+
+    /* ---------- Виньетка + развёртка ---------- */
+    .vignette {
+        position:absolute; inset:0; z-index:3; pointer-events:none;
+        background: radial-gradient(ellipse at center, rgba(0,0,0,0) 42%, rgba(0,0,0,0.9) 100%);
+    }
+    .scanlines {
+        position:absolute; inset:0; z-index:5; pointer-events:none; opacity:.35;
+        background: repeating-linear-gradient(
+            0deg,
+            rgba(0,0,0,.55) 0px, rgba(0,0,0,.55) 1px,
+            transparent 1px, transparent 3px);
+    }
+    .scanbeam {
+        position:absolute; left:0; right:0; height:140px; z-index:3; pointer-events:none;
+        background: linear-gradient(180deg, transparent, rgba(0,242,255,0.045), transparent);
+        animation: scanbeam 9s linear infinite;
+        opacity:.8;
+    }
+    @keyframes scanbeam { 0%{ top:-140px; } 100%{ top:100%; } }
+
+    /* ---------- Уголки ---------- */
+    .corner{
+        position:absolute; width:44px; height:44px; z-index:4; pointer-events:none;
+        border:1px solid rgba(0,242,255,.35);
+        box-shadow: 0 0 12px rgba(0,242,255,.12);
+    }
+    .corner.tl{ top:22px; left:22px; border-right:0; border-bottom:0; }
+    .corner.tr{ top:22px; right:22px; border-left:0;  border-bottom:0; }
+    .corner.bl{ bottom:22px; left:22px; border-right:0; border-top:0; }
+    .corner.br{ bottom:22px; right:22px; border-left:0;  border-top:0; }
+
+    /* ---------- HUD ---------- */
+    .hud-overlay {
+        position: absolute; inset: 0; z-index: 4; pointer-events: none;
+        padding: 46px 62px;
+        display: flex; flex-direction: column; justify-content: space-between;
+    }
+    .hud-top {
+        display: flex; justify-content: space-between; align-items: flex-start;
+        text-transform: uppercase; letter-spacing: 3px; font-size: 12px;
+        text-shadow: 0 0 10px rgba(0,242,255,.8);
+        line-height: 1.9;
+    }
+    .hud-top small{
+        display:block; letter-spacing:2px; font-size:10px; color:#3d6b73;
+        text-shadow:none; margin-top:6px;
+    }
+    .alert-text {
+        color: var(--danger);
+        text-shadow: 0 0 4px var(--danger), 0 0 14px rgba(255,51,51,.65);
+        font-weight: bold;
+        animation: pulse 2.4s ease-in-out infinite;
+    }
+    @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.45;} }
+
+    /* ---------- Панель телеметрии ---------- */
+    .data-panel {
+        position: absolute; right: 62px; top: 50%; transform: translateY(-50%);
+        width: 268px; z-index: 4; font-size: 10px; line-height: 1.7;
+        pointer-events:none;
+    }
+    .panel-title{
+        font-size:9px; letter-spacing:4px; color:#3d6b73; text-transform:uppercase;
+        margin-bottom:10px; padding-bottom:8px;
+        border-bottom:1px solid rgba(0,242,255,.18);
+        display:flex; align-items:center; gap:8px;
+    }
+    .panel-title::before{
+        content:''; width:6px; height:6px; background:var(--cyan);
+        box-shadow:0 0 10px var(--cyan); animation: pulse 1.6s infinite;
+    }
+    .data-row {
+        display: flex; justify-content: space-between; align-items:center;
+        border-bottom: 1px solid rgba(0,242,255,0.08);
+        padding: 6px 0; gap:10px;
+    }
+    .data-label { color: #6b8a90; letter-spacing:.6px; }
+    .data-val {
+        color: var(--amber);
+        text-shadow: 0 0 6px rgba(255,170,0,.85);
+        font-weight:bold; white-space:nowrap;
+    }
+    .data-val.warning {
+        color: var(--danger);
+        text-shadow: 0 0 6px rgba(255,51,51,.9);
+        animation: pulse 1.4s infinite;
+    }
+
+    /* ---------- Нижняя строка ---------- */
+    .hud-bottom{
+        position:absolute; left:62px; right:62px; bottom:46px; z-index:4;
+        display:flex; justify-content:space-between; gap:24px;
+        font-size:10px; letter-spacing:2px; text-transform:uppercase;
+        color:#3d6b73; pointer-events:none;
+    }
+    .hud-bottom .val{
+        color:var(--cyan); text-shadow:0 0 8px rgba(0,242,255,.8);
+    }
+
+    @media (max-width: 860px){
+        .data-panel{ right:20px; width:200px; font-size:9px; }
+        .hud-overlay{ padding:28px; font-size:10px; }
+        .hud-bottom{ left:28px; right:28px; bottom:28px; font-size:9px; }
+        .corner{ width:28px; height:28px; }
+    }
+</style>
+</head>
+<body>
+
+    <div id="canvas-container"><canvas id="blackhole"></canvas></div>
+    <div class="scanner-grid"></div>
+    <div class="vignette"></div>
+    <div class="scanbeam"></div>
+    <div class="scanlines"></div>
+
+    <div class="corner tl"></div>
+    <div class="corner tr"></div>
+    <div class="corner bl"></div>
+    <div class="corner br"></div>
+
+    <div class="hud-overlay">
+        <div class="hud-top">
+            <div>
+                СПЕКТРАЛЬНЫЙ АНАЛИЗ // СЕКТОР 07<br>
+                <span class="alert-text">ОБНАРУЖЕН ИСТОЧНИК ГАММА-ИЗЛУЧЕНИЯ</span>
+                <small>РЕЖИМ: ПАССИВНОЕ НАБЛЮДЕНИЕ</small>
+            </div>
+            <div style="text-align: right;">
+                ОБЪЕКТ: GARGANTUA<br>
+                КЛАСС: KERR BLACK HOLE
+                <small>ЛОКАЦИЯ: 47°12' / −8°44'</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="data-panel">
+        <div class="panel-title">ТЕЛЕМЕТРИЯ</div>
+        <div class="data-row"><span class="data-label">МАССА (M☉):</span> <span class="data-val">1.0 × 10⁸</span></div>
+        <div class="data-row"><span class="data-label">СПИН (a):</span> <span class="data-val">0.999</span></div>
+        <div class="data-row"><span class="data-label">ГОРИЗОНТ (Rs):</span> <span class="data-val">~ 3.0 × 10⁸ км</span></div>
+        <div class="data-row"><span class="data-label">ТЕМП. ДИСКА:</span> <span class="data-val warning">ЭКСТРЕМАЛЬНАЯ</span></div>
+        <div class="data-row"><span class="data-label">ДОПЛЕР-СДВИГ:</span> <span class="data-val">z ≈ 0.41</span></div>
+        <div class="data-row"><span class="data-label">ФОТОН. СФЕРА:</span> <span class="data-val">1.5 Rs</span></div>
+    </div>
+
+    <div class="hud-bottom">
+        <div>СЕАНС: <span class="val" id="session">00:00:00</span></div>
+        <div>ЧАСТИЦ: <span class="val" id="pcount">0</span></div>
+        <div>FPS: <span class="val" id="fps">--</span></div>
+    </div>
+
+<script>
+(function () {
+'use strict';
+
+const canvas = document.getElementById('blackhole');
+const ctx    = canvas.getContext('2d', { alpha: false });
+const TAU    = Math.PI * 2;
+const rand   = (a, b) => a + Math.random() * (b - a);
+
+/* ======================= СОСТОЯНИЕ ======================= */
+let W = 0, H = 0, DPR = 1;
+let cx0 = 0, cy0 = 0;      // базовый центр
+let cx  = 0, cy  = 0;      // центр с учётом параллакса
+let R_SHADOW = 140;
+let diskInner = 0, diskOuter = 0;
+
+const cfg = {
+    perspective : 0.30,    // сплющивание диска (0 = ребром)
+    tilt        : -0.02,   // наклон плоскости диска
+    count       : 3400     // частиц плазмы
+};
+
+// Параллакс от указателя
+const pointer = { x: 0, y: 0, tx: 0, ty: 0 };
+
+/* ======================= СПРАЙТЫ СВЕЧЕНИЯ ======================= */
+const PALETTE = [
+    [255, 255, 255],   // ядро
+    [255, 244, 214],   // горячий белый
+    [255, 208, 130],   // золото
+    [255, 146,  52],   // оранжевый
+    [208,  74,  18],   // красно-оранжевый
+    [124,  26,   4]    // тёмно-красный
+];
+let sprites = [];
+
+function makeSprite(size, rgb) {
+    const [r, g, b] = rgb;
+    const c = document.createElement('canvas');
+    c.width = c.height = size;
+    const g2 = c.getContext('2d');
+    const half = size / 2;
+    const grd = g2.createRadialGradient(half, half, 0, half, half, half);
+    grd.addColorStop(0.00, `rgba(${r},${g},${b},1)`);
+    grd.addColorStop(0.18, `rgba(${r},${g},${b},0.58)`);
+    grd.addColorStop(0.50, `rgba(${r},${g},${b},0.13)`);
+    grd.addColorStop(1.00, `rgba(${r},${g},${b},0)`);
+    g2.fillStyle = grd;
+    g2.beginPath();
+    g2.arc(half, half, half, 0, TAU);
+    g2.fill();
+    return c;
+}
+
+function buildSprites() {
+    sprites = PALETTE.map(c => makeSprite(64, c));
+}
+
+/* ======================= ЗВЁЗДЫ ======================= */
+let stars = [];
+
+function buildStars() {
+    stars = [];
+    const n = Math.min(520, Math.round((W * H) / 7000));
+    for (let i = 0; i < n; i++) {
+        stars.push({
+            x   : Math.random() * W,
+            y   : Math.random() * H,
+            r   : rand(0.25, 1.4),
+            a   : rand(0.12, 0.85),
+            tw  : Math.random() * TAU,
+            tws : rand(0.4, 2.4)
+        });
+    }
+}
+
+function drawStars(t) {
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 1;
+    for (let i = 0; i < stars.length; i++) {
+        const s = stars[i];
+        const a = s.a * (0.6 + 0.4 * Math.sin(t * s.tws + s.tw));
+        if (a <= 0.02) continue;
+        ctx.fillStyle = `rgba(200,222,255,${a.toFixed(3)})`;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, TAU);
+        ctx.fill();
+    }
+}
+
+/* ======================= ЧАСТИЦЫ ДИСКА ======================= */
+let particles = [];
+
+function buildParticles() {
+    particles = [];
+    const inner = R_SHADOW * 1.12;
+    const outer = R_SHADOW * 4.40;
+    diskInner = inner;
+    diskOuter = outer;
+
+    for (let i = 0; i < cfg.count; i++) {
+        // Сгущение к внутреннему краю
+        const u = Math.pow(Math.random(), 1.65);
+        const r = inner + u * (outer - inner);
+        const f = (r - inner) / (outer - inner);   // 0 = внутренний край
+
+        let band;
+        if      (f < 0.08) band = 0;
+        else if (f < 0.22) band = 1;
+        else if (f < 0.44) band = 2;
+        else if (f < 0.68) band = 3;
+        else if (f < 0.87) band = 4;
+        else               band = 5;
+
+        particles.push({
+            r      : r,
+            angle  : Math.random() * TAU,
+            // Кеплеровское вращение: ω ∝ r^-3/2
+            omega  : 1.15 * Math.pow(r / inner, -1.5),
+            size   : rand(0.085, 0.20) * R_SHADOW * (1 - f * 0.30),
+            alpha  : rand(0.045, 0.135) * (1 - f * 0.35),
+            band   : band,
+            wobPhase: Math.random() * TAU,
+            wobFreq : rand(0.5, 1.8),
+            wobAmp  : rand(0.15, 1.2),
+            flPhase : Math.random() * TAU,
+            flFreq  : rand(1.5, 4.5),
+            sx: 0, sy: 0, back: false, dop: 1, fl: 1
+        });
+    }
+}
+
+/* Обновление позиций + доплеровское усиление */
+function updateParticles(dt, t) {
+    const ct = Math.cos(cfg.tilt);
+    const st = Math.sin(cfg.tilt);
+    const persp = cfg.perspective;
+    const inner = diskInner;
+    const nearSpan = R_SHADOW * 1.6;
+
+    for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+
+        p.angle -= p.omega * dt;
+        if (p.angle < 0) p.angle += TAU;
+
+        const c = Math.cos(p.angle);
+        const s = Math.sin(p.angle);
+
+        // лёгкое «дыхание» орбиты
+        const rr = p.r + Math.sin(t * p.wobFreq + p.wobPhase) * p.wobAmp;
+
+        const px = c * rr;
+        const py = s * rr;
+
+        p.sx = cx + (px * ct - py * st);
+        p.sy = cy + (px * st + py * ct) * persp;
+        p.back = py < 0;   // верхняя половина эллипса = за дырой
+
+        // ---- Доплеровское усиление (приближающаяся сторона ярче) ----
+        const dopBase = 0.5 + 0.5 * c;                 // 0..1
+        const boost   = 0.16 + 1.95 * dopBase * dopBase;
+        const far     = Math.min(1, (p.r - inner) / nearSpan);
+        p.dop = 1 + (boost - 1) * (1 - far * 0.55);
+
+        // ---- мерцание плазмы ----
+        p.fl = 0.82 + 0.30 * Math.sin(t * p.flFreq + p.flPhase);
+    }
+}
+
+/* ======================= ОТРИСОВКА ДИСКА ======================= */
+function drawParticles(back) {
+    ctx.globalCompositeOperation = 'lighter';
+    const list = particles;
+
+    for (let i = 0; i < list.length; i++) {
+        const p = list[i];
+        if (p.back !== back) continue;
+
+        const a = p.alpha * p.dop * p.fl * (back ? 0.72 : 1);
+        if (a < 0.005) continue;
+
+        const s = p.size * (back ? 0.82 : 1);
+        ctx.globalAlpha = a > 1 ? 1 : a;
+        ctx.drawImage(sprites[p.band], p.sx - s * 0.5, p.sy - s * 0.5, s, s);
+    }
+    ctx.globalAlpha = 1;
+}
+
+/* Мягкое свечение вокруг диска (эллиптическое) */
+function drawDiskGlow() {
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.scale(1, cfg.perspective * 1.55);
+
+    const R = R_SHADOW * 4.6;
+    const g = ctx.createRadialGradient(0, 0, R_SHADOW * 0.85, 0, 0, R);
+    g.addColorStop(0.00, 'rgba(255,215,160,0.50)');
+    g.addColorStop(0.10, 'rgba(255,150,70,0.28)');
+    g.addColorStop(0.32, 'rgba(200,62,16,0.10)');
+    g.addColorStop(1.00, 'rgba(0,0,0,0)');
+
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(0, 0, R, 0, TAU);
+    ctx.fill();
+    ctx.restore();
+}
+
+/* Тень (горизонт событий) */
+function drawShadow() {
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 1;
+    ctx.beginPath();
+    ctx.arc(cx, cy, R_SHADOW, 0, TAU);
+    ctx.fillStyle = '#000';
+    ctx.fill();
+}
+
+/* Фотонное кольцо с угловой яркостью */
+function drawPhotonRing(t) {
+    const R = R_SHADOW * 1.005;
+    const segs = 96;
+    const step = TAU / segs;
+
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.lineCap = 'butt';
+
+    // Основное кольцо
+    ctx.lineWidth = Math.max(1.4, R_SHADOW * 0.017);
+    for (let i = 0; i < segs; i++) {
+        const a0 = i * step;
+        const side = Math.abs(Math.cos(a0));
+        const bright = 0.32 + 0.68 * Math.pow(side, 1.7);
+        ctx.strokeStyle = `rgba(255,246,228,${(bright * 0.9).toFixed(3)})`;
+        ctx.beginPath();
+        ctx.arc(cx, cy, R, a0, a0 + step);
+        ctx.stroke();
+    }
+
+    // Ореол
+    ctx.lineWidth = Math.max(4, R_SHADOW * 0.055);
+    for (let i = 0; i < segs; i++) {
+        const a0 = i * step;
+        const side = Math.abs(Math.cos(a0));
+        const bright = 0.32 + 0.68 * Math.pow(side, 1.7);
+        ctx.strokeStyle = `rgba(255,198,140,${(bright * 0.085).toFixed(3)})`;
+        ctx.beginPath();
+        ctx.arc(cx, cy, R, a0, a0 + step);
+        ctx.stroke();
+    }
+}
+
+/* Гравитационно-линзированное изображение дальней стороны диска */
+function drawLensedArc(t) {
+    const R = R_SHADOW * 1.055;
+    const steps = 64;
+    const step = Math.PI / steps;
+
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.lineWidth = Math.max(1.2, R_SHADOW * 0.016);
+
+    for (let i = 0; i < steps; i++) {
+        const a0 = Math.PI + i * step;           // верхняя дуга (canvas: π → 2π)
+        const m  = (i + 0.5) / steps;
+        const bright = Math.pow(Math.sin(m * Math.PI), 1.4);
+        ctx.strokeStyle = `rgba(255,232,196,${(0.42 * bright).toFixed(3)})`;
+        ctx.beginPath();
+        ctx.arc(cx, cy, R, a0, a0 + step);
+        ctx.stroke();
+    }
+}
+
+/* ======================= ГЛАВНЫЙ РЕНДЕР ======================= */
+function render(dt, t) {
+    // --- фон ---
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#010204';
+    ctx.fillRect(0, 0, W, H);
+
+    // --- параллакс ---
+    const ease = Math.min(1, dt * 3.2);
+    pointer.x += (pointer.tx - pointer.x) * ease;
+    pointer.y += (pointer.ty - pointer.y) * ease;
+    cx = cx0 + pointer.x * R_SHADOW * 0.10;
+    cy = cy0 + pointer.y * R_SHADOW * 0.10;
+
+    drawStars(t);
+    updateParticles(dt, t);
+
+    // задняя половина диска
+    drawParticles(true);
+
+    // свечение
+    drawDiskGlow();
+
+    // тень
+    drawShadow();
+
+    // фотонное кольцо
+    drawPhotonRing(t);
+
+    // линзированная дуга
+    drawLensedArc(t);
+
+    // передняя половина диска
+    drawParticles(false);
+
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 1;
+}
+
+/* ======================= РАЗМЕРЫ / РЕСАЙЗ ======================= */
+function resize() {
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth;
+    H = window.innerHeight;
+
+    canvas.width  = Math.floor(W * DPR);
+    canvas.height = Math.floor(H * DPR);
+    canvas.style.width  = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+    cx0 = W * 0.5;
+    cy0 = H * 0.5;
+    cx  = cx0;
+    cy  = cy0;
+
+    R_SHADOW = Math.max(70, Math.min(W, H) * 0.135);
+
+    buildStars();
+    buildParticles();
+
+    document.getElementById('pcount').textContent = cfg.count;
+}
+
+/* ======================= ЦИКЛ ======================= */
+const fpsEl     = document.getElementById('fps');
+const sessionEl = document.getElementById('session');
+
+let lastTime = 0;
+let simTime  = 0;
+let fpsAcc   = 0;
+let fpsFrames = 0;
+let lastSec  = -1;
+
+function pad(n){ return n < 10 ? '0' + n : '' + n; }
+
+function loop(now) {
+    if (!lastTime) lastTime = now;
+    let dt = (now - lastTime) / 1000;
+    lastTime = now;
+    if (dt > 0.1) dt = 0.1;      // защита от прыжков при смене таба
+    simTime += dt;
+
+    render(dt, simTime);
+
+    // --- FPS ---
+    fpsAcc += dt;
+    fpsFrames++;
+    if (fpsAcc >= 0.5) {
+        fpsEl.textContent = Math.round(fpsFrames / fpsAcc);
+        fpsAcc = 0;
+        fpsFrames = 0;
+    }
+
+    // --- таймер сеанса ---
+    const total = Math.floor(simTime);
+    if (total !== lastSec) {
+        lastSec = total;
+        const h = Math.floor(total / 3600);
+        const m = Math.floor((total % 3600) / 60);
+        const s = total % 60;
+        sessionEl.textContent = pad(h) + ':' + pad(m) + ':' + pad(s);
+    }
+
+    requestAnimationFrame(loop);
+}
+
+/* ======================= СОБЫТИЯ ======================= */
+window.addEventListener('resize', resize, { passive: true });
+
+window.addEventListener('pointermove', (e) => {
+    pointer.tx = (e.clientX / W - 0.5) * 2;
+    pointer.ty = (e.clientY / H - 0.5) * 2;
+}, { passive: true });
+
+window.addEventListener('pointerleave', () => {
+    pointer.tx = 0;
+    pointer.ty = 0;
+});
+
+document.addEventListener('visibilitychange', () => {
+    // сбрасываем время, чтобы не было рывка после возврата
+    lastTime = 0;
+});
+
+/* ======================= СТАРТ ======================= */
+buildSprites();
+resize();
+requestAnimationFrame(loop);
+
+})();
+</script>
+</body>
+</html>
