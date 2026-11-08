@@ -85,7 +85,13 @@
         }
 
         // Проверка флагов для остальных
-        if (node.id === 'telemetry' && localStorage.getItem('s9_core_fixed') === 'true') return 'ONLINE';
+        if (node.id === 'telemetry') {
+            const coreFixed = localStorage.getItem('s9_core_fixed') === 'true';
+            if (!coreFixed) return 'OFFLINE'; // Нельзя войти, пока Ядро не починено
+            
+            const isTelemetryFixed = localStorage.getItem('s9_telemetry_calibrated') === 'true';
+            return isTelemetryFixed ? 'ONLINE' : 'ERROR'; // Красный, пока не синхронизировали
+        }
         if (node.id === 'edr' && localStorage.getItem('s9_os_fixed') === 'true') return 'ONLINE';
         if (node.id === 'gateway' && localStorage.getItem('s9_core_unlocked') === 'true') return 'ONLINE';
         

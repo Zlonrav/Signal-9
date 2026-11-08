@@ -265,6 +265,20 @@
             }
             return;
         }
+		
+        // --- КОМАНДЫ ДЛЯ ТЕЛЕМЕТРИИ ---
+        if (cmd.startsWith('telemetry --')) {
+            if (currentPage !== 'telemetry.html') {
+                print(`<span class="err">ОШИБКА: КОМАНДА ДОСТУПНА ТОЛЬКО В МОДУЛЕ ТЕЛЕМЕТРИИ.</span>`);
+            } else {
+                if (typeof window.telemetryCommand === 'function') {
+                    window.telemetryCommand(cmd);
+                } else {
+                    print(`<span class="err">ОШИБКА: МОДУЛЬ ТЕЛЕМЕТРИИ НЕ АКТИВЕН.</span>`);
+                }
+            }
+            return;
+        }		
 
         // --- КОМАНДА ДЛЯ ОС ---
         if (cmd.startsWith('os --reset qubit ')) {
