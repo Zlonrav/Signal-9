@@ -48,8 +48,8 @@
 
         // --- ЛОГИКА ЗАВЕРШЕНИЯ ТЕСТА ---
         if (isCalibrated && !isFixed) {
-            // Ждем, пока в памяти не станет ровно 4 фразы (2 эталонные + 2 новые)
-            if (phrases.length >= 4) {
+            const baseline = parseInt(localStorage.getItem('s9_archive_baseline_count') || '2', 10);
+            if (phrases.length >= baseline + 2) {
                 localStorage.setItem('s9_archive_fixed', 'true');
                 setTimeout(() => { location.reload(); }, 1000);
             }

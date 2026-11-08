@@ -38,7 +38,7 @@ window.toggleAudio = () => {
 };
 
 window.playGlyphSound = async (pathIndices) => {
-    if (!window.audioCtx || window.isMuted || window.isSignalLoss) return; 
+    if (!window.audioCtx || window.isMuted) return; 
     
     if (window.glyphGainNode) {
         const prevGain = window.glyphGainNode;

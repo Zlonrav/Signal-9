@@ -326,50 +326,6 @@
         document.getElementById('textInput').oninput = (e) => {
             const rawVal = e.target.value.trim();
 
-            // Твой старый код с орбитой (142) оставляем, если он нужен для реактора
-            if (rawVal === "142") {
-                console.log("ВЕКТОР ПРИНЯТ: ОРБИТА СТАБИЛИЗИРОВАНА");
-                const isReactorFixed = localStorage.getItem('s9_reactor_fixed') === 'true';
-                if (!isReactorFixed) {
-                    localStorage.removeItem('s9_emergency_flag'); 
-                    localStorage.setItem('s9_emergency_reactor', 'active'); 
-                    localStorage.setItem('s9_orbit_stabilized', 'active');  
-                    document.body.classList.add('emergency-mode');
-                    if (typeof window.applyEmergencyStyles === 'function') window.applyEmergencyStyles();
-                    const label = document.getElementById('statusLabel');
-                    if (label) {
-                        label.innerText = "ОРБИТА СТАБИЛЬНА. ВНИМАНИЕ: ОШИБКА ЯДРА РЕАКТОРА!";
-                        label.style.color = "#ffaa00"; 
-                        label.style.textShadow = "0 0 15px #ffaa00";
-                        setTimeout(() => {
-                            label.innerText = "соедините точки";
-                            label.style.color = "";
-                            label.style.textShadow = "";
-                        }, 4000);
-                    }
-                } else {
-                    localStorage.removeItem('s9_emergency_flag');
-                    localStorage.removeItem('s9_emergency_reactor');
-                    localStorage.removeItem('s9_orbit_stabilized');
-                    if (typeof window.applyEmergencyStyles === 'function') window.applyEmergencyStyles();
-                    const label = document.getElementById('statusLabel');
-                    if (label) {
-                        label.innerText = "ВЕКТОР ПРИНЯТ: СИСТЕМА ФУНКЦИОНИРУЕТ ШТАТНО";
-                        label.style.color = "#00ff44"; 
-                        label.style.textShadow = "0 0 15px #00ff44";
-                        setTimeout(() => {
-                            label.innerText = "соедините точки";
-                            label.style.color = "";
-                            label.style.textShadow = "";
-                        }, 4000);
-                    }
-                }
-                e.target.value = ""; 
-                if (typeof renderPath === 'function') renderPath('genPath', [], false); 
-                if (typeof updatePointsUI === 'function') updatePointsUI(); 
-                return; 
-            }
-
             // Обычная логика глифов
             const val = rawVal.toUpperCase().replace(/[^А-ЯЁA-Z]/g, '');
             genIndices = (val && typeof getPath === 'function') ? getPath(val) : [];

@@ -141,7 +141,6 @@
                 localStorage.setItem('s9_phrases_data', JSON.stringify(phrasesData));
                 localStorage.setItem('s9_archive_calibrated', 'true');
                 localStorage.setItem('s9_archive_fixed', 'true');
-                localStorage.setItem('s9_archive_baseline_count', '2');
                 print('<span class="ok">[ЧИТ] 10 ЭТАЛОННЫХ ТРАССИТОВ ВВЕДЕНО. АРХИВ ПОЧИНЕН.</span>');
                 setTimeout(() => { window.location.href = 'archive.html'; }, 1500);
                 return true; 
@@ -153,7 +152,6 @@
                 localStorage.removeItem('s9_archive_fixed');
                 localStorage.removeItem('s9_archive_baseline_count');
                 localStorage.removeItem('s9_phrases_data');
-                localStorage.removeItem('s9_archive_calibration_time');
                 const words = ["СИСТЕМА", "ПАМЯТЬ", "КОД", "СИГНАЛ", "ВЕКТОР", "АРХИВ", "ЗВЕЗДА", "ОРБИТА", "МОДУЛЬ", "ДАННЫЕ"];
                 words.forEach(w => localStorage.removeItem('s9_glyph_' + w));
                 print('<span class="ok">[ЧИТ] ЗАДАНИЕ С АРХИВОМ СБРОШЕНО.</span>');
@@ -200,22 +198,32 @@
                 localStorage.removeItem('s9_core_overheated');
                 localStorage.removeItem('s9_core_fixed');
                 localStorage.removeItem('s9_core_timer_start');
-                localStorage.removeItem('s9_core_warning_read');
                 
                 print('<span class="ok">[ЧИТ] СТАТУС ЯДРА СБРОШЕН ДО WARNING (ЖЕЛТЫЙ). ПЕРЕХОД НА КАРТУ...</span>');
                 setTimeout(() => { window.location.href = 'map.html'; }, 1500);
                 return true;
             }
+			// --- ЧИТ ДЛЯ ТЕЛЕМЕТРИИ ---
+            if (cmd.toLowerCase() === 'fix_telemetry') {
+                if (typeof window.cheatFixTelemetry === 'function') {
+                    window.cheatFixTelemetry();
+                    print('<span class="ok">[ЧИТ] ВОЛНЫ СИНХРОНИЗИРОВАНЫ С ЭТАЛОНОМ.</span>');
+                } else {
+                    print('<span class="err">[ЧИТ] МОДУЛЬ ТЕЛЕМЕТРИИ НЕ АКТИВЕН. ПЕРЕЙДИТЕ НА СТРАНИЦУ ТЕЛЕМЕТРИИ.</span>');
+                }
+                return true;
+            }
+            
             // --- ЧИТ ДЛЯ ОС (С УЧЕТОМ EDR) ---
             if (cmd.toLowerCase() === 'fix_os') {
                 localStorage.setItem('s9_os_captcha', 'true');
                 localStorage.setItem('s9_os_broken_qubits', '[]'); 
-                localStorage.setItem('s9_os_errors', '0');
                 localStorage.removeItem('s9_os_fixed');
                 
                 const edrPassed = localStorage.getItem('s9_edr_os_passed') === 'true';
                 
                 if (edrPassed) {
+                    localStorage.removeItem('s9_edr_os_trigger');
                     localStorage.setItem('s9_os_fixed', 'true');
                     print('<span class="ok">[ЧИТ] КУБИТЫ ПЕРЕКАЛИБРОВАНЫ. ОС ПОЧИНЕНА.</span>');
                     setTimeout(() => { window.location.href = 'os.html'; }, 1500);

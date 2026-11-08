@@ -48,25 +48,10 @@ const CHAT_DATABASE = {
 
     window.currentChatStep = 0;
     let isTyping = false;
-    let lastEmergencyState = null; 
-    let lastCoreStatus = 'WAIT';
+	let lastCoreStatus = 'WAIT';
 
     function getActiveData() {
         const page = window.location.pathname.split('/').pop() || 'index.html';
-        const isEmergency = localStorage.getItem('s9_emergency_flag') === 'active';
-        
-        if (isEmergency !== lastEmergencyState) {
-            window.currentChatStep = 0;
-            lastEmergencyState = isEmergency;
-        }
-
-        if (isEmergency) {
-            return [
-                { q: "> ДИАГНОСТИКА СИСТЕМ", a: "КРИТИЧЕСКИЙ УРОВЕНЬ ИОНИЗАЦИИ. КОРПУС ПЕРЕГРЕТ. МАГНИТНЫЕ ЩИТЫ ОТКЛЮЧЕНЫ." },
-                { q: "> ЧТО ДЕЛАТЬ?", a: "ИСПОЛЬЗУЙТЕ КОНСОЛЬ УПРАВЛЕНИЯ (ТИЛЬДА). НАЙДИТЕ ПОВРЕЖДЕННЫЙ МОДУЛЬ." }
-            ];
-        }
-
         const isLoginPage = page === 'login.html';
         const isHuman = isLoginPage || localStorage.getItem('s9_lang_human') === 'true';
 
@@ -176,6 +161,12 @@ const CHAT_DATABASE = {
             ];
         }
         if (page === 'core.html') {
+            if (localStorage.getItem('s9_core_fixed') === 'true') {
+                return [
+                    { q: "> СТАТУС ЯДРА", a: "СТАБИЛЬНО. ВЫРАБОТКА 100%. МАГНИТЫ В НОРМЕ." },
+                    { q: "> ТЕЛЕМЕТРИЯ", a: "ПИТАНИЕ ПОДАНО. МОДУЛЬ ТЕЛЕМЕТРИИ ДОСТУПЕН." }
+                ];
+            }
             return [
                 { q: "> СТАТУС ЯДРА", a: "КРИТИЧЕСКИЙ ПЕРЕГРЕВ. МАГНИТНАЯ СТАБИЛИЗАЦИЯ НАРУШЕНА." },
                 { q: "> ДИАГНОСТИКА", a: "ЯДРО СМЕЩЕНО ОТНОСИТЕЛЬНО ЦЕНТРА. ПОКАЗАНИЯ ДАТЧИКОВ РАССТОЯНИЯ ОТКЛОНЯЮТСЯ ОТ ЭТАЛОНА (10)." },
@@ -377,12 +368,6 @@ const CHAT_DATABASE = {
             }, 2000);
         });
     };
-
-    window.addEventListener('storage', (e) => {
-        if (e.key === 's9_emergency_flag') {
-            window.updateQuestion();
-        }
-    });
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', window.updateQuestion);

@@ -34,7 +34,6 @@
         const isCoreFixed = localStorage.getItem('s9_core_fixed') === 'true';
 
         if (isCoreFixed) {
-            // Если починено — зелёное, спокойное
             core.classList.remove('critical');
             core.style.background = "radial-gradient(circle, #fff 0%, #00ff44 30%, #0066ff 70%, transparent 100%)";
             core.style.boxShadow = "0 0 50px #00ff44, 0 0 100px #0066ff, inset 0 0 30px #fff";
@@ -43,66 +42,68 @@
             if (valStab) { valStab.innerText = "100%"; barStab.style.width = "100%"; barStab.className = "progress-fill"; valStab.style.color = "var(--ok)"; }
             
             addLog("> SYSTEM STABLE", "ok");
-            return;
+        } else {
+            core.classList.add('critical');
+            
+            if (valTemp) { valTemp.innerText = "98%"; barTemp.style.width = "98%"; barTemp.className = "progress-fill err"; }
+            if (valStab) { valStab.innerText = "5%"; barStab.style.width = "5%"; barStab.className = "progress-fill err"; valStab.style.color = "var(--err)"; }
         }
 
-        // Если не починено — СРАЗУ аварийное (красное)
-        core.classList.add('critical');
-        
-        if (valTemp) { valTemp.innerText = "98%"; barTemp.style.width = "98%"; barTemp.className = "progress-fill err"; }
-        if (valStab) { valStab.innerText = "5%"; barStab.style.width = "5%"; barStab.className = "progress-fill err"; valStab.style.color = "var(--err)"; }
+        let targetX, targetY, targetZ;
+        let sensors, expected;
 
-        // 1. ГЕНЕРАЦИЯ СМЕЩЕНИЯ (от -5 до 5)
-        let targetX = Math.floor(Math.random() * 11) - 5;
-        let targetY = Math.floor(Math.random() * 11) - 5;
-        let targetZ = Math.floor(Math.random() * 11) - 5;
-        
-        if (targetX === 0) targetX = 2;
-        if (targetY === 0) targetY = -3;
-        if (targetZ === 0) targetZ = 1;
+        if (!isCoreFixed) {
+            targetX = Math.floor(Math.random() * 11) - 5;
+            targetY = Math.floor(Math.random() * 11) - 5;
+            targetZ = Math.floor(Math.random() * 11) - 5;
+            
+            if (targetX === 0) targetX = 2;
+            if (targetY === 0) targetY = -3;
+            if (targetZ === 0) targetZ = 1;
 
-        // 2. ВЫЧИСЛЯЕМ ПОКАЗАНИЯ ДАТЧИКОВ (Эталон 10)
-        // Если ядро ушло вправо на 3 (X=3), то до правого магнита 10-3=7, а до левого 10+3=13
-        const sensors = {
-            'rt': 10 - targetX,
-            'lt': 10 + targetX,
-            'up': 10 - targetY,
-            'dn': 10 + targetY,
-            'fw': 10 - targetZ,
-            'bk': 10 + targetZ
-        };
+            sensors = {
+                'rt': 10 - targetX,
+                'lt': 10 + targetX,
+                'up': 10 - targetY,
+                'dn': 10 + targetY,
+                'fw': 10 - targetZ,
+                'bk': 10 + targetZ
+            };
 
-        // Коррекция, которую должен ввести игрок: 10 - показание_датчика
-        const expected = {
-            'rt': 10 - sensors['rt'], // = targetX
-            'lt': 10 - sensors['lt'], // = -targetX
-            'up': 10 - sensors['up'], // = targetY
-            'dn': 10 - sensors['dn'], // = -targetY
-            'fw': 10 - sensors['fw'], // = targetZ
-            'bk': 10 - sensors['bk']  // = -targetZ
-        };
+            expected = {
+                'rt': 10 - sensors['rt'],
+                'lt': 10 - sensors['lt'],
+                'up': 10 - sensors['up'],
+                'dn': 10 - sensors['dn'],
+                'fw': 10 - sensors['fw'],
+                'bk': 10 - sensors['bk']
+            };
 
-        window.coreEquations = {
-            xy: targetX + targetY,
-            yz: targetY + targetZ,
-            xz: targetX + targetZ
-        };
+            window.coreEquations = {
+                xy: targetX + targetY,
+                yz: targetY + targetZ,
+                xz: targetX + targetZ
+            };
 
-        window.coreTargets = sensors; // Это уже есть в коде
+            window.coreTargets = sensors;
+        }
 
         // 3. ФУНКЦИЯ ПРОВЕРКИ ВВЕДЕННОЙ СТРОКИ
         window.checkCorePosition = function(cmdStr) {
+            if (localStorage.getItem('s9_core_fixed') === 'true') {
+                if (window.printToConsole) window.printToConsole(`<span class="ok">[OK] ЯДРО СТАБИЛЬНО. КОМАНДА НЕ ТРЕБУЕТСЯ.</span>`);
+                return;
+            }
+				if (localStorage.getItem('s9_core_fixed') === 'true') {
+					if (window.printToConsole) window.printToConsole(`<span class="ok">[OK] ЯДРО СТАБИЛЬНО. КОМАНДА НЕ ТРЕБУЕТСЯ.</span>`);
+					return;
+				}
             const rtMatch = cmdStr.match(/rt\s*([+-]?\d+)/);
             const ltMatch = cmdStr.match(/lt\s*([+-]?\d+)/);
             const upMatch = cmdStr.match(/up\s*([+-]?\d+)/);
             const dnMatch = cmdStr.match(/dn\s*([+-]?\d+)/);
             const fwMatch = cmdStr.match(/fw\s*([+-]?\d+)/);
             const bkMatch = cmdStr.match(/bk\s*([+-]?\d+)/);
-        window.coreEquations = {
-            xy: targetX + targetY,
-            yz: targetY + targetZ,
-            xz: targetX + targetZ
-        };
             if (!rtMatch || !ltMatch || !upMatch || !dnMatch || !fwMatch || !bkMatch) {
                 if (window.printToConsole) window.printToConsole(`<span class="err">[ОШИБКА] НЕВЕРНЫЙ ФОРМАТ. ВВЕДИТЕ ВСЕ 6 ЗНАЧЕНИЙ ЧЕРЕЗ ЗАПЯТУЮ.</span>`);
                 return;
@@ -141,8 +142,12 @@
         };
 
         // 4. ФУНКЦИЯ СИНХРОНИЗАЦИИ
-        window.syncCore = function() {
-            if (!window.corePositionReady) {
+			window.syncCore = function() {
+				if (localStorage.getItem('s9_core_fixed') === 'true') {
+					if (window.printToConsole) window.printToConsole(`<span class="ok">[OK] ЯДРО СТАБИЛЬНО. КОРРЕКТИРОВКА НЕ ТРЕБУЕТСЯ.</span>`);
+					return;
+				}
+				if (!window.corePositionReady) {
                 if (window.printToConsole) window.printToConsole(`<span class="err">[ОШИБКА] НЕВОЗМОЖНО СИНХРОНИЗИРОВАТЬ. СНАЧАЛА КАЛИБРУЙТЕ ВСЕ МАГНИТЫ.</span>`);
                 return;
             }
@@ -165,6 +170,9 @@
                     window.dispatchEvent(new Event('unlockConsole'));
                 }
                 addLog("> CORE STABILIZED. SYSTEM ONLINE.", "ok");
+                
+                // Перезагрузка через 2 секунды после сообщения
+               setTimeout(() => { location.reload(); }, 2000);
             }, 2000);
         };
     });

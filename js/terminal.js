@@ -164,7 +164,7 @@
             case 'os': return localStorage.getItem('s9_archive_fixed') === 'true';
             case 'edr': return localStorage.getItem('s9_os_fixed') === 'true';
             case 'telemetry': return localStorage.getItem('s9_core_fixed') === 'true';
-            case 'core': return localStorage.getItem('s9_telemetry_calibrated') === 'true' || localStorage.getItem('s9_core_unlocked') === 'true';
+            case 'core': return localStorage.getItem('s9_core_overheated') === 'true' || localStorage.getItem('s9_core_fixed') === 'true';
             case 'gateway': return localStorage.getItem('s9_core_unlocked') === 'true';
             default: return false;
         }
@@ -229,8 +229,17 @@
         }
 
         // --- КОМАНДА ВЕРИФИКАЦИИ ОС ---
-        if (cmd.startsWith('login --id ')) {
-            const id = cmd.replace('login --id ', '').trim().replace('0x', '').toLowerCase();
+			if (cmd === 'login --id') {
+				print(`<span class="err">ОШИБКА: УКАЖИТЕ ID. ПРИМЕР: <span class="cmd-text">login --id <ВАШ_ID></span></span>`);
+				return;
+			}
+			// --- КОМАНДА ВЕРИФИКАЦИИ ОС ---
+				if (cmd.startsWith('login --id ')) {
+				if (currentPage !== 'os.html') {
+					print(`<span class="err">ОШИБКА: КОМАНДА ДОСТУПНА ТОЛЬКО В ОПЕРАЦИОННОЙ СИСТЕМЕ.</span>`);
+					return;
+				}
+				const id = cmd.replace('login --id ', '').trim().replace('0x', '').toLowerCase();
             if (id === '7f930cb4ddb0') {
                 localStorage.setItem('s9_os_captcha', 'true');
                 print(`<span class="ok">[УСПЕХ] ИДЕНТИФИКАТОР ПРИНЯТ. ДОСТУП К ЯДРУ РАЗРЕШЕН.</span>`);
@@ -305,6 +314,25 @@
             } else if (topic === 'os') {
                 print(`<span class="topic-header">[ОС]</span>`);
                 print(`ДЛЯ РЕМОНТА КУБИТОВ ИСПОЛЬЗУЙТЕ ${printCmd('os --reset qubit rXcY')}`);
+			} else if (topic === 'core') {
+				if (currentPage !== 'core.html') {
+					print(`<span class="err">СПРАВКА ДОСТУПНА ТОЛЬКО В МОДУЛЕ ЭНЕРГОЯДРА.</span>`);
+				} else if (localStorage.getItem('s9_core_fixed') === 'true') {
+					print(`<span class="topic-header">[ЭНЕРГОЯДРО]</span>`);
+					print(`<span class="ok">ЯДРО СТАБИЛЬНО, РЕМОНТ НЕ ТРЕБУЕТСЯ.</span>`);
+				} else if (!window.coreEquations) {
+					print(`<span class="err">ОШИБКА: МОДУЛЬ ЯДРА НЕ АКТИВЕН.</span>`);
+				} else {
+					print(`<span class="topic-header">[ЭНЕРГОЯДРО]</span>`);
+					print(`ДАНО:`);
+					print(`X + Y = ${window.coreEquations.xy}`);
+					print(`Y + Z = ${window.coreEquations.yz}`);
+					print(`X + Z = ${window.coreEquations.xz}`);
+					print(`НАЙДИТЕ X, Y, Z И ВВЕДИТЕ:`);
+					print(`> ${printCmd('core --position rt X, lt -X, up Y, dn -Y, fw Z, bk -Z')}`);
+					print(`ЗАТЕМ:`);
+					print(`> ${printCmd('core --position sync')}`);
+				}				
             } else if (topic === 'telemetry') {
                 if (currentPage === 'telemetry.html') {
                     print(`<span class="topic-header">[СИСТЕМА ТЕЛЕМЕТРИИ]</span>`);
@@ -315,13 +343,13 @@
                     
                     print(`> ${printCmd('telemetry --set <red|green|blue> <freq|phase|amp|offset> <+/-число>')}`);
                     print(`  Изменяет параметр выбранной волны.`);
-                    print(`  Пример: telemetry --set red freq +5`);
-                    print(`  Пример: telemetry --set blue phase -10`);
+                    print(`  Пример: ${printCmd('telemetry --set red freq +5')}`);
+                    print(`  Пример: ${printCmd('telemetry --set blue phase -10')}`);
                     print(``);
                     
                     print(`> ${printCmd('telemetry --toggle <red|green|blue>')}`);
                     print(`  Скрывает или показывает выбранную волну на экране.`);
-                    print(`  Пример: telemetry --toggle green`);
+                    print(`  Пример: ${printCmd('telemetry --toggle green')}`);
                     print(``);
                     
                     print(`> ${printCmd('telemetry --read target')}`);
@@ -340,6 +368,7 @@
                 print(`> ${printCmd('fix_os')} - Починить ОС (и вызвать EDR)`);
                 print(`> ${printCmd('reset_os')} - Сбросить ОС и EDR`);
                 print(`> ${printCmd('reset_core')} - Сброс до желтого ядра (охлаждение)`);
+                print(`> ${printCmd('fix_telemetry')} - Синхронизировать волны телеметрии`);
                 print(`> ${printCmd('clear_memory')} - Полная очистка памяти`);
             } else {
                 print(`НЕТ ИНФОРМАЦИИ ПО ТЕМЕ '${topic}'.`, 'err');
@@ -388,9 +417,20 @@
     }
 
     document.addEventListener('keydown', (e) => {
-        if (e.key === '`' || e.key === '~' || e.key === 'Ё' || e.key === 'ё') {
+        // Тильда (Punto Switcher)
+        if (e.code === 'Backquote') {
+            if (overlay.classList.contains('active') && document.activeElement === input) {
+                e.preventDefault();
+                return;
+            }
             e.preventDefault();
             toggleConsole(!overlay.classList.contains('active'));
+        }
+        
+        // Закрытие по Escape (только если консоль открыта)
+        if (e.key === 'Escape' && overlay.classList.contains('active')) {
+            e.preventDefault();
+            toggleConsole(false);
         }
     });
 

@@ -3,18 +3,6 @@ function update() {
     if (typeof PHRASES === 'undefined') return;
     const now = Date.now();
     const isHuman = localStorage.getItem('s9_lang_human') === 'true'; // ПРОВЕРКА ЯЗЫКА
-    
-    const isSolarEmergency = localStorage.getItem('s9_emergency_flag') === 'active';
-    const isReactorEmergency = localStorage.getItem('s9_emergency_reactor') === 'active';
-    const isGlobalEmergency = isSolarEmergency || isReactorEmergency;
-    
-    if (isGlobalEmergency) {
-        if (!isSignalLoss) triggerSignalLoss(true);
-        const timeSec = Math.floor(now / 1000);
-        const timePassed = timeSec % (typeof CYCLE_TIME !== 'undefined' ? CYCLE_TIME : 128);
-        updateMetaData(now, true, timePassed, 0);
-        return;
-    }
 
     const timeSec = Math.floor(now / 1000);
     const timeLeft = CYCLE_TIME - (timeSec % CYCLE_TIME);
@@ -22,8 +10,6 @@ function update() {
     const phraseIndex = Math.floor((timeSec / CYCLE_TIME) % PHRASES.length);
 
     const phraseContainer = document.getElementById('currentPhrase');
-
-    if (timePassed === 0 && isSignalLoss) triggerSignalLoss(false);
 
     // --- ПОДМЕНА ТАЙМЕРА ---
     if (document.getElementById('timer')) {
@@ -35,7 +21,7 @@ function update() {
     }
     // -----------------------
 
-    updateMetaData(now, isSignalLoss, timePassed, phraseIndex);
+        updateMetaData(now, false, timePassed, phraseIndex);
 
     if (isSignalLoss) return;
 

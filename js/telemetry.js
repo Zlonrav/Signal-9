@@ -17,11 +17,21 @@
             offset: Math.floor(Math.random() * 5) * 10 - 20
         };
 
+        // Функция для генерации случайных стартовых параметров (отличных от эталона)
+        const getRandomParams = () => ({
+            freq: Math.floor(Math.random() * 16) + 20, // 20..35 (вместо 20..50)
+            phase: (Math.floor(Math.random() * 19) * 10) - 90, // -90..90 (вместо -180..180)
+            amp: Math.floor(Math.random() * 41) + 30, // 30..70 (вместо 0..150)
+            offset: (Math.floor(Math.random() * 13) * 10) - 60 // -60..60 (вместо -125..125)
+        });
+
         const waves = {
-            red:   { freq: 30, phase: 45, amp: 60,  offset: 0, color: '#ff3333', name: 'RED', visible: true, osc: null, gain: null, panner: null, lfo: null, lfoGain: null },
-            green: { freq: 30, phase: 0,  amp: 100, offset: -20, color: '#00ff44', name: 'GREEN', visible: true, osc: null, gain: null, panner: null, lfo: null, lfoGain: null },
-            blue:  { freq: 30, phase: 120, amp: 40, offset: 20, color: '#00aaff', name: 'BLUE', visible: true, osc: null, gain: null, panner: null, lfo: null, lfoGain: null }
+            red:   { ...getRandomParams(), color: '#ff3333', name: 'RED', visible: true, osc: null, gain: null, panner: null, lfo: null, lfoGain: null },
+            green: { ...getRandomParams(), color: '#00ff44', name: 'GREEN', visible: true, osc: null, gain: null, panner: null, lfo: null, lfoGain: null },
+            blue:  { ...getRandomParams(), color: '#00aaff', name: 'BLUE', visible: true, osc: null, gain: null, panner: null, lfo: null, lfoGain: null }
         };
+		
+		const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
 
         const refAudio = { osc: null, gain: null, panner: null, lfo: null, lfoGain: null, isPlaying: false };
 
@@ -96,7 +106,7 @@
                 audio.osc.frequency.setTargetAtTime(w.freq * 10 + 200, window.audioCtx.currentTime, 0.1);
                 const vol = forceVolume !== null ? forceVolume : (w.amp / 2000);
                 audio.gain.gain.setTargetAtTime(vol, window.audioCtx.currentTime, 0.1);
-                const panValue = (w.phase / 180) - 1; 
+                const panValue = w.phase / 180; 
                 audio.panner.pan.setTargetAtTime(panValue, window.audioCtx.currentTime, 0.1);
                 audio.lfoGain.gain.setTargetAtTime(Math.abs(w.offset) * 2, window.audioCtx.currentTime, 0.1);
             };
@@ -104,7 +114,9 @@
             // Если слушаем эталон - глушим остальные
             const muteOthers = refAudio.isPlaying;
             for (const key in waves) {
-                applyParams(waves[key], waves[key], muteOthers ? 0 : null);
+                // Глушим волну, если она скрыта (visible === false) ИЛИ если мы слушаем эталон
+                const isMuted = !waves[key].visible || muteOthers;
+                applyParams(waves[key], waves[key], isMuted ? 0 : null);
             }
             
             if (refAudio.isPlaying) {
@@ -210,9 +222,8 @@
             if (parts[1] === '--toggle' && parts[2]) {
                 const color = parts[2];
                 if (waves[color]) {
-                    waves[color].visible = !waves[color].visible;
+                    window.toggleWave(color);
                     printMsg(`<span class="ok">[ОК] Волна ${color.toUpperCase()} ${waves[color].visible ? 'включена' : 'выключена'}.</span>`);
-                    updateAudio();
                 } else {
                     printMsg(`<span class="err">[ОШИБКА] Неизвестная волна.</span>`);
                 }
@@ -227,12 +238,24 @@
                 if (waves[color] && waves[color][param] !== undefined) {
                     if (/^[+-]\d+$/.test(valStr)) {
                         const val = parseInt(valStr);
-                        waves[color][param] += val;
-                        printMsg(`<span class="ok">[ОК] ${color.toUpperCase()} ${param.toUpperCase()} изм. на ${val}.</span>`);
+                        
+                        // Вычисляем новое значение
+                        let newValue = waves[color][param] + val;
+                        
+                        // Применяем ограничения (Clamp)
+                        if (param === 'freq') newValue = clamp(newValue, 0, 100);
+                        else if (param === 'phase') newValue = clamp(newValue, -180, 180);
+                        else if (param === 'amp') newValue = clamp(newValue, 0, 150);
+                        else if (param === 'offset') newValue = clamp(newValue, -125, 125);
+                        
+                        // Записываем обратно
+                        waves[color][param] = newValue;
+                        
+                        printMsg(`<span class="ok">[ОК] ${color.toUpperCase()} ${param.toUpperCase()} изм. на ${val}. (Текущее: ${newValue})</span>`);
                         updateUI();
                         updateAudio();
                     } else {
-                        printMsg(`<span class="err">[ОШИБКА] Неверный формат значения.</span>`);
+                        printMsg(`<span class="err">[ОШИБКА] Неверный формат значения. Используйте +число или -число.</span>`);
                     }
                 } else {
                     printMsg(`<span class="err">[ОШИБКА] Неизвестная волна или параметр.</span>`);
@@ -248,10 +271,47 @@
         const audioBtn = document.getElementById('audio-toggle');
         if (audioBtn) {
             audioBtn.addEventListener('click', () => {
-                // Убираем setTimeout, чтобы избежать гонки состояний
                 initAudio();
             });
         }
+
+        // --- ЛОГИКА ПЕРЕКЛЮЧЕНИЯ ВОЛН (КЛИКИ И КОМАНДЫ) ---
+        window.toggleWave = function(color) {
+            if (waves[color]) {
+                waves[color].visible = !waves[color].visible;
+                
+                // Обновляем визуал кнопки (делаем бледной)
+                const btn = document.getElementById(`btn-${color}`);
+                if (btn) {
+                    btn.classList.toggle('hidden-wave', !waves[color].visible);
+                }
+                
+                // Обновляем звук
+                updateAudio(); 
+                
+                // Пишем в лог
+                const action = waves[color].visible ? 'включена' : 'выключена';
+                addLog(`<span class="ok">[ОК] Волна ${color.toUpperCase()} ${action}.</span>`);
+            }
+        };
+
+        // Привязываем клики к кнопкам в интерфейсе
+        document.getElementById('btn-red')?.addEventListener('click', () => window.toggleWave('red'));
+        document.getElementById('btn-green')?.addEventListener('click', () => window.toggleWave('green'));
+        document.getElementById('btn-blue')?.addEventListener('click', () => window.toggleWave('blue'));
+        // ---------------------------------------------------
+
+        // Экспортируем функцию для читов
+        window.cheatFixTelemetry = function() {
+            for (const key in waves) {
+                waves[key].freq = reference.freq;
+                waves[key].phase = reference.phase;
+                waves[key].amp = reference.amp;
+                waves[key].offset = reference.offset;
+            }
+            updateUI();
+            updateAudio();
+        };
 
         updateUI();
         render();

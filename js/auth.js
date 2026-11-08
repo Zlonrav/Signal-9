@@ -21,5 +21,21 @@
     // Если EDR заблокирован, а игрок пытается открыть любую страницу, кроме EDR и логина — возвращаем его
     if (isEdrLocked && !isEdrPage && !isLoginPage) {
         window.location.replace('edr.html');
+        return;
+    }
+
+    // Route guard: порядок этапов
+    const page = path.split('/').pop() || 'index.html';
+
+    const routeRequirements = {
+        'map.html':       () => localStorage.getItem('s9_lang_human') === 'true',
+        'archive.html':   () => localStorage.getItem('s9_map_visited') === 'true',
+        'os.html':        () => localStorage.getItem('s9_archive_fixed') === 'true',
+        'core.html':      () => localStorage.getItem('s9_core_overheated') === 'true' || localStorage.getItem('s9_core_fixed') === 'true',
+        'telemetry.html': () => localStorage.getItem('s9_core_fixed') === 'true'
+    };
+
+    if (routeRequirements[page] && !routeRequirements[page]()) {
+        window.location.replace('404.html');
     }
 })();

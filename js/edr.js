@@ -143,7 +143,6 @@
                     localStorage.setItem('s9_edr_os_passed', 'true');
                     localStorage.removeItem('s9_edr_os_trigger');
                     localStorage.setItem('s9_os_fixed', 'true');
-                    localStorage.setItem('s9_os_errors', '0');
                     
                     if (window.printToConsole) window.printToConsole(`<span class="ok">> ВСЕ ТЕСТЫ ПРОЙДЕНЫ. ВОЗВРАТ В ОС...</span>`);
                     window.dispatchEvent(new Event('unlockConsole'));

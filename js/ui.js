@@ -30,11 +30,10 @@
             const now = Date.now();
             const cycle = 25000; 
             const isHintTime = (now % cycle) > 20000;
-            const isEmergency = localStorage.getItem('s9_emergency_flag') === 'active';
             const isHuman = localStorage.getItem('s9_lang_human') === 'true';
 
             if (isHintTime) {
-                // БЕЗОПАСНАЯ ОРБИТА (Зеленый режим)
+                // БЕЗОПАСНАЯ ОРБИТА (Оставляем для будущего квеста)
                 coordsElem.innerText = "142.0458.13.70"; 
                 if (statusElem) {
                     if (isHuman) {
@@ -57,43 +56,14 @@
 
                 if (statusElem) {
                     if (isHuman) {
-                        statusElem.innerText = isEmergency ? "ВНИМАНИЕ: КРИТИЧЕСКИЙ ВЫБРОС" : "СТАТУС: ГЕОСТАЦИОНАР";
+                        statusElem.innerText = "СТАТУС: ГЕОСТАЦИОНАР";
                     } else {
-                        statusElem.innerText = isEmergency ? "status: CRITICAL" : "status: GEO_STATIONARY";
+                        statusElem.innerText = "status: GEO_STATIONARY";
                     }
                 }
                 if (panel) panel.classList.remove('safe-orbit-active');
             }
         }, 100);
-    };
-
-    // --- 2. УПРАВЛЕНИЕ РЕЖИМОМ ЧС ---
-    window.triggerSignalLoss = function(active) {
-        window.isSignalLoss = active;
-        const phraseContainer = document.getElementById('currentPhrase');
-        
-        if (active) {
-            localStorage.setItem('s9_emergency_flag', 'active');
-            document.body.classList.add('emergency-mode');
-            
-            if (phraseContainer) {
-                phraseContainer.innerHTML = '';
-                for (let i = 0; i < 5; i++) {
-                    const unit = document.createElement('div');
-                    unit.className = 'glyph-unit';
-                    unit.innerHTML = '<span class="error-text">ERROR</span><div class="glyph-label"></div>';
-                    phraseContainer.appendChild(unit);
-                }
-            }
-        } else {
-            localStorage.removeItem('s9_emergency_flag');
-            document.body.classList.remove('emergency-mode');
-            location.reload(); 
-        }
-    };
-
-    window.resolveEmergency = function() {
-        window.triggerSignalLoss(false);
     };
 
     // --- 3. ОБРАБОТКА МЕТАДАННЫХ ---
@@ -103,18 +73,16 @@
         const statusMeta = document.getElementById('status-meta');
         if (statusMeta) {
             if (now > window.nextSignalUpdate) {
-                window.signalTarget = error ? 0.1 + Math.random() * 1.5 : 93 + Math.random() * 6;
+                window.signalTarget = 93 + Math.random() * 6;
                 window.nextSignalUpdate = now + 1500 + Math.random() * 2500;
             }
             window.signalDisplay += (window.signalTarget - window.signalDisplay) * 0.02;
             
             if (isHuman) {
                 let receptionText = window.signalDisplay < 94 ? '<span style="color:#ff3333; font-weight:bold;">НЕСТАБИЛЬНЫЙ</span>' : 'АКТИВНЫЙ';
-                if (error) receptionText = '<span style="color:#ff3333; font-weight:bold;">ОБРЫВ СВЯЗИ</span>';
                 statusMeta.innerHTML = `УРОВЕНЬ СИГНАЛА: ${window.signalDisplay.toFixed(1)}% | ПРИЁМ: ${receptionText}`;
             } else {
                 let rawRecv = window.signalDisplay < 94 ? 'FALSE' : 'TRUE';
-                if (error) rawRecv = 'FALSE (ERR)';
                 statusMeta.innerHTML = `signal_amp: ${window.signalDisplay.toFixed(1)}% | recv: ${rawRecv}`;
             }
         }
@@ -235,46 +203,7 @@
                 }
             };
         }
-
         window.startStationTelemetry();
-
-        if (typeof applyEmergencyStyles === 'function') {
-            applyEmergencyStyles();
-        }
     });
 
 })(); 
-
-// --- ЦЕНТРАЛЬНАЯ СИСТЕМА МОНИТОРИНГА ЧС И ИНТЕРФЕЙСА ---
-window.applyEmergencyStyles = function() {
-    const isSolar = localStorage.getItem('s9_emergency_flag') === 'active';
-    const isReactor = localStorage.getItem('s9_emergency_reactor') === 'active';
-    const isHuman = localStorage.getItem('s9_lang_human') === 'true';
-
-    if (isSolar || isReactor) {
-        document.body.classList.add('emergency-mode');
-        
-        let bar = document.getElementById('emergency-bar');
-        if (!bar) {
-            bar = document.createElement('div');
-            bar.id = 'emergency-bar';
-            bar.style = "position:fixed; top:0; left:0; width:100%; background:#ff3300; color:#000; text-align:center; font-weight:bold; z-index:10000; padding:8px; font-family:monospace; letter-spacing:2px; text-transform:uppercase;";
-            document.body.appendChild(bar);
-        }
-        
-        if (isHuman) {
-            bar.innerText = isReactor ? "ВНИМАНИЕ! КРИТИЧЕСКИЙ СБОЙ ПО РЕАКТОРА!" : "ВНИМАНИЕ! СОЛНЕЧНАЯ АКТИВНОСТЬ!";
-        } else {
-            bar.innerText = isReactor ? "WARNING: REACTOR_CRITICAL_FAILURE" : "WARNING: SOLAR_ACTIVITY";
-        }
-        
-    } else {
-        document.body.classList.remove('emergency-mode');
-        const bar = document.getElementById('emergency-bar');
-        if (bar) bar.remove();
-    }
-};
-
-document.addEventListener('DOMContentLoaded', window.applyEmergencyStyles);
-window.addEventListener('load', window.applyEmergencyStyles);
-window.addEventListener('storage', window.applyEmergencyStyles);
