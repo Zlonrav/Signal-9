@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>СИГНАЛ-9 // ОБЪЕКТ GARGANTUA // V4.1 CINEMATIC</title>
+<style>
+    :root{ --cyan:#00f2ff; --amber:#ffaa00; --danger:#ff3333; }
+    *{box-sizing:border-box;}
+    body, html {
+        margin: 0; padding: 0; width: 100%; height: 100%;
+        background-color: #010204; overflow: hidden;
+        font-family: 'JetBrains Mono','Consolas','Courier New',monospace;
+        color: var(--cyan); cursor: grab;
+        -webkit-font-smoothing: antialiased; user-select: none;
+    }
+    body:active { cursor: grabbing; }
+    #blackhole { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 1; }
+    .scanner-grid {
+        position: absolute; inset: 0; z-index: 2; pointer-events: none;
+        background-image:
+            linear-gradient(rgba(0,242,255,0.02) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0,242,255,0.02) 1px, transparent 1px);
+        background-size: 50px 50px;
+        mask-image: radial-gradient(circle at center, transparent 35%, black 95%);
+        -webkit-mask-image: radial-gradient(circle at center, transparent 35%, black 95%);
+    }
+    .vignette {
+        position:absolute; inset:0; z-index:3; pointer-events:none;
+        background: radial-gradient(ellipse at center, rgba(0,0,0,0) 42%, rgba(0,0,0,0.92) 100%);
+    }
+    .scanlines {
+        position:absolute; inset:0; z-index:5; pointer-events:none; opacity:.32;
+        background: repeating-linear-gradient(0deg, rgba(0,0,0,.55) 0px, rgba(0,0,0,.55) 1px, transparent 1px, transparent 3px);
+    }
+    .scanbeam {
+        position:absolute; left:0; right:0; height:140px; z-index:3; pointer-events:none;
+        background: linear-gradient(180deg, transparent, rgba(0,242,255,0.045), transparent);
+        animation: scanbeam 9s linear infinite; opacity:.7;
+    }
+    @keyframes scanbeam { 0%{ top:-140px; } 100%{ top:100%; } }
+    .corner {
+        position:absolute; width:44px; height:44px; z-index:4; pointer-events:none;
+        border:1px solid rgba(0,242,255,.35); box-shadow: 0 0 12px rgba(0,242,255,.12);
+    }
+    .corner.tl{ top:22px; left:22px; border-right:0; border-bottom:0; }
+    .corner.tr{ top:22px; right:22px; border-left:0;  border-bottom:0; }
+    .corner.bl{ bottom:22px; left:22px; border-right:0; border-top:0; }
+    .corner.br{ bottom:22px; right:22px; border-left:0;  border-top:0; }
+    .hud-overlay {
+        position: absolute; inset: 0; z-index: 4; pointer-events: none;
+        padding: 46px 62px; display: flex; flex-direction: column; justify-content: space-between;
+    }
+    .hud-top {
+        display: flex; justify-content: space-between; align-items: flex-start;
+        text-transform: uppercase; letter-spacing: 3px; font-size: 12px;
+        text-shadow: 0 0 10px rgba(0,242,255,.8); line-height: 1.9;
+    }
+    .hud-top small { display:block; letter-spacing:2px; font-size:10px; color:#3d6b73; text-shadow:none; margin-top:6px; }
+    .alert-text { color: var(--danger); text-shadow: 0 0 4px var(--danger), 0 0 14px rgba(255,51,51,.65); font-weight: bold; animation: pulse 2.4s ease-in-out infinite; }
+    @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.45;} }
+    .data-panel {
+        position: absolute; right: 62px; top: 50%; transform: translateY(-50%);
+        width: 268px; z-index: 4; font-size: 10px; line-height: 1.7; pointer-events:none;
+    }
+    .panel-title {
+        font-size:9px; letter-spacing:4px; color:#3d6b73; text-transform:uppercase;
+        margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid rgba(0,242,255,.18);
+        display:flex; align-items:center; gap:8px;
+    }
+    .panel-title::before { content:''; width:6px; height:6px; background:var(--cyan); box-shadow:0 0 10px var(--cyan); animation: pulse 1.6s infinite; }
+    .data-row { display: flex; justify-content: space-between; align-items:center; border-bottom: 1px solid rgba(0,242,255,0.08); padding: 6px 0; gap:10px; }
+    .data-label { color: #6b8a90; letter-spacing:.6px; }
+    .data-val { color: var(--amber); text-shadow: 0 0 6px rgba(255,170,0,.85); font-weight:bold; white-space:nowrap; font-variant-numeric: tabular-nums; }
+    .data-val.warning { color: var(--danger); text-shadow: 0 0 6px rgba(255,51,51,.9); animation: pulse 1.4s infinite; }
+    .hud-bottom {
+        position:absolute; left:62px; right:62px; bottom:46px; z-index:4;
+        display:flex; justify-content:space-between; gap:24px; font-size:10px; letter-spacing:2px;
+        text-transform:uppercase; color:#3d6b73; pointer-events:none;
+    }
+    .hud-bottom .val { color:var(--cyan); text-shadow:0 0 8px rgba(0,242,255,.8); font-variant-numeric: tabular-nums; }
+    .hint {
+        position:absolute; left:50%; bottom:14px; transform:translateX(-50%);
+        z-index:4; pointer-events:none; font-size:9px; letter-spacing:2px;
+        text-transform:uppercase; color:#2a4d54; white-space:nowrap;
+    }
+    .hint b { color:#4d8b96; font-weight:normal; }
+    #error { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; z-index: 100; background: #000; color: #ff3333; font-size: 14px; letter-spacing: 3px; text-transform: uppercase; text-align: center; padding: 20px; }
+    @media (max-width: 860px){
+        .data-panel{ right:20px; width:200px; font-size:9px; }
+        .hud-overlay{ padding:28px; font-size:10px; }
+        .hud-bottom{ left:28px; right:28px; bottom:28px; font-size:9px; }
+        .corner{ width:28px; height:28px; }
+        .hint{ display:none; }
+    }
+</style>
+</head>
+<body>
+
+<canvas id="blackhole"></canvas>
+<div class="scanner-grid"></div>
+<div class="vignette"></div>
+<div class="scanbeam"></div>
+<div class="scanlines"></div>
+<div class="corner tl"></div>
+<div class="corner tr"></div>
+<div class="corner bl"></div>
+<div class="corner br"></div>
+
+<div class="hud-overlay">
+    <div class="hud-top">
+        <div>
+            СПЕКТРАЛЬНЫЙ АНАЛИЗ // СЕКТОР 07<br>
+            <span class="alert-text">ОБНАРУЖЕН ИСТОЧНИК ГАММА-ИЗЛУЧЕНИЯ</span>
+            <small>РЕЖИМ: АКТИВНОЕ НАБЛЮДЕНИЕ</small>
+        </div>
+        <div style="text-align: right;">
+            ОБЪЕКТ: GARGANTUA<br>
+            КЛАСС: KERR BLACK HOLE
+            <small>ЛОКАЦИЯ: 47°12' / −8°44'</small>
+        </div>
+    </div>
+</div>
+
+<div class="data-panel">
+    <div class="panel-title">ТЕЛЕМЕТРИЯ</div>
+    <div class="data-row"><span class="data-label">МАССА (M☉):</span> <span class="data-val">1.0 × 10⁸</span></div>
+    <div class="data-row"><span class="data-label">СПИН (a):</span> <span class="data-val">0.999</span></div>
+    <div class="data-row"><span class="data-label">ГОРИЗОНТ (Rs):</span> <span class="data-val">~ 3.0 × 10⁸ км</span></div>
+    <div class="data-row"><span class="data-label">ТЕМП. ДИСКА:</span> <span class="data-val warning">ЭКСТРЕМАЛЬНАЯ</span></div>
+    <div class="data-row"><span class="data-label">ДОПЛЕР-СДВИГ:</span> <span class="data-val" id="dop">z ≈ 0.41</span></div>
+    <div class="data-row"><span class="data-label">РЕЛ. ДЖЕТ:</span> <span class="data-val warning">АКТИВЕН</span></div>
+    <div class="data-row"><span class="data-label">ДИСТАНЦИЯ:</span> <span class="data-val" id="dist">15.0 R</span></div>
+    <div class="data-row"><span class="data-label">ВРЕМЯ (локальное):</span> <span class="data-val" id="tdilate">1.000x</span></div>
+</div>
+
+<div class="hud-bottom">
+    <div>СЕАНС: <span class="val" id="session">00:00:00</span></div>
+    <div>FPS: <span class="val" id="fps">--</span></div>
+    <div>РАЗРЕШЕНИЕ: <span class="val" id="res">—</span></div>
+</div>
+
+<div class="hint"><b>ПЕРЕТАЩИТЬ</b> — ОРБИТА &nbsp;·&nbsp; <b>КОЛЕСО</b> — МАСШТАБ &nbsp;·&nbsp; <b>ЖДИ</b> — АВТОПИЛОТ</div>
+<div id="error">WEBGL НЕДОСТУПЕН</div>
+
+<script>
+(function () {
+'use strict';
+
+const canvas = document.getElementById('blackhole');
+const errorEl = document.getElementById('error');
+
+const gl = canvas.getContext('webgl', {
+    antialias: false, alpha: false, depth: false, stencil: false,
+    powerPreference: 'high-performance', preserveDrawingBuffer: false
+});
+
+if (!gl) { errorEl.style.display = 'flex'; return; }
+
+const extFloat = gl.getExtension('OES_texture_float');
+const extColorBufferFloat = gl.getExtension('WEBGL_color_buffer_float');
+const extFloatLinear = gl.getExtension('OES_texture_float_linear');
+const useFloatFBO = !!(extFloat && extColorBufferFloat);
+const useLinearFilter = !useFloatFBO || !!extFloatLinear;
+
+// ============ УТИЛИТЫ WEBGL ============
+const quadVert = `
+attribute vec2 aPos;
+varying vec2 vUv;
+void main() {
+    vUv = aPos * 0.5 + 0.5;
+    gl_Position = vec4(aPos, 0.0, 1.0);
+}`;
+
+function compile(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src); gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+        console.error(gl.getShaderInfoLog(s)); throw new Error('Shader error');
+    }
+    return s;
+}
+
+function createProgram(fragSrc) {
+    const p = gl.createProgram();
+    gl.attachShader(p, compile(gl.VERTEX_SHADER, quadVert));
+    gl.attachShader(p, compile(gl.FRAGMENT_SHADER, fragSrc));
+    gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) { console.error(gl.getProgramInfoLog(p)); return null; }
+    return p;
+}
+
+const buf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
+
+function bindQuad(prog) {
+    const aPos = gl.getAttribLocation(prog, 'aPos');
+    if (aPos !== -1) {
+        gl.enableVertexAttribArray(aPos);
+        gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+    }
+}
+
+// ============ ШЕЙДЕРЫ ============
+
+// 1. MAIN RAY-MARCHING (HDR + Kerr-like frame-dragging)
+const fragMain = `
+precision highp float;
+uniform vec2 uResolution;
+uniform float uTime;
+uniform vec3 uCamPos, uCamForward, uCamRight, uCamUp;
+uniform float uFov;
+
+#define HORIZON 1.0
+#define DISK_INNER 3.0
+#define DISK_OUTER 14.0
+#define MAX_STEPS 360
+
+float hash13(vec3 p) { p = fract(p * 0.1031); p += dot(p, p.yzx + 33.33); return fract((p.x + p.y) * p.z); }
+vec3 hash33(vec3 p) { p = fract(p * vec3(0.1031, 0.1030, 0.0973)); p += dot(p, p.yxz + 33.33); return fract((p.xxy + p.yxx) * p.zyx); }
+float noise3(vec3 p) {
+    vec3 i = floor(p); vec3 f = fract(p); vec3 u = f * f * (3.0 - 2.0 * f);
+    return mix(mix(mix(hash13(i), hash13(i+vec3(1,0,0)), u.x), mix(hash13(i+vec3(0,1,0)), hash13(i+vec3(1,1,0)), u.x), u.y),
+               mix(mix(hash13(i+vec3(0,0,1)), hash13(i+vec3(1,0,1)), u.x), mix(hash13(i+vec3(0,1,1)), hash13(i+vec3(1,1,1)), u.x), u.y), u.z);
+}
+float fbm(vec3 p) { float v = 0.0, a = 0.5; for (int i = 0; i < 4; i++) { v += a * noise3(p); p = p * 2.07 + vec3(1.7, 9.2, 3.3); a *= 0.5; } return v; }
+
+vec3 stars(vec3 dir) {
+    vec3 p = dir * 280.0; vec3 cell = floor(p); vec3 local = fract(p) - 0.5;
+    float h = hash13(cell); if (h < 0.995) return vec3(0.0);
+    vec3 starPos = (hash33(cell + 1.0) - 0.5) * 0.6; float dist = length(local - starPos);
+    float size = 0.3 + hash13(cell + 5.0) * 0.7; float bright = pow(smoothstep(size, 0.0, dist), 2.5);
+    float ct = hash13(cell + 7.0);
+    vec3 col = ct < 0.25 ? vec3(0.65, 0.78, 1.00) : (ct < 0.60 ? vec3(1.00, 1.00, 1.00) : (ct < 0.85 ? vec3(1.00, 0.92, 0.75) : vec3(1.00, 0.72, 0.45)));
+    float tw = 0.75 + 0.25 * sin(uTime * (0.7 + h * 4.0) + h * 28.0);
+    return col * bright * (0.3 + hash13(cell + 13.0) * 2.0) * tw;
+}
+vec3 nebula(vec3 dir) {
+    float n1 = fbm(dir * 3.5 + 12.0); float n2 = fbm(dir * 7.0 - 3.0);
+    float m = smoothstep(0.45, 0.75, n1) * 0.6 + smoothstep(0.55, 0.85, n2) * 0.4;
+    return vec3(0.10, 0.05, 0.16) * m * 0.3;
+}
+vec3 background(vec3 dir) { return stars(dir) + nebula(dir) + vec3(0.003, 0.005, 0.010); }
+
+vec3 diskColor(float t) {
+    vec3 hot  = vec3(1.00, 0.96, 0.85); vec3 warm = vec3(1.00, 0.68, 0.32); vec3 cool = vec3(0.60, 0.20, 0.05);
+    return t < 0.5 ? mix(cool, warm, t * 2.0) : mix(warm, hot, (t - 0.5) * 2.0);
+}
+
+vec4 sampleAccretion(vec3 hit, float r) {
+    float t = (r - DISK_INNER) / (DISK_OUTER - DISK_INNER); if (t < 0.0 || t > 1.0) return vec4(0.0);
+    float radial = pow(1.0 - t, 2.2) * smoothstep(0.0, 0.06, t);
+    float phi = atan(hit.z, hit.x);
+    float omega = 3.2 / pow(r, 1.5) + 0.5 / pow(r, 2.0); 
+    float matPhi = phi - uTime * omega;
+    vec2 uv = vec2(cos(matPhi), sin(matPhi)) * (r * 2.0);
+    float n = fbm(vec3(uv, uTime * 0.15 + r * 0.4));
+    float density = radial * (0.35 + pow(n, 1.4) * 1.5);
+    float temp = pow(1.0 - t, 1.4);
+    vec3 col = diskColor(temp) * density * 4.0;
+    return vec4(col, clamp(density * 0.85, 0.0, 0.95));
+}
+
+void main() {
+    vec2 uv = (gl_FragCoord.xy - 0.5 * uResolution) / uResolution.y;
+    vec3 rayDir = normalize(uCamForward + uv.x * uCamRight * uFov + uv.y * uCamUp * uFov);
+    vec3 pos = uCamPos; vec3 vel = rayDir;
+    vec3 L = cross(pos, vel); float h2 = dot(L, L);
+    vec3 color = vec3(0.0); float alpha = 0.0;
+    vec3 prevPos = pos; float prevY = pos.y;
+    bool captured = false;
+
+    for (int i = 0; i < MAX_STEPS; i++) {
+        float r = length(pos);
+        if (r < HORIZON) { captured = true; break; }
+        if (r > 60.0 || alpha > 0.995) break;
+        
+        float stepSize = clamp(0.02 + (r - 1.0) * 0.032, 0.01, 0.5);
+        if (r < 2.0) stepSize = 0.015;
+        
+        float yAbs = abs(pos.y);
+        if (yAbs > 1.2 && yAbs < 30.0) {
+            float coneRadius = 0.15 + yAbs * 0.06;
+            float distToAxis = length(pos.xz);
+            if (distToAxis < coneRadius) {
+                vec3 jetUV = vec3(pos.xz * 4.0, yAbs * 0.4 - uTime * 2.0);
+                float n1 = fbm(jetUV);
+                float n2 = noise3(vec3(pos.xz * 10.0, yAbs * 0.8 - uTime * 3.0));
+                float turbulence = n1 * 0.6 + n2 * 0.4;
+                float radialFalloff = smoothstep(coneRadius, 0.0, distToAxis);
+                float heightFalloff = smoothstep(30.0, 1.5, yAbs);
+                float jetDensity = radialFalloff * heightFalloff * turbulence;
+                float jetDoppler = 0.5 + 0.5 * sin(uTime * 2.0 + yAbs * 0.5);
+                vec3 jetColor = mix(vec3(0.2, 0.5, 1.0), vec3(0.8, 0.2, 1.0), turbulence) * (0.7 + jetDoppler);
+                float accum = jetDensity * stepSize * 0.15;
+                color += jetColor * accum * (1.0 - alpha);
+                alpha += accum * 0.5;
+            }
+        }
+        
+        vec3 accel = -1.5 * h2 * pos / (r * r * r * r * r);
+        vec3 torque = cross(vec3(0.0, 1.0, 0.0), pos) * 0.15 / (r * r * r);
+        accel += torque;
+        vel += accel * stepSize;
+        vec3 newPos = pos + vel * stepSize;
+
+        if (newPos.y * prevY < 0.0) {
+            float tt = prevY / (prevY - newPos.y);
+            vec3 hit = mix(prevPos, newPos, tt);
+            float rd = length(hit.xz);
+            vec4 ds = sampleAccretion(hit, rd);
+            if (ds.a > 0.002) {
+                float phi = atan(hit.z, hit.x);
+                vec3 vDisk = vec3(-sin(phi), 0.0, cos(phi)) * sqrt(0.5 / rd);
+                float beta = dot(vDisk, normalize(-vel));
+                float gamma = 1.0 / sqrt(max(0.01, 1.0 - dot(vDisk, vDisk)));
+                float D = 1.0 / max(0.05, gamma * (1.0 - beta));
+                float gz = sqrt(max(0.01, 1.0 - HORIZON / rd));
+                color += ds.rgb * (D * D * D) * gz * (1.0 - alpha);
+                alpha += ds.a * (1.0 - alpha);
+            }
+        }
+        prevPos = pos; prevY = pos.y; pos = newPos;
+    }
+
+    vec3 finalColor = captured ? color : color + background(normalize(vel)) * (1.0 - alpha);
+    gl_FragColor = vec4(finalColor, 1.0);
+}`;
+
+// 2. BRIGHT PASS
+const fragBright = `
+precision highp float;
+uniform sampler2D uTex;
+uniform vec2 uResolution;
+varying vec2 vUv;
+void main() {
+    vec3 c = texture2D(uTex, vUv).rgb;
+    float lum = dot(c, vec3(0.2126, 0.7152, 0.0722));
+    vec3 bloom = c * smoothstep(1.0, 2.0, lum);
+    gl_FragColor = vec4(bloom, 1.0);
+}`;
+
+// 3. BLUR PASS
+const fragBlur = `
+precision highp float;
+uniform sampler2D uTex;
+uniform vec2 uResolution;
+uniform vec2 uDir;
+varying vec2 vUv;
+void main() {
+    vec2 texel = 1.0 / uResolution;
+    vec3 sum = vec3(0.0);
+    float weights[5];
+    weights[0]=0.227027; weights[1]=0.1945946; weights[2]=0.1216216; weights[3]=0.054054; weights[4]=0.016216;
+    sum += texture2D(uTex, vUv).rgb * weights[0];
+    for(int i=1; i<5; i++) {
+        vec2 offset = uDir * texel * float(i) * 2.0;
+        sum += texture2D(uTex, vUv + offset).rgb * weights[i];
+        sum += texture2D(uTex, vUv - offset).rgb * weights[i];
+    }
+    gl_FragColor = vec4(sum, 1.0);
+}`;
+
+// 4. COMPOSITE PASS (ИСПРАВЛЕННЫЙ FLARE)
+const fragComposite = `
+precision highp float;
+uniform sampler2D uMain;
+uniform sampler2D uBloom;
+uniform vec2 uResolution;
+uniform float uTime;
+varying vec2 vUv;
+
+vec3 aces(vec3 x) { return (x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14); }
+
+void main() {
+    vec2 uv = vUv;
+    vec2 center = vec2(0.5);
+    vec2 dist = uv - center;
+    float r2 = dot(dist, dist);
+    
+    vec3 col;
+    col.r = texture2D(uMain, uv - dist * r2 * 0.03).r;
+    col.g = texture2D(uMain, uv).g;
+    col.b = texture2D(uMain, uv + dist * r2 * 0.03).b;
+
+    vec3 bloom = texture2D(uBloom, uv).rgb;
+    
+    // --- ФИКС ANAMORPHIC LENS FLARE ---
+    vec3 flare = vec3(0.0);
+    for(int i=0; i<16; i++) {
+        float offset = (float(i) - 8.0) * 0.006; // Очень тонкая линия
+        vec3 s = texture2D(uBloom, vec2(uv.x + offset, uv.y)).rgb;
+        
+        // Берем только САМЫЕ яркие пиксели (фотонное кольцо, звезды)
+        float lum = dot(s, vec3(0.299, 0.587, 0.114));
+        flare += s * smoothstep(1.5, 4.0, lum); 
+    }
+    flare /= 16.0;
+    flare *= vec3(0.1, 0.4, 1.0); // Синий оттенок
+
+    // Снизили основной Bloom до 0.7, а блик до 0.04
+    col += bloom * 0.7 + flare * 0.04;
+
+    col = aces(col * 0.85);
+    col = pow(col, vec3(1.0 / 2.2));
+
+    float vig = smoothstep(1.0, 0.3, length(uv - 0.5) * 1.4);
+    col *= mix(0.4, 1.0, vig);
+
+    vec2 grainUv = uv + uTime * 0.01;
+    float grain = fract(sin(dot(grainUv, vec2(12.9898, 78.233))) * 43758.5453);
+    col += (grain - 0.5) * 0.015;
+
+    gl_FragColor = vec4(col, 1.0);
+}`;
+
+const progMain = createProgram(fragMain);
+const progBright = createProgram(fragBright);
+const progBlur = createProgram(fragBlur);
+const progComp = createProgram(fragComposite);
+
+// ============ FBO ============
+function createFBO(w, h) {
+    const tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    const type = useFloatFBO ? gl.FLOAT : gl.UNSIGNED_BYTE;
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, type, null);
+    const filter = useLinearFilter ? gl.LINEAR : gl.NEAREST;
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    const fbo = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+    return { tex, fbo, w, h };
+}
+
+let mainFBO, bloomA, bloomB;
+function initFBOs(w, h) {
+    const scale = 0.5; const bw = Math.floor(w * scale), bh = Math.floor(h * scale);
+    if (mainFBO) { gl.deleteTexture(mainFBO.tex); gl.deleteFramebuffer(mainFBO.fbo); }
+    if (bloomA) { gl.deleteTexture(bloomA.tex); gl.deleteFramebuffer(bloomA.fbo); }
+    if (bloomB) { gl.deleteTexture(bloomB.tex); gl.deleteFramebuffer(bloomB.fbo); }
+    mainFBO = createFBO(w, h); bloomA = createFBO(bw, bh); bloomB = createFBO(bw, bh);
+}
+
+// ============ КАМЕРА & АВТОПИЛОТ ============
+let camTheta = 0.20, camPhi = 0.22, camDist = 15.0;
+let targetTheta = camTheta, targetPhi = camPhi, targetDist = camDist;
+let idleTimer = 0;
+let autoPilot = false;
+
+function normalize(v) { const l = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0]/l, v[1]/l, v[2]/l]; }
+function cross(a, b) { return [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]]; }
+
+function computeCamera() {
+    const x = camDist * Math.cos(camPhi) * Math.sin(camTheta);
+    const y = camDist * Math.sin(camPhi);
+    const z = camDist * Math.cos(camPhi) * Math.cos(camTheta);
+    const pos = [x, y, z];
+    const fwd = normalize([-x, -y, -z]);
+    const right = normalize(cross(fwd, [0, 1, 0]));
+    const up = cross(right, fwd);
+    return { pos, fwd, right, up };
+}
+
+// ============ РЕСАЙЗ ============
+let W = 0, H = 0;
+const resEl = document.getElementById('res');
+function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    W = Math.floor(window.innerWidth * dpr); H = Math.floor(window.innerHeight * dpr);
+    canvas.width = W; canvas.height = H;
+    canvas.style.width = window.innerWidth + 'px'; canvas.style.height = window.innerHeight + 'px';
+    gl.viewport(0, 0, W, H);
+    resEl.textContent = W + '×' + H;
+    initFBOs(W, H);
+}
+window.addEventListener('resize', resize, { passive: true });
+
+// ============ УПРАВЛЕНИЕ ============
+let dragging = false, lastX = 0, lastY = 0;
+canvas.addEventListener('pointerdown', (e) => { 
+    dragging = true; lastX = e.clientX; lastY = e.clientY; 
+    canvas.setPointerCapture(e.pointerId); idleTimer = 0; autoPilot = false;
+});
+canvas.addEventListener('pointerup', (e) => { dragging = false; try { canvas.releasePointerCapture(e.pointerId); } catch (_) {} });
+canvas.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    targetTheta -= (e.clientX - lastX) * 0.005;
+    targetPhi = Math.max(-1.35, Math.min(1.35, targetPhi + (e.clientY - lastY) * 0.005));
+    lastX = e.clientX; lastY = e.clientY;
+    idleTimer = 0; 
+});
+canvas.addEventListener('wheel', (e) => {
+    e.preventDefault(); targetDist *= Math.exp(e.deltaY * 0.0009);
+    targetDist = Math.max(4.0, Math.min(45.0, targetDist));
+    idleTimer = 0;
+}, { passive: false });
+
+let pinchDist = null;
+canvas.addEventListener('touchstart', (e) => { if (e.touches.length === 2) pinchDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); }, { passive: true });
+canvas.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 2 && pinchDist !== null) {
+        e.preventDefault();
+        const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+        if (d > 0) targetDist = Math.max(4.0, Math.min(45.0, targetDist * pinchDist / d));
+        pinchDist = d;
+    }
+}, { passive: false });
+canvas.addEventListener('touchend', () => { pinchDist = null; });
+
+// ============ ЦИКЛ РЕНДЕРА ============
+const fpsEl = document.getElementById('fps'), sessionEl = document.getElementById('session'), distEl = document.getElementById('dist'), dopEl = document.getElementById('dop'), tdilateEl = document.getElementById('tdilate');
+let lastTime = 0, simTime = 0, fpsAcc = 0, fpsFrames = 0, lastSec = -1, lastHud = -1;
+const pad = (n) => n < 10 ? '0' + n : '' + n;
+
+function render(dt) {
+    // 1. MAIN PASS
+    gl.bindFramebuffer(gl.FRAMEBUFFER, mainFBO.fbo);
+    gl.viewport(0, 0, W, H);
+    gl.useProgram(progMain);
+    bindQuad(progMain);
+    
+    const cam = computeCamera();
+    
+    // --- TIME DILATION ---
+    const timeDilation = Math.sqrt(Math.max(0.01, 1.0 - 1.0 / camDist));
+    simTime += dt * timeDilation;
+    
+    gl.uniform2f(gl.getUniformLocation(progMain, 'uResolution'), W, H);
+    gl.uniform1f(gl.getUniformLocation(progMain, 'uTime'), simTime);
+    gl.uniform3fv(gl.getUniformLocation(progMain, 'uCamPos'), cam.pos);
+    gl.uniform3fv(gl.getUniformLocation(progMain, 'uCamForward'), cam.fwd);
+    gl.uniform3fv(gl.getUniformLocation(progMain, 'uCamRight'), cam.right);
+    gl.uniform3fv(gl.getUniformLocation(progMain, 'uCamUp'), cam.up);
+    gl.uniform1f(gl.getUniformLocation(progMain, 'uFov'), 1.4);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+    // 2. BRIGHT PASS
+    gl.bindFramebuffer(gl.FRAMEBUFFER, bloomA.fbo);
+    gl.viewport(0, 0, bloomA.w, bloomA.h);
+    gl.useProgram(progBright);
+    bindQuad(progBright);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, mainFBO.tex);
+    gl.uniform1i(gl.getUniformLocation(progBright, 'uTex'), 0);
+    gl.uniform2f(gl.getUniformLocation(progBright, 'uResolution'), bloomA.w, bloomA.h);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+    // 3. BLUR PASS (горизонтальный)
+    gl.bindFramebuffer(gl.FRAMEBUFFER, bloomB.fbo);
+    gl.useProgram(progBlur);
+    bindQuad(progBlur);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, bloomA.tex);
+    gl.uniform1i(gl.getUniformLocation(progBlur, 'uTex'), 0);
+    gl.uniform2f(gl.getUniformLocation(progBlur, 'uResolution'), bloomA.w, bloomA.h);
+    gl.uniform2f(gl.getUniformLocation(progBlur, 'uDir'), 1.0, 0.0);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+    // 4. BLUR PASS (вертикальный)
+    gl.bindFramebuffer(gl.FRAMEBUFFER, bloomA.fbo);
+    gl.useProgram(progBlur);
+    bindQuad(progBlur);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, bloomB.tex);
+    gl.uniform1i(gl.getUniformLocation(progBlur, 'uTex'), 0);
+    gl.uniform2f(gl.getUniformLocation(progBlur, 'uResolution'), bloomA.w, bloomA.h);
+    gl.uniform2f(gl.getUniformLocation(progBlur, 'uDir'), 0.0, 1.0);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+    // 5. COMPOSITE PASS
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.viewport(0, 0, W, H);
+    gl.useProgram(progComp);
+    bindQuad(progComp);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, mainFBO.tex);
+    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, bloomA.tex);
+    gl.uniform1i(gl.getUniformLocation(progComp, 'uMain'), 0);
+    gl.uniform1i(gl.getUniformLocation(progComp, 'uBloom'), 1);
+    gl.uniform2f(gl.getUniformLocation(progComp, 'uResolution'), W, H);
+    gl.uniform1f(gl.getUniformLocation(progComp, 'uTime'), simTime);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+    // HUD Updates
+    const tdilateText = timeDilation.toFixed(3) + 'x';
+    if (tdilateEl.textContent !== tdilateText) tdilateEl.textContent = tdilateText;
+    
+    const total = Math.floor(simTime);
+    if (total !== lastSec) {
+        lastSec = total;
+        sessionEl.textContent = pad(Math.floor(total / 3600)) + ':' + pad(Math.floor((total % 3600) / 60)) + ':' + pad(total % 60);
+    }
+    if (total !== lastHud) {
+        lastHud = total;
+        distEl.textContent = camDist.toFixed(1) + ' R';
+        dopEl.textContent = 'z ≈ ' + (0.41 + Math.sin(simTime * 0.37) * 0.03).toFixed(2);
+    }
+}
+
+function loop(now) {
+    if (!lastTime) lastTime = now;
+    let dt = (now - lastTime) / 1000; lastTime = now;
+    if (dt > 0.1) dt = 0.1;
+
+    idleTimer += dt;
+    if (idleTimer > 3.0 && !autoPilot) autoPilot = true;
+    if (dragging) autoPilot = false;
+
+    if (autoPilot) {
+        targetTheta += dt * 0.1; 
+        targetPhi = 0.22 + Math.sin(simTime * 0.2) * 0.15; 
+    }
+
+    const ease = Math.min(1, dt * 7);
+    camTheta += (targetTheta - camTheta) * ease;
+    camPhi   += (targetPhi   - camPhi)   * ease;
+    camDist  += (targetDist  - camDist)  * ease;
+
+    render(dt);
+
+    fpsAcc += dt; fpsFrames++;
+    if (fpsAcc >= 0.5) { fpsEl.textContent = Math.round(fpsFrames / fpsAcc); fpsAcc = 0; fpsFrames = 0; }
+
+    requestAnimationFrame(loop);
+}
+
+resize();
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
