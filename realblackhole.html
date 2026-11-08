@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>СИГНАЛ-9 // ОБЪЕКТ GARGANTUA</title>
+<style>
+    :root{ --cyan:#00f2ff; --amber:#ffaa00; --danger:#ff3333; }
+    *{box-sizing:border-box;}
+    body, html {
+        margin: 0; padding: 0; width: 100%; height: 100%;
+        background-color: #010204; overflow: hidden;
+        font-family: 'JetBrains Mono','Consolas','Courier New',monospace;
+        color: var(--cyan); cursor: grab;
+        -webkit-font-smoothing: antialiased; user-select: none;
+    }
+    body:active { cursor: grabbing; }
+    #blackhole {
+        position: absolute; inset: 0; width: 100%; height: 100%;
+        display: block; z-index: 1;
+    }
+    .scanner-grid {
+        position: absolute; inset: 0; z-index: 2; pointer-events: none;
+        background-image:
+            linear-gradient(rgba(0,242,255,0.028) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0,242,255,0.028) 1px, transparent 1px);
+        background-size: 50px 50px;
+        mask-image: radial-gradient(circle at center, transparent 35%, black 95%);
+        -webkit-mask-image: radial-gradient(circle at center, transparent 35%, black 95%);
+    }
+    .vignette {
+        position:absolute; inset:0; z-index:3; pointer-events:none;
+        background: radial-gradient(ellipse at center, rgba(0,0,0,0) 42%, rgba(0,0,0,0.92) 100%);
+    }
+    .scanlines {
+        position:absolute; inset:0; z-index:5; pointer-events:none; opacity:.32;
+        background: repeating-linear-gradient(0deg,
+            rgba(0,0,0,.55) 0px, rgba(0,0,0,.55) 1px,
+            transparent 1px, transparent 3px);
+    }
+    .scanbeam {
+        position:absolute; left:0; right:0; height:140px; z-index:3; pointer-events:none;
+        background: linear-gradient(180deg, transparent, rgba(0,242,255,0.045), transparent);
+        animation: scanbeam 9s linear infinite; opacity:.7;
+    }
+    @keyframes scanbeam { 0%{ top:-140px; } 100%{ top:100%; } }
+    .corner{
+        position:absolute; width:44px; height:44px; z-index:4; pointer-events:none;
+        border:1px solid rgba(0,242,255,.35); box-shadow: 0 0 12px rgba(0,242,255,.12);
+    }
+    .corner.tl{ top:22px; left:22px; border-right:0; border-bottom:0; }
+    .corner.tr{ top:22px; right:22px; border-left:0;  border-bottom:0; }
+    .corner.bl{ bottom:22px; left:22px; border-right:0; border-top:0; }
+    .corner.br{ bottom:22px; right:22px; border-left:0;  border-top:0; }
+    .hud-overlay {
+        position: absolute; inset: 0; z-index: 4; pointer-events: none;
+        padding: 46px 62px;
+        display: flex; flex-direction: column; justify-content: space-between;
+    }
+    .hud-top {
+        display: flex; justify-content: space-between; align-items: flex-start;
+        text-transform: uppercase; letter-spacing: 3px; font-size: 12px;
+        text-shadow: 0 0 10px rgba(0,242,255,.8); line-height: 1.9;
+    }
+    .hud-top small{
+        display:block; letter-spacing:2px; font-size:10px; color:#3d6b73;
+        text-shadow:none; margin-top:6px;
+    }
+    .alert-text {
+        color: var(--danger);
+        text-shadow: 0 0 4px var(--danger), 0 0 14px rgba(255,51,51,.65);
+        font-weight: bold; animation: pulse 2.4s ease-in-out infinite;
+    }
+    @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.45;} }
+    .data-panel {
+        position: absolute; right: 62px; top: 50%; transform: translateY(-50%);
+        width: 268px; z-index: 4; font-size: 10px; line-height: 1.7;
+        pointer-events:none;
+    }
+    .panel-title{
+        font-size:9px; letter-spacing:4px; color:#3d6b73; text-transform:uppercase;
+        margin-bottom:10px; padding-bottom:8px;
+        border-bottom:1px solid rgba(0,242,255,.18);
+        display:flex; align-items:center; gap:8px;
+    }
+    .panel-title::before{
+        content:''; width:6px; height:6px; background:var(--cyan);
+        box-shadow:0 0 10px var(--cyan); animation: pulse 1.6s infinite;
+    }
+    .data-row {
+        display: flex; justify-content: space-between; align-items:center;
+        border-bottom: 1px solid rgba(0,242,255,0.08); padding: 6px 0; gap:10px;
+    }
+    .data-label { color: #6b8a90; letter-spacing:.6px; }
+    .data-val {
+        color: var(--amber); text-shadow: 0 0 6px rgba(255,170,0,.85);
+        font-weight:bold; white-space:nowrap; font-variant-numeric: tabular-nums;
+    }
+    .data-val.warning {
+        color: var(--danger); text-shadow: 0 0 6px rgba(255,51,51,.9);
+        animation: pulse 1.4s infinite;
+    }
+    .hud-bottom{
+        position:absolute; left:62px; right:62px; bottom:46px; z-index:4;
+        display:flex; justify-content:space-between; gap:24px;
+        font-size:10px; letter-spacing:2px; text-transform:uppercase;
+        color:#3d6b73; pointer-events:none;
+    }
+    .hud-bottom .val{
+        color:var(--cyan); text-shadow:0 0 8px rgba(0,242,255,.8);
+        font-variant-numeric: tabular-nums;
+    }
+    .hint{
+        position:absolute; left:50%; bottom:14px; transform:translateX(-50%);
+        z-index:4; pointer-events:none;
+        font-size:9px; letter-spacing:2px; text-transform:uppercase;
+        color:#2a4d54; white-space:nowrap;
+    }
+    .hint b{ color:#4d8b96; font-weight:normal; }
+    #error {
+        position: absolute; inset: 0; display: none;
+        align-items: center; justify-content: center;
+        z-index: 100; background: #000; color: #ff3333;
+        font-size: 14px; letter-spacing: 3px; text-transform: uppercase;
+        text-align: center; padding: 20px;
+    }
+    @media (max-width: 860px){
+        .data-panel{ right:20px; width:200px; font-size:9px; }
+        .hud-overlay{ padding:28px; font-size:10px; }
+        .hud-bottom{ left:28px; right:28px; bottom:28px; font-size:9px; }
+        .corner{ width:28px; height:28px; }
+        .hint{ display:none; }
+    }
+</style>
+</head>
+<body>
+
+<canvas id="blackhole"></canvas>
+<div class="scanner-grid"></div>
+<div class="vignette"></div>
+<div class="scanbeam"></div>
+<div class="scanlines"></div>
+<div class="corner tl"></div>
+<div class="corner tr"></div>
+<div class="corner bl"></div>
+<div class="corner br"></div>
+
+<div class="hud-overlay">
+    <div class="hud-top">
+        <div>
+            СПЕКТРАЛЬНЫЙ АНАЛИЗ // СЕКТОР 07<br>
+            <span class="alert-text">ОБНАРУЖЕН ИСТОЧНИК ГАММА-ИЗЛУЧЕНИЯ</span>
+            <small>РЕЖИМ: АКТИВНОЕ НАБЛЮДЕНИЕ</small>
+        </div>
+        <div style="text-align: right;">
+            ОБЪЕКТ: GARGANTUA<br>
+            КЛАСС: KERR BLACK HOLE
+            <small>ЛОКАЦИЯ: 47°12' / −8°44'</small>
+        </div>
+    </div>
+</div>
+
+<div class="data-panel">
+    <div class="panel-title">ТЕЛЕМЕТРИЯ</div>
+    <div class="data-row"><span class="data-label">МАССА (M☉):</span> <span class="data-val">1.0 × 10⁸</span></div>
+    <div class="data-row"><span class="data-label">СПИН (a):</span> <span class="data-val">0.999</span></div>
+    <div class="data-row"><span class="data-label">ГОРИЗОНТ (Rs):</span> <span class="data-val">~ 3.0 × 10⁸ км</span></div>
+    <div class="data-row"><span class="data-label">ТЕМП. ДИСКА:</span> <span class="data-val warning">ЭКСТРЕМАЛЬНАЯ</span></div>
+    <div class="data-row"><span class="data-label">ДОПЛЕР-СДВИГ:</span> <span class="data-val" id="dop">z ≈ 0.41</span></div>
+    <div class="data-row"><span class="data-label">ФОТОН. СФЕРА:</span> <span class="data-val">1.5 Rs</span></div>
+    <div class="data-row"><span class="data-label">ДИСТАНЦИЯ:</span> <span class="data-val" id="dist">15.0 R</span></div>
+</div>
+
+<div class="hud-bottom">
+    <div>СЕАНС: <span class="val" id="session">00:00:00</span></div>
+    <div>FPS: <span class="val" id="fps">--</span></div>
+    <div>РАЗРЕШЕНИЕ: <span class="val" id="res">—</span></div>
+</div>
+
+<div class="hint"><b>ПЕРЕТАЩИТЬ</b> — ОРБИТА &nbsp;·&nbsp; <b>КОЛЕСО</b> — МАСШТАБ</div>
+<div id="error">WEBGL НЕДОСТУПЕН</div>
+
+<script>
+(function () {
+'use strict';
+
+const canvas = document.getElementById('blackhole');
+const errorEl = document.getElementById('error');
+
+const gl = canvas.getContext('webgl', {
+    antialias: false, alpha: false, depth: false, stencil: false,
+    powerPreference: 'high-performance', preserveDrawingBuffer: false
+});
+
+if (!gl) { errorEl.style.display = 'flex'; return; }
+
+// ============ ШЕЙДЕРЫ ============
+const VERT_SRC = `
+attribute vec2 aPos;
+void main() { gl_Position = vec4(aPos, 0.0, 1.0); }
+`;
+
+const FRAG_SRC = `
+precision highp float;
+
+uniform vec2  uResolution;
+uniform float uTime;
+uniform vec3  uCamPos;
+uniform vec3  uCamForward;
+uniform vec3  uCamRight;
+uniform vec3  uCamUp;
+uniform float uFov;
+
+#define HORIZON     1.0
+#define DISK_INNER  3.0
+#define DISK_OUTER  12.0
+#define MAX_STEPS   380
+
+// ---------- HASH & NOISE ----------
+float hash13(vec3 p) {
+    p = fract(p * 0.1031);
+    p += dot(p, p.yzx + 33.33);
+    return fract((p.x + p.y) * p.z);
+}
+vec3 hash33(vec3 p) {
+    p = fract(p * vec3(0.1031, 0.1030, 0.0973));
+    p += dot(p, p.yxz + 33.33);
+    return fract((p.xxy + p.yxx) * p.zyx);
+}
+float noise3(vec3 p) {
+    vec3 i = floor(p);
+    vec3 f = fract(p);
+    vec3 u = f * f * (3.0 - 2.0 * f);
+    float n000 = hash13(i);
+    float n100 = hash13(i + vec3(1,0,0));
+    float n010 = hash13(i + vec3(0,1,0));
+    float n110 = hash13(i + vec3(1,1,0));
+    float n001 = hash13(i + vec3(0,0,1));
+    float n101 = hash13(i + vec3(1,0,1));
+    float n011 = hash13(i + vec3(0,1,1));
+    float n111 = hash13(i + vec3(1,1,1));
+    return mix(
+        mix(mix(n000, n100, u.x), mix(n010, n110, u.x), u.y),
+        mix(mix(n001, n101, u.x), mix(n011, n111, u.x), u.y),
+        u.z);
+}
+float fbm(vec3 p) {
+    float v = 0.0, a = 0.5;
+    for (int i = 0; i < 5; i++) {
+        v += a * noise3(p);
+        p = p * 2.07 + vec3(1.7, 9.2, 3.3);
+        a *= 0.5;
+    }
+    return v;
+}
+
+// ---------- ФОН ----------
+vec3 stars(vec3 dir) {
+    vec3 p = dir * 280.0;
+    vec3 cell = floor(p);
+    vec3 local = fract(p) - 0.5;
+    float h = hash13(cell);
+    if (h < 0.995) return vec3(0.0);
+    vec3 starPos = (hash33(cell + 1.0) - 0.5) * 0.6;
+    float dist = length(local - starPos);
+    float size = 0.3 + hash13(cell + 5.0) * 0.7;
+    float bright = smoothstep(size, 0.0, dist);
+    bright = pow(bright, 2.5);
+    float ct = hash13(cell + 7.0);
+    vec3 col;
+    if      (ct < 0.25) col = vec3(0.65, 0.78, 1.00);
+    else if (ct < 0.60) col = vec3(1.00, 1.00, 1.00);
+    else if (ct < 0.85) col = vec3(1.00, 0.92, 0.75);
+    else                col = vec3(1.00, 0.72, 0.45);
+    float tw = 0.75 + 0.25 * sin(uTime * (0.7 + h * 4.0) + h * 28.0);
+    float bH = hash13(cell + 13.0);
+    float bright2 = 0.3 + bH * bH * 2.0;
+    return col * bright * bright2 * tw;
+}
+
+vec3 nebula(vec3 dir) {
+    float n1 = fbm(dir * 3.5 + 12.0);
+    float n2 = fbm(dir * 7.0 - 3.0);
+    float m = smoothstep(0.45, 0.75, n1) * 0.6 + smoothstep(0.55, 0.85, n2) * 0.4;
+    return vec3(0.10, 0.05, 0.16) * m * 0.3;
+}
+
+vec3 background(vec3 dir) {
+    return stars(dir) + nebula(dir) + vec3(0.003, 0.005, 0.010);
+}
+
+// ---------- ДИСК ----------
+vec3 diskColor(float t) {
+    vec3 hot  = vec3(1.00, 0.96, 0.85);
+    vec3 warm = vec3(1.00, 0.68, 0.32);
+    vec3 cool = vec3(0.60, 0.20, 0.05);
+    if (t < 0.5) return mix(cool, warm, t * 2.0);
+    return mix(warm, hot, (t - 0.5) * 2.0);
+}
+
+vec4 sampleDisk(vec3 hit, float r) {
+    float t = (r - DISK_INNER) / (DISK_OUTER - DISK_INNER);
+    if (t < 0.0 || t > 1.0) return vec4(0.0);
+    float radial = pow(1.0 - t, 2.2) * smoothstep(0.0, 0.06, t);
+    float phi = atan(hit.z, hit.x);
+    float omega = 3.2 / pow(r, 1.5);
+    float matPhi = phi - uTime * omega;
+    vec2 uv = vec2(cos(matPhi), sin(matPhi)) * (r * 2.0);
+    vec3 noisePos = vec3(uv, uTime * 0.15 + r * 0.4);
+    float n = fbm(noisePos);
+    n = pow(clamp(n, 0.0, 1.0), 1.4);
+    float fil = fbm(vec3(uv * 3.5, uTime * 0.08));
+    fil = smoothstep(0.35, 0.75, fil);
+    float density = radial * (0.35 + n * 1.5 + fil * 0.8);
+    float temp = pow(1.0 - t, 1.4);
+    vec3 col = diskColor(temp) * density * 4.0;
+    float alpha = clamp(density * 0.85, 0.0, 0.95);
+    return vec4(col, alpha);
+}
+
+// ---------- MAIN ----------
+void main() {
+    vec2 uv = (gl_FragCoord.xy - 0.5 * uResolution) / uResolution.y;
+    vec3 rayDir = normalize(uCamForward + uv.x * uCamRight * uFov + uv.y * uCamUp * uFov);
+
+    vec3 pos = uCamPos;
+    vec3 vel = rayDir;
+    vec3 L = cross(pos, vel);
+    float h2 = dot(L, L);
+
+    vec3  color = vec3(0.0);
+    float alpha = 0.0;
+    vec3  prevPos = pos;
+    float prevY   = pos.y;
+    bool captured = false;
+
+    for (int i = 0; i < MAX_STEPS; i++) {
+        float r = length(pos);
+        if (r < HORIZON) { captured = true; break; }
+        if (r > 55.0 || alpha > 0.995) break;
+
+        float stepSize;
+        if      (r < 2.0) stepSize = 0.008;
+        else if (r < 3.0) stepSize = 0.015;
+        else              stepSize = clamp(0.02 + (r - 1.0) * 0.032, 0.02, 0.55);
+
+        float r2 = r * r;
+        vec3 accel = -1.5 * h2 * pos / (r2 * r2 * r);
+        vel += accel * stepSize;
+        vec3 newPos = pos + vel * stepSize;
+
+        if (newPos.y * prevY < 0.0) {
+            float tt = prevY / (prevY - newPos.y);
+            vec3 hit = mix(prevPos, newPos, tt);
+            float rd = length(hit.xz);
+            if (rd > DISK_INNER && rd < DISK_OUTER) {
+                vec4 ds = sampleDisk(hit, rd);
+                if (ds.a > 0.002) {
+                    float phi = atan(hit.z, hit.x);
+                    vec3 vDisk = vec3(-sin(phi), 0.0, cos(phi)) * sqrt(0.5 / rd);
+                    float v2 = dot(vDisk, vDisk);
+                    vec3 viewDir = normalize(-vel);
+                    float beta = dot(vDisk, viewDir);
+                    float gamma = 1.0 / sqrt(max(0.01, 1.0 - v2));
+                    float D = 1.0 / max(0.05, gamma * (1.0 - beta));
+                    float beam = D * D * D;
+                    float gz = sqrt(max(0.01, 1.0 - HORIZON / rd));
+                    vec3 c = ds.rgb * beam * gz;
+                    float a = ds.a;
+                    color += c * (1.0 - alpha);
+                    alpha += a * (1.0 - alpha);
+                }
+            }
+        }
+        prevPos = pos;
+        prevY   = pos.y;
+        pos     = newPos;
+    }
+
+    vec3 finalColor;
+    if (captured) {
+        finalColor = color;
+    } else {
+        vec3 bg = background(normalize(vel));
+        finalColor = color + bg * (1.0 - alpha);
+    }
+
+    // ACES tone mapping
+    finalColor *= 0.7;
+    finalColor = (finalColor * (2.51 * finalColor + 0.03)) /
+                 (finalColor * (2.43 * finalColor + 0.59) + 0.14);
+    finalColor = pow(finalColor, vec3(1.0 / 2.2));
+
+    // film grain
+    float grain = hash13(vec3(gl_FragCoord.xy, uTime * 60.0));
+    finalColor += (grain - 0.5) * 0.014;
+
+    // vignette
+    vec2 vUV = gl_FragCoord.xy / uResolution;
+    float vig = smoothstep(0.95, 0.25, length(vUV - 0.5) * 1.35);
+    finalColor *= mix(0.55, 1.0, vig);
+
+    gl_FragColor = vec4(finalColor, 1.0);
+}
+`;
+
+// ============ КОМПИЛЯЦИЯ ============
+function compile(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+        console.error(gl.getShaderInfoLog(s));
+        throw new Error('Shader compile error');
+    }
+    return s;
+}
+
+const prog = gl.createProgram();
+gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT_SRC));
+gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FRAG_SRC));
+gl.linkProgram(prog);
+if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+    console.error(gl.getProgramInfoLog(prog));
+    errorEl.style.display = 'flex';
+    return;
+}
+gl.useProgram(prog);
+
+const buf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
+const aPos = gl.getAttribLocation(prog, 'aPos');
+gl.enableVertexAttribArray(aPos);
+gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+const U = {
+    res     : gl.getUniformLocation(prog, 'uResolution'),
+    time    : gl.getUniformLocation(prog, 'uTime'),
+    camPos  : gl.getUniformLocation(prog, 'uCamPos'),
+    camFwd  : gl.getUniformLocation(prog, 'uCamForward'),
+    camRight: gl.getUniformLocation(prog, 'uCamRight'),
+    camUp   : gl.getUniformLocation(prog, 'uCamUp'),
+    fov     : gl.getUniformLocation(prog, 'uFov')
+};
+
+// ============ КАМЕРА ============
+let camTheta = 0.20, camPhi = 0.22, camDist = 15.0;
+let targetTheta = camTheta, targetPhi = camPhi, targetDist = camDist;
+
+function normalize(v) {
+    const l = Math.hypot(v[0], v[1], v[2]) || 1;
+    return [v[0]/l, v[1]/l, v[2]/l];
+}
+function cross(a, b) {
+    return [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
+}
+function computeCamera() {
+    const x = camDist * Math.cos(camPhi) * Math.sin(camTheta);
+    const y = camDist * Math.sin(camPhi);
+    const z = camDist * Math.cos(camPhi) * Math.cos(camTheta);
+    const pos = [x, y, z];
+    const fwd = normalize([-x, -y, -z]);
+    const right = normalize(cross(fwd, [0, 1, 0]));
+    const up = cross(right, fwd);
+    return { pos, fwd, right, up };
+}
+
+// ============ RESIZE ============
+let W = 0, H = 0;
+const resEl = document.getElementById('res');
+function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    W = Math.floor(window.innerWidth  * dpr);
+    H = Math.floor(window.innerHeight * dpr);
+    canvas.width = W; canvas.height = H;
+    canvas.style.width  = window.innerWidth  + 'px';
+    canvas.style.height = window.innerHeight + 'px';
+    gl.viewport(0, 0, W, H);
+    resEl.textContent = W + '×' + H;
+}
+window.addEventListener('resize', resize, { passive: true });
+
+// ============ УПРАВЛЕНИЕ ============
+let dragging = false, lastX = 0, lastY = 0;
+canvas.addEventListener('pointerdown', (e) => {
+    dragging = true; lastX = e.clientX; lastY = e.clientY;
+    canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener('pointerup', (e) => {
+    dragging = false;
+    try { canvas.releasePointerCapture(e.pointerId); } catch (_) {}
+});
+canvas.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    const dx = e.clientX - lastX, dy = e.clientY - lastY;
+    targetTheta -= dx * 0.005;
+    targetPhi = Math.max(-1.35, Math.min(1.35, targetPhi + dy * 0.005));
+    lastX = e.clientX; lastY = e.clientY;
+});
+canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    targetDist *= Math.exp(e.deltaY * 0.0009);
+    targetDist = Math.max(4.0, Math.min(45.0, targetDist));
+}, { passive: false });
+
+let pinchDist = null;
+canvas.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 2) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        pinchDist = Math.hypot(dx, dy);
+    }
+}, { passive: true });
+canvas.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 2 && pinchDist !== null) {
+        e.preventDefault();
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const d = Math.hypot(dx, dy);
+        if (d > 0) targetDist = Math.max(4.0, Math.min(45.0, targetDist * pinchDist / d));
+        pinchDist = d;
+    }
+}, { passive: false });
+canvas.addEventListener('touchend', () => { pinchDist = null; });
+
+// ============ ЦИКЛ ============
+const fpsEl = document.getElementById('fps');
+const sessionEl = document.getElementById('session');
+const distEl = document.getElementById('dist');
+const dopEl = document.getElementById('dop');
+
+let lastTime = 0, simTime = 0, fpsAcc = 0, fpsFrames = 0;
+let lastSec = -1, lastHud = -1;
+const pad = (n) => n < 10 ? '0' + n : '' + n;
+
+function loop(now) {
+    if (!lastTime) lastTime = now;
+    let dt = (now - lastTime) / 1000;
+    lastTime = now;
+    if (dt > 0.1) dt = 0.1;
+    simTime += dt;
+
+    const ease = Math.min(1, dt * 7);
+    camTheta += (targetTheta - camTheta) * ease;
+    camPhi   += (targetPhi   - camPhi)   * ease;
+    camDist  += (targetDist  - camDist)  * ease;
+
+    const cam = computeCamera();
+    gl.uniform2f(U.res, W, H);
+    gl.uniform1f(U.time, simTime);
+    gl.uniform3f(U.camPos,   cam.pos[0],   cam.pos[1],   cam.pos[2]);
+    gl.uniform3f(U.camFwd,   cam.fwd[0],   cam.fwd[1],   cam.fwd[2]);
+    gl.uniform3f(U.camRight, cam.right[0], cam.right[1], cam.right[2]);
+    gl.uniform3f(U.camUp,    cam.up[0],    cam.up[1],    cam.up[2]);
+    gl.uniform1f(U.fov, 1.4);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+    fpsAcc += dt; fpsFrames++;
+    if (fpsAcc >= 0.5) {
+        fpsEl.textContent = Math.round(fpsFrames / fpsAcc);
+        fpsAcc = 0; fpsFrames = 0;
+    }
+    const total = Math.floor(simTime);
+    if (total !== lastSec) {
+        lastSec = total;
+        const h = Math.floor(total / 3600);
+        const m = Math.floor((total % 3600) / 60);
+        const s = total % 60;
+        sessionEl.textContent = pad(h) + ':' + pad(m) + ':' + pad(s);
+    }
+    if (total !== lastHud) {
+        lastHud = total;
+        distEl.textContent = camDist.toFixed(1) + ' R';
+        const z = 0.41 + Math.sin(simTime * 0.37) * 0.03;
+        dopEl.textContent = 'z ≈ ' + z.toFixed(2);
+    }
+    requestAnimationFrame(loop);
+}
+
+resize();
+requestAnimationFrame(loop);
+
+})();
+</script>
+</body>
+</html>
