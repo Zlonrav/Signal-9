@@ -37,6 +37,29 @@
         #tilde-console #terminal-input { flex: 1; background: transparent !important; border: none !important; border-bottom: 1px solid rgba(0, 242, 255, 0.5) !important; color: var(--neon) !important; font-family: 'JetBrains Mono', monospace !important; font-size: 14px !important; text-align: left !important; outline: none !important; text-transform: uppercase; box-shadow: none !important; position: static !important; width: 100% !important; padding: 5px 0 !important; margin: 0 !important; display: block !important; }
         #tilde-console #terminal-input:focus { border-bottom-color: var(--neon) !important; box-shadow: 0 5px 10px -5px var(--neon) !important; }
         #tilde-console .console-hint { margin-top: 15px; font-size: 9px; color: #555; display: flex; justify-content: space-between; flex-shrink: 0; }
+		
+        #tilde-console #console-enter-btn {
+            background: transparent;
+            border: 1px solid rgba(0, 242, 255, 0.5);
+            color: var(--neon);
+            border-radius: 3px;
+			padding: 6px 12px 2px 12px;	
+            margin-left: 10px;
+            cursor: pointer;
+            font-family: monospace;
+            font-size: 22px; 
+            line-height: 1;
+            transition: 0.3s;
+            outline: none;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #tilde-console #console-enter-btn:hover {
+            background: rgba(0, 242, 255, 0.1);
+            box-shadow: 0 0 10px var(--neon);
+        }
         
         /* Стили для кода в консоли (исправлены отступы) */
         #tilde-console .console-code-block { 
@@ -72,6 +95,7 @@
         <div class="console-input-wrapper">
             <span>></span>
             <input type="text" id="terminal-input" autocomplete="off" spellcheck="false" placeholder="">
+            <button id="console-enter-btn" title="Выполнить">↵</button>
         </div>
         <div class="console-hint">
             <span>[TILDE / ~] - ЗАКРЫТЬ</span>
@@ -359,14 +383,23 @@
     const closeBtn = document.getElementById('console-close-btn');
     if (closeBtn) closeBtn.addEventListener('click', () => toggleConsole(false));
 
-    bgOverlay.addEventListener('click', () => toggleConsole(false));
+    function submitCommand() {
+        const cmd = input.value.trim(); 
+        if (cmd) {
+            processCommand(cmd);
+            input.value = '';
+        }
+    }
 
     input.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
-            // ВАЖНО: Убрали .toLowerCase(), чтобы сохранить регистр для JSON (load)
-            const cmd = input.value.trim(); 
-            if (cmd) processCommand(cmd);
-            input.value = '';
+            e.preventDefault();
+            submitCommand();
         }
     });
+
+    const enterBtn = document.getElementById('console-enter-btn');
+    if (enterBtn) {
+        enterBtn.addEventListener('click', submitCommand);
+    }
 })();
