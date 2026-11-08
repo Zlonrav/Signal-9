@@ -163,7 +163,7 @@
             case 'archive': return localStorage.getItem('s9_map_visited') === 'true';
             case 'os': return localStorage.getItem('s9_archive_fixed') === 'true';
             case 'edr': return localStorage.getItem('s9_os_fixed') === 'true';
-            case 'telemetry': return localStorage.getItem('s9_edr_ghosts') !== null;
+            case 'telemetry': return localStorage.getItem('s9_core_fixed') === 'true';
             case 'core': return localStorage.getItem('s9_telemetry_calibrated') === 'true' || localStorage.getItem('s9_core_unlocked') === 'true';
             case 'gateway': return localStorage.getItem('s9_core_unlocked') === 'true';
             default: return false;
@@ -305,30 +305,29 @@
             } else if (topic === 'os') {
                 print(`<span class="topic-header">[ОС]</span>`);
                 print(`ДЛЯ РЕМОНТА КУБИТОВ ИСПОЛЬЗУЙТЕ ${printCmd('os --reset qubit rXcY')}`);
-            } else if (topic === 'core') {
-                if (currentPage === 'core.html') {
-                    print(`<span class="topic-header">[РУКОВОДСТВО ПО СТАБИЛИЗАЦИИ ЯДРА]</span>`);
-                    print(`ЯДРО СМЕЩЕНО ОТ ЦЕНТРА. ДЛЯ КАЛИБРОВКИ МАГНИТОВ ВЫЧИСЛИТЕ СМЕЩЕНИЕ ПО ОСЯМ X, Y, Z.`);
+            } else if (topic === 'telemetry') {
+                if (currentPage === 'telemetry.html') {
+                    print(`<span class="topic-header">[СИСТЕМА ТЕЛЕМЕТРИИ]</span>`);
+                    print(`ВАША ЗАДАЧА: СИНХРОНИЗИРОВАТЬ 3 ВОЛНЫ (RED, GREEN, BLUE) С ЭТАЛОНОМ (БЕЛАЯ ВОЛНА).`);
+                    print(`СОВЕТ: НАВЕДИТЕ КУРСОР НА ЛЮБУЮ ВОЛНУ (ВКЛЮЧАЯ БЕЛУЮ), ЧТОБЫ УЗНАТЬ ЕЁ ПАРАМЕТРЫ.`);
+                    print(``);
+                    print(`<span class="topic-header">[ДОСТУПНЫЕ КОМАНДЫ]</span>`);
                     
-                    print(`<span class="topic-header">[СИСТЕМА УРАВНЕНИЙ]</span>`);
-                    if (window.coreEquations) {
-                        print(`> X + Y = <span class="num">${window.coreEquations.xy}</span>`);
-                        print(`> Y + Z = <span class="num">${window.coreEquations.yz}</span>`);
-                        print(`> X + Z = <span class="num">${window.coreEquations.xz}</span>`);
-                    } else {
-                        print(`<span class="err">ОШИБКА: УРАВНЕНИЯ НЕДОСТУПНЫ.</span>`);
-                    }
+                    print(`> ${printCmd('telemetry --set <red|green|blue> <freq|phase|amp|offset> <+/-число>')}`);
+                    print(`  Изменяет параметр выбранной волны.`);
+                    print(`  Пример: telemetry --set red freq +5`);
+                    print(`  Пример: telemetry --set blue phase -10`);
+                    print(``);
                     
+                    print(`> ${printCmd('telemetry --toggle <red|green|blue>')}`);
+                    print(`  Скрывает или показывает выбранную волну на экране.`);
+                    print(`  Пример: telemetry --toggle green`);
                     print(``);
-                    print(`<span class="warn">ПОСЛЕ ВЫЧИСЛЕНИЯ X, Y, Z ВВЕДИТЕ КОМАНДУ ДЛЯ ВСЕХ 6 МАГНИТОВ:</span>`);
-                    print(`<span class="cmd-text">core --position rt [X], lt [-X], up [Y], dn [-Y], fw [Z], bk [-Z]</span>`);
-                    print(``);
-                    print(`ПРИМЕР: ЕСЛИ X=1, Y=-2, Z=1, ТО КОМАНДА БУДЕТ:`);
-                    print(`<span class="num">core --position rt 1, lt -1, up -2, dn 2, fw 1, bk -1</span>`);
-                    print(``);
-                    print(`ПРАВИЛО: ЕСЛИ X ПОЛОЖИТЕЛЬНЫЙ (ЯДРО УШЛО ВПРАВО), ПРАВЫЙ МАГНИТ RT ПРИТЯГИВАЕТ ЕГО (ПИШЕМ ПОЛОЖИТЕЛЬНОЕ ЧИСЛО), А ЛЕВЫЙ LT ОСЛАБЛЯЕТ (ПИШЕМ ОТРИЦАТЕЛЬНОЕ).`);
+                    
+                    print(`> ${printCmd('telemetry --read target')}`);
+                    print(`  Выводит точные параметры эталонной (белой) волны в консоль.`);
                 } else {
-                    print(`<span class="err">РУКОВОДСТВО ДОСТУПНО ТОЛЬКО В СЕКТОРЕ ЭНЕРГОЯДРА.</span>`);
+                    print(`<span class="err">СПРАВКА ДОСТУПНА ТОЛЬКО В МОДУЛЕ ТЕЛЕМЕТРИИ.</span>`);
                 }
             } else if (topic === 'cheats') {
                 print(`<span class="topic-header">[ЧИТЫ И УТИЛИТЫ]</span>`);
@@ -372,6 +371,10 @@
             case 'archive': if (isModuleOnline('archive')) window.location.href = 'archive.html'; break;
             case 'os': if (isModuleOnline('os')) window.location.href = 'os.html'; break;
             case 'edr': if (isModuleOnline('edr')) window.location.href = 'edr.html'; break;
+			case 'telemetry': 
+                if (isModuleOnline('telemetry')) window.location.href = 'telemetry.html'; 
+                else print(`ОШИБКА: МОДУЛЬ [ТЕЛЕМЕТРИЯ] НЕДОСТУПЕН.`, 'err');
+                break;
             case 'core': 
                 if (localStorage.getItem('s9_core_overheated') === 'true' || localStorage.getItem('s9_core_fixed') === 'true') {
                     window.location.href = 'core.html';
