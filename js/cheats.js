@@ -203,7 +203,20 @@
                 setTimeout(() => { window.location.href = 'map.html'; }, 1500);
                 return true;
             }
-			// --- ЧИТ ДЛЯ ТЕЛЕМЕТРИИ ---
+
+            // --- ЧИТ ДЛЯ СБРОСА ТЕЛЕМЕТРИИ ---
+            if (cmd.toLowerCase() === 'reset_telemetry') {
+                if (typeof window.cheatResetTelemetry === 'function') {
+                    window.cheatResetTelemetry();
+                    print('<span class="ok">[ЧИТ] ТЕЛЕМЕТРИЯ СБРОШЕНА. ГЕНЕРАЦИЯ НОВЫХ ВОЛН...</span>');
+                    setTimeout(() => { location.reload(); }, 1500);
+                } else {
+                    print('<span class="err">[ЧИТ] МОДУЛЬ ТЕЛЕМЕТРИИ НЕ АКТИВЕН. ПЕРЕЙДИТЕ НА СТРАНИЦУ ТЕЛЕМЕТРИИ.</span>');
+                }
+                return true;
+            }
+
+            // --- ЧИТ ДЛЯ ТЕЛЕМЕТРИИ ---
             if (cmd.toLowerCase() === 'fix_telemetry') {
                 if (typeof window.cheatFixTelemetry === 'function') {
                     window.cheatFixTelemetry();

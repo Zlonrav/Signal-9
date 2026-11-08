@@ -43,7 +43,7 @@
             { id: 'edr', title: 'EDR\nСЕКТОР', x: 850, y: 425, url: 'edr.html', type: 'offline' },
             { id: 'gateway', title: 'ТРАНСПОРТНЫЙ\nШЛЮЗ', x: 1050, y: 425, url: 'gateway.html', type: 'offline' },
             { id: 'sector00', title: 'СЕКТОР\n[0x00]', x: 850, y: 200, url: '#', type: 'offline' },
-            { id: 'sectorff', title: 'СЕКТОР\n[0xFF]', x: 850, y: 650, url: '#', type: 'offline' }
+            { id: 'sectorff', title: 'СЕКТОР\n[0xFF]', x: 850, y: 650, url: '#', type: 'offline' },
         ],
         // Удаляем MAP_POINTS и getMapPath полностью.
         // Вместо них используем глобальные POINTS и getPath.
@@ -55,7 +55,7 @@
             { s: 'tools', t: 'os' }, { s: 'tools', t: 'sector00' },
             { s: 'core', t: 'telemetry' }, { s: 'core', t: 'os' }, { s: 'core', t: 'archive' },
             { s: 'edr', t: 'gateway' }, { s: 'edr', t: 'sector00' }, { s: 'edr', t: 'sectorff' },
-            { s: 'map', t: 'archive' }, { s: 'map', t: 'sectorff' }
+            { s: 'map', t: 'archive' }, { s: 'map', t: 'sectorff' },
         ]
     };
 
@@ -202,14 +202,37 @@
             const wordForGlyph = node.title.split('\n')[0].replace(/\[.*?\]/g, '').trim();
             const glyphSVG = createSVG(getPath(wordForGlyph));
 
+                    // ... (здесь заканчивается цикл MAP_DATA.nodes.forEach) ...
+            
             el.innerHTML = `
                 <div class="node-glyph">${glyphSVG}</div>
                 <div class="node-title">${formattedTitle}</div>
                 <div class="node-status">${status}</div>
             `;
             nodesContainer.appendChild(el);
-        });
-    }
+        }); // <--- КОНЕЦ ЦИКЛА MAP_DATA.nodes.forEach
+
+        // --- Декоративный прямоугольник для Телеметрии ---
+        const telemetryNode = MAP_DATA.nodes.find(n => n.id === 'telemetry');
+        if (telemetryNode) {
+            const decor = document.createElement('div');
+            decor.className = 'decor-rect';
+            
+            // Вычисляем позицию: 
+            // От центра Телеметрии (x) отнимаем половину её ширины (65), 
+            // отнимаем отступ (5) и отнимаем половину ширины нашего прямоугольника (7).
+            const decorX = telemetryNode.x - 65 - 5 - 7;
+            const decorY = telemetryNode.y; // Выравниваем по вертикали
+
+            decor.style.left = `${decorX}px`;
+            decor.style.top = `${decorY}px`;
+            
+            nodesContainer.appendChild(decor);
+        }
+        // ------------------------------------------------
+
+    } // <--- КОНЕЦ ФУНКЦИИ buildMap
 
     document.addEventListener('DOMContentLoaded', buildMap);
+	
 })();

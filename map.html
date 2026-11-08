@@ -105,6 +105,31 @@
         }
         .link-active .link-bg { stroke: rgba(0, 242, 255, 0.2); }
         .link-active .link-flow { stroke: var(--neon); filter: drop-shadow(0 0 6px var(--neon)); }
+		        /* Тонкий декоративный прямоугольник рядом с Телеметрией */
+        .decor-rect {
+            position: absolute;
+            width: 14px;
+            height: 130px; /* Высота как у узлов */
+            background: rgba(2, 10, 15, 0.85);
+            border: 1px solid rgba(0, 242, 255, 0.15);
+            transform: translate(-50%, -50%);
+            z-index: 5;
+            pointer-events: none; /* Чтобы не мешал кликам */
+        }
+
+        /* Внутренние полоски для "технологичного" вида */
+        .decor-rect::before {
+            content: '';
+            position: absolute;
+            top: 10px; bottom: 10px; left: 3px; right: 3px;
+            background: repeating-linear-gradient(
+                0deg, 
+                rgba(0, 242, 255, 0.2), 
+                rgba(0, 242, 255, 0.2) 2px, 
+                transparent 2px, 
+                transparent 6px
+            );
+        }
     </style>
 </head>
 <body class="tools-page">

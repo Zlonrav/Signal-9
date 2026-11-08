@@ -313,6 +313,35 @@
             updateAudio();
         };
 
+        window.cheatResetTelemetry = function() {
+            // Сбрасываем флаг победы
+            isSolved = false;
+            localStorage.removeItem('s9_telemetry_calibrated');
+            
+            // Перегенерируем эталон (белую волну)
+            reference.freq = Math.floor(Math.random() * 30) + 20;
+            reference.phase = Math.floor(Math.random() * 36) * 10;
+            reference.amp = Math.floor(Math.random() * 40) + 60;
+            reference.offset = Math.floor(Math.random() * 5) * 10 - 20;
+            
+            // Перегенерируем цветные волны
+            for (const key in waves) {
+                const newParams = getRandomParams();
+                waves[key].freq = newParams.freq;
+                waves[key].phase = newParams.phase;
+                waves[key].amp = newParams.amp;
+                waves[key].offset = newParams.offset;
+                waves[key].visible = true;
+                
+                // Возвращаем кнопку в нормальное состояние
+                const btn = document.getElementById(`btn-${key}`);
+                if (btn) btn.classList.remove('hidden-wave');
+            }
+            
+            updateUI();
+            updateAudio();
+        };
+
         updateUI();
         render();
     });

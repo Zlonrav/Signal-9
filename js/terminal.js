@@ -337,7 +337,6 @@
                 if (currentPage === 'telemetry.html') {
                     print(`<span class="topic-header">[СИСТЕМА ТЕЛЕМЕТРИИ]</span>`);
                     print(`ВАША ЗАДАЧА: СИНХРОНИЗИРОВАТЬ 3 ВОЛНЫ (RED, GREEN, BLUE) С ЭТАЛОНОМ (БЕЛАЯ ВОЛНА).`);
-                    print(`СОВЕТ: НАВЕДИТЕ КУРСОР НА ЛЮБУЮ ВОЛНУ (ВКЛЮЧАЯ БЕЛУЮ), ЧТОБЫ УЗНАТЬ ЕЁ ПАРАМЕТРЫ.`);
                     print(``);
                     print(`<span class="topic-header">[ДОСТУПНЫЕ КОМАНДЫ]</span>`);
                     
@@ -369,6 +368,7 @@
                 print(`> ${printCmd('reset_os')} - Сбросить ОС и EDR`);
                 print(`> ${printCmd('reset_core')} - Сброс до желтого ядра (охлаждение)`);
                 print(`> ${printCmd('fix_telemetry')} - Синхронизировать волны телеметрии`);
+                print(`> ${printCmd('reset_telemetry')} - Сбросить телеметрию (новые волны)`);
                 print(`> ${printCmd('clear_memory')} - Полная очистка памяти`);
             } else {
                 print(`НЕТ ИНФОРМАЦИИ ПО ТЕМЕ '${topic}'.`, 'err');
