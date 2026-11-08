@@ -75,6 +75,14 @@
         .map-node.error-node .node-glyph path { stroke: #ff3333; filter: drop-shadow(0 0 5px #ff3333); }
         .map-node.error-node .node-title { color: #ff6666; text-shadow: 0 0 5px #ff3333; }
         .map-node.error-node .node-status { color: #ff3333; animation: blink 1s infinite; }
+		
+		 /* --- УЗЕЛ С ПРЕДУПРЕЖДЕНИЕМ (ЯДРО) --- */
+        .map-node.warning-node { border-color: rgba(255, 170, 0, 0.5); background: rgba(15, 10, 2, 0.85); cursor: pointer; }
+        .map-node.warning-node::before { top: -1px; left: -1px; border-top: 2px solid #ffaa00; border-left: 2px solid #ffaa00; }
+        .map-node.warning-node::after { bottom: -1px; right: -1px; border-bottom: 2px solid #ffaa00; border-right: 2px solid #ffaa00; }
+        .map-node.warning-node .node-glyph path { stroke: #ffaa00; filter: drop-shadow(0 0 5px #ffaa00); }
+        .map-node.warning-node .node-title { color: #ffaa00; text-shadow: 0 0 5px #ffaa00; }
+        .map-node.warning-node .node-status { color: #ffaa00; animation: blink 1s infinite; }
 
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 

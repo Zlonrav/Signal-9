@@ -40,7 +40,7 @@ const CHAT_DATABASE = {
 };
 
 // ==========================================
-// ЧАСТЬ 2: ДВИЖОК ЖУРНАЛА (С ПОДДЕРЖКОЙ ТЕГОВ)
+// ЧАСТЬ 2: ДВИЖОК ЖУРНАЛА
 // ==========================================
 (function() {
     if (window.journalLoaded) return;
@@ -49,19 +49,10 @@ const CHAT_DATABASE = {
     window.currentChatStep = 0;
     let isTyping = false;
     let lastEmergencyState = null; 
+    let lastCoreStatus = 'WAIT';
 
     function getActiveData() {
-        // --- ФОНОВЫЕ ЛОГИ EDR ---
-        const osPassed = localStorage.getItem('s9_edr_os_passed') === 'true';
-        const gwPassed = localStorage.getItem('s9_edr_gateway_passed') === 'true';
-        if (osPassed && gwPassed) {
-            return [
-                { q: "> EDR MONITOR", a: "СИСТЕМА АКТИВНА. УГРОЗ НЕ ОБНАРУЖЕНО." },
-                { q: "> SCANNING", a: "ПРОВЕРКА ПАМЯТИ: 0 УГРОЗ." }
-            ];
-        }
-        // -------------------------
-
+        const page = window.location.pathname.split('/').pop() || 'index.html';
         const isEmergency = localStorage.getItem('s9_emergency_flag') === 'active';
         
         if (isEmergency !== lastEmergencyState) {
@@ -76,16 +67,11 @@ const CHAT_DATABASE = {
             ];
         }
 
-        let page = window.location.pathname.split('/').pop() || 'index.html';
         const isLoginPage = page === 'login.html';
         const isHuman = isLoginPage || localStorage.getItem('s9_lang_human') === 'true';
+
+        if (page === 'index.html' && !isHuman) return CHAT_DATABASE['index.html'];
         
-        // 1. ХАБ (СЫРОЙ РЕЖИМ)
-        if (page === 'index.html' && !isHuman) {
-            return CHAT_DATABASE['index.html'];
-        }
-        
-        // 2. ХАБ (ОБЫЧНЫЙ РЕЖИМ)
         if (page === 'index.html' && isHuman) {
             return [
                 { q: "> СИСТЕМА ПРИЁМА СИГНАЛА", a: "ДЕШИФРОВКА ВХОДЯЩЕГО ПОТОКА ЗАПУЩЕНА. ИСТОЧНИК СИГНАЛА НЕИЗВЕСТЕН. КАЖДЫЕ 128 СЕКУНД КАНАЛ ПЕРЕЗАГРУЖАЕТСЯ, ГЕНЕРИРУЯ НОВУЮ ПОРЦИЮ ТРАССИТОВ." },
@@ -95,8 +81,41 @@ const CHAT_DATABASE = {
             ];
         }
 
-        // 3. АРХИВ
-        // --- ЛОГИКА ДЛЯ АРХИВА ---
+        if (page === 'map.html') {
+            const osFixed = localStorage.getItem('s9_os_fixed') === 'true';
+            const coreOverheated = localStorage.getItem('s9_core_overheated') === 'true';
+            const coreFixed = localStorage.getItem('s9_core_fixed') === 'true';
+
+            if (osFixed && !coreOverheated && !coreFixed) {
+                return [
+                    { q: "> СТАТУС ТОПОЛОГИИ", a: "КАРТА РАЗВЕРНУТА. ОБНАРУЖЕНЫ ОТКЛЮЧЕНИЯ." },
+                    { q: "> ДИАГНОСТИКА ЯДРА", a: "ПОСЛЕ РЕМОНТА ОС НАГРУЗКА НА ЯДРО ВОЗРОСЛА." },
+                    { q: "> ВНИМАНИЕ", a: "ЗАФИКСИРОВАН ПЕРИОД ОХЛАЖДЕНИЯ. НЕОБХОДИМО 64 СЕКУНДЫ." },
+                    { q: "> ПРОГНОЗ", a: "ЕСЛИ НЕ НАЧАТЬ КАЛИБРОВКУ, ЯДРО УЙДЕТ В ПЕРЕГРУЗКУ." },
+                    { q: "> СИСТЕМА", a: "ОЖИДАНИЕ АВАРИЙНОГО СИГНАЛА. КОМАНДА <cmd>core</cmd> ПОКА НЕДОСТУПНА." }
+                ];
+            }
+
+            if (coreOverheated && !coreFixed) {
+                return [
+                    { q: "> КРИТИЧЕСКАЯ ОШИБКА", a: "ЭНЕРГОЯДРО ПЕРЕГРУЖЕНО. МАГНИТЫ РАЗБАЛАНСИРОВАНЫ." },
+                    { q: "> АВАРИЙНЫЙ ПРОТОКОЛ", a: "ТРЕБУЕТСЯ РУЧНАЯ СТАБИЛИЗАЦИЯ ЯДРА." },
+                    { q: "> ДОСТУП", a: "ПЕРЕЙДИТЕ В МОДУЛЬ ЧЕРЕЗ КОМАНДУ <cmd>core</cmd>." },
+                    { q: "> ИНСТРУКЦИЯ", a: "ИСПОЛЬЗУЙТЕ КОНСОЛЬ ДЛЯ ВЫЧИСЛЕНИЯ СМЕЩЕНИЯ МАГНИТОВ." },
+                    { q: "> СИСТЕМА", a: "ОЖИДАНИЕ КОМАНДЫ <cmd>core</cmd>..." }
+                ];
+            }
+
+            if (coreFixed) {
+                return [
+                    { q: "> СТАТУС ТОПОЛОГИИ", a: "КАРТА СТАБИЛЬНА. ВСЕ ОСНОВНЫЕ СИСТЕМЫ В НОРМЕ." },
+                    { q: "> ЭНЕРГОЯДРО", a: "СТАБИЛЬНО. ВЫРАБОТКА 100%." },
+                    { q: "> ТЕЛЕМЕТРИЯ", a: "ПИТАНИЕ ПОДАНО. МОДУЛЬ ДОСТУПЕН." }
+                ];
+            }
+            return (typeof CHAT_DATABASE !== 'undefined' && CHAT_DATABASE[page]) ? CHAT_DATABASE[page] : [{ q: "> СИСТЕМА", a: "ИНФОРМАЦИЯ ОТСУТСТВУЕТ." }];
+        }
+
         if (page === 'archive.html') {
             const isCalibrated = localStorage.getItem('s9_archive_calibrated') === 'true';
             const isFixed = localStorage.getItem('s9_archive_fixed') === 'true';
@@ -117,7 +136,6 @@ const CHAT_DATABASE = {
             }
         }
 
-        // 4. ОПЕРАЦИОННАЯ СИСТЕМА
         if (page === 'os.html') {
             const isCaptchaPassed = localStorage.getItem('s9_os_captcha') === 'true';
             const isOsFixed = localStorage.getItem('s9_os_fixed') === 'true';
@@ -138,12 +156,18 @@ const CHAT_DATABASE = {
 
             if (isOsFixed) {
                 return [
-                    { q: "> ОС СТАБИЛЬНА", a: "ВСЕ КУБИТЫ В РАБОЧЕМ СОСТОЯНИИ." },
+                    { q: "> ОС СТАБИЛЬНА", a: "ВСЕ КУБИТЫ В РАБОЧЕМ СОСТОЯНИИ." }
                 ];
             }
         }
-
-        // Стандартный вывод для остальных страниц
+        if (page === 'core.html') {
+            return [
+                { q: "> СТАТУС ЯДРА", a: "КРИТИЧЕСКИЙ ПЕРЕГРЕВ. МАГНИТНАЯ СТАБИЛИЗАЦИЯ НАРУШЕНА." },
+                { q: "> ДИАГНОСТИКА", a: "ЯДРО СМЕЩЕНО ОТНОСИТЕЛЬНО ЦЕНТРА. ПОКАЗАНИЯ ДАТЧИКОВ РАССТОЯНИЯ ОТКЛОНЯЮТСЯ ОТ ЭТАЛОНА (10)." },
+                { q: "> РЕШЕНИЕ", a: "ОТКРОЙТЕ КОНСОЛЬ УПРАВЛЕНИЯ (КЛАВИША ~). ВВЕДИТЕ КОМАНДУ <cmd>help core</cmd> ДЛЯ ПОЛУЧЕНИЯ ПОКАЗАНИЙ ДАТЧИКОВ И РУКОВОДСТВА." },
+                { q: "> ПРИНЦИП", a: "ЧТОБЫ ВЕРНУТЬ ЯДРО В ЦЕНТР, НУЖНО СКОРРЕКТИРОВАТЬ РАССТОЯНИЕ КАЖДОГО МАГНИТА, ВЫЧИТАЯ ТЕКУЩЕЕ ПОКАЗАНИЕ ИЗ ЭТАЛОНА (10)." }
+            ];
+        }
         return (typeof CHAT_DATABASE !== 'undefined' && CHAT_DATABASE[page]) 
                ? CHAT_DATABASE[page] 
                : [{ q: "> СИСТЕМА", a: "ИНФОРМАЦИЯ ДЛЯ ЭТОЙ СТРАНИЦЫ ОТСУТСТВУЕТ." }];
@@ -163,14 +187,10 @@ const CHAT_DATABASE = {
         } catch(e) {}
     }
 
-    // --- НОВЫЙ ДВИЖОК ПЕЧАТИ С ПОДДЕРЖКОЙ <cmd> ---
     function typeHtmlText(element, htmlText, onComplete) {
         element.innerHTML = ''; 
-        
-        // Создаем временный контейнер для парсинга HTML
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = htmlText;
-
         const nodes = Array.from(tempDiv.childNodes);
         let nodeIndex = 0;
         let charIndex = 0;
@@ -184,20 +204,15 @@ const CHAT_DATABASE = {
             }
 
             const node = nodes[nodeIndex];
-            
-            // Если обертка еще не создана для текущего узла
             if (!currentWrapper) {
                 if (node.nodeType === Node.TEXT_NODE) {
-                    // Обычный текст
                     currentWrapper = document.createElement('span');
                     element.appendChild(currentWrapper);
                 } else if (node.nodeName.toLowerCase() === 'cmd') {
-                    // Команда (внутри тега <cmd>)
                     currentWrapper = document.createElement('span');
-                    currentWrapper.className = 'cmd-text'; // Применяем неоновый стиль
+                    currentWrapper.className = 'cmd-text';
                     element.appendChild(currentWrapper);
                 } else {
-                    // Неизвестный тег, пропускаем
                     nodeIndex++;
                     typeNextChar();
                     return;
@@ -206,7 +221,6 @@ const CHAT_DATABASE = {
                 charIndex = 0;
             }
 
-            // Печатаем символы
             if (charIndex < currentNodeText.length) {
                 const char = currentNodeText[charIndex];
                 currentWrapper.textContent += char;
@@ -214,13 +228,11 @@ const CHAT_DATABASE = {
                 charIndex++;
                 setTimeout(typeNextChar, 30);
             } else {
-                // Узел напечатан, переходим к следующему
                 nodeIndex++;
                 currentWrapper = null;
                 typeNextChar();
             }
         }
-
         if (nodes.length > 0) typeNextChar();
         else if (onComplete) onComplete();
     }
@@ -231,8 +243,8 @@ const CHAT_DATABASE = {
         const container = document.querySelector('.chat-system');
         if (!qField || !aField) return;
 
-        // --- СБРОС ШАГА ПРИ ИЗМЕНЕНИИ ФЛАГА АРХИВА ---
         let page = window.location.pathname.split('/').pop() || 'index.html';
+        
         if (page === 'archive.html') {
             const isFixed = localStorage.getItem('s9_archive_fixed') === 'true';
             if (window.lastArchiveFixedState !== isFixed) {
@@ -240,19 +252,49 @@ const CHAT_DATABASE = {
                 window.lastArchiveFixedState = isFixed;
             }
         }
-        // ---------------------------------------------
+
+        if (page === 'map.html') {
+            const coreOverheated = localStorage.getItem('s9_core_overheated') === 'true';
+            const coreFixed = localStorage.getItem('s9_core_fixed') === 'true';
+            let status = 'WAIT';
+            if (coreOverheated && !coreFixed) status = 'ERROR';
+            if (coreFixed) status = 'FIXED';
+
+            if (lastCoreStatus !== status) {
+                window.currentChatStep = 0;
+                lastCoreStatus = status;
+            }
+        }
 
         const data = getActiveData();
 
         if (window.currentChatStep < data.length) {
             aField.innerText = "";
-            // Для вопроса просто выводим текст (можно тоже добавить теги, если надо)
             qField.innerText = data[window.currentChatStep].q.replace(/<\/?cmd>/g, ''); 
             qField.style.opacity = "1";
             qField.style.cursor = "pointer";
             if (container) container.classList.remove('chat-fade-out');
             isTyping = false;
         } else {
+            if (page === 'map.html') {
+                const osFixed = localStorage.getItem('s9_os_fixed') === 'true';
+                const coreOverheated = localStorage.getItem('s9_core_overheated') === 'true';
+                const coreFixed = localStorage.getItem('s9_core_fixed') === 'true';
+                const timerStart = localStorage.getItem('s9_core_timer_start');
+
+                if (osFixed && !coreOverheated && !coreFixed && timerStart) {
+                    const elapsed = Math.floor((Date.now() - parseInt(timerStart, 10)) / 1000);
+                    const remaining = Math.max(0, 64 - elapsed);
+                    
+                    qField.innerText = "> ОХЛАЖДЕНИЕ ЯДРА";
+                    aField.innerHTML = `<span id="cooling-timer">ОСТАЛОСЬ ВРЕМЕНИ: ${remaining} СЕК</span>`;
+                    
+                    qField.style.cursor = "default";
+                    return;
+                }
+            }
+            // ... (код кнопки "ОБНОВИТЬ" идет ниже) ...
+
             qField.innerHTML = `
                 <div style="display: flex; align-items: center; justify-content: space-between; opacity: 0.7;">
                     <span>> ЖУРНАЛ ПРОЧИТАН</span>
@@ -291,27 +333,32 @@ const CHAT_DATABASE = {
         const aField = document.getElementById('answer-field');
         const text = data[window.currentChatStep].a;
 
-        // Используем новый движок печати
         typeHtmlText(aField, text, () => {
             setTimeout(() => {
                 window.currentChatStep++;
-                window.updateQuestion();
 
-                // --- АВТОВЫЗОВ КОНСОЛИ ДЛЯ ПЕРВОГО КВЕСТА ---
                 let page = window.location.pathname.split('/').pop() || 'index.html';
                 if (page === 'index.html' && window.currentChatStep === data.length) {
                     if (localStorage.getItem('s9_lang_human') !== 'true') {
                         window.dispatchEvent(new CustomEvent('autoOpenConsole'));
                     }
                 }
-                // ---------------------------------------------
 
-                // --- УСТАНОВКА ФЛАГА ПРОСМОТРА КАРТЫ ---
+                // Запускаем таймер ДО обновления вопроса
                 if (page === 'map.html' && window.currentChatStep === data.length) {
                     localStorage.setItem('s9_map_visited', 'true');
+                    
+                    const osFixed = localStorage.getItem('s9_os_fixed') === 'true';
+                    const coreOverheated = localStorage.getItem('s9_core_overheated') === 'true';
+                    const coreFixed = localStorage.getItem('s9_core_fixed') === 'true';
+                    
+                    if (osFixed && !coreOverheated && !coreFixed && !localStorage.getItem('s9_core_timer_start')) {
+                        localStorage.setItem('s9_core_timer_start', Date.now().toString());
+                    }
                 }
-                // --------------------------------------
 
+                isTyping = false; // ВАЖНО: Сбрасываем флаг печати
+                window.updateQuestion();
             }, 2000);
         });
     };
@@ -327,4 +374,30 @@ const CHAT_DATABASE = {
     } else {
         window.updateQuestion();
     }
+
+    setInterval(() => {
+        const page = window.location.pathname.split('/').pop() || 'index.html';
+        if (page === 'map.html') {
+            const osFixed = localStorage.getItem('s9_os_fixed') === 'true';
+            const coreOverheated = localStorage.getItem('s9_core_overheated') === 'true';
+            const coreFixed = localStorage.getItem('s9_core_fixed') === 'true';
+            const timerStart = localStorage.getItem('s9_core_timer_start');
+            
+            if (osFixed && !coreOverheated && !coreFixed && timerStart) {
+                const timerEl = document.getElementById('cooling-timer');
+                if (timerEl) {
+                    const elapsed = Math.floor((Date.now() - parseInt(timerStart, 10)) / 1000);
+                    const remaining = Math.max(0, 64 - elapsed);
+                    timerEl.innerText = `ОСТАЛОСЬ ВРЕМЕНИ: ${remaining} СЕК`;
+                    
+                    if (remaining <= 0) {
+                        localStorage.setItem('s9_core_overheated', 'true');
+                        localStorage.removeItem('s9_core_timer_start');
+                        location.reload();
+                    }
+                }
+            }
+        }
+    }, 1000);
+
 })();

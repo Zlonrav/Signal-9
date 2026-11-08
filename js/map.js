@@ -66,6 +66,18 @@
             return localStorage.getItem('s9_archive_fixed') === 'true' ? 'ONLINE' : 'ERROR';
         }
 
+        if (node.id === 'core') {
+            const osFixed = localStorage.getItem('s9_os_fixed') === 'true';
+            if (!osFixed) return 'OFFLINE'; // Ядро не может быть онлайн, пока ОС не починена
+
+            const isOverheated = localStorage.getItem('s9_core_overheated') === 'true';
+            const isFixed = localStorage.getItem('s9_core_fixed') === 'true';
+
+            if (isFixed) return 'ONLINE';
+            if (isOverheated) return 'ERROR';
+            return 'WARNING'; // Желтый статус (период охлаждения)
+        }
+
         if (node.type === 'os') {
             const isArchiveFixed = localStorage.getItem('s9_archive_fixed') === 'true';
             if (!isArchiveFixed) return 'OFFLINE';
@@ -73,9 +85,8 @@
         }
 
         // Проверка флагов для остальных
-        if (node.id === 'core' && localStorage.getItem('s9_telemetry_calibrated') === 'true') return 'ONLINE';
+        if (node.id === 'telemetry' && localStorage.getItem('s9_core_fixed') === 'true') return 'ONLINE';
         if (node.id === 'edr' && localStorage.getItem('s9_os_fixed') === 'true') return 'ONLINE';
-        if (node.id === 'telemetry' && localStorage.getItem('s9_edr_ghosts') !== null) return 'ONLINE';
         if (node.id === 'gateway' && localStorage.getItem('s9_core_unlocked') === 'true') return 'ONLINE';
         
         return 'OFFLINE';
@@ -107,10 +118,13 @@
                 lineClass = 'link-locked';
                 isActive = false;
             } else if (sourceStatus === 'ERROR' || targetStatus === 'ERROR') {
-                lineClass = 'link-error'; // Красная аварийная
+                lineClass = 'link-error';
                 isActive = true;
             } else if (sourceStatus === 'ONLINE' && targetStatus === 'ONLINE') {
-                lineClass = 'link-active'; // Синяя активная
+                lineClass = 'link-active';
+                isActive = true;
+            } else if (sourceStatus === 'WARNING' || targetStatus === 'WARNING') {
+                lineClass = 'link-locked'; // Или можно сделать желтую линию, если хочешь
                 isActive = true;
             }
 
@@ -138,7 +152,7 @@
         MAP_DATA.nodes.forEach(node => {
             const status = getNodeStatus(node);
             
-            let isClickable = (status !== 'OFFLINE');
+            let isClickable = (status !== 'OFFLINE' && status !== 'WARNING');
             if (node.id === 'archive' && localStorage.getItem('s9_map_visited') !== 'true') {
                 isClickable = false;
             }
@@ -166,7 +180,8 @@
             let cssClass = 'map-node ';
             if (status === 'ONLINE') cssClass += 'unlocked';
             else if (status === 'ERROR') cssClass += 'error-node';
-            else cssClass += 'locked';
+            else if (status === 'WARNING') cssClass += 'warning-node'; /* Добавили желтый статус */
+            else cssClass += 'locked'; 
             
             if (!isClickable) cssClass += ' no-pointer'; // <--- ВОТ ЭТА СТРОКА
 

@@ -25,18 +25,16 @@
                 if (data) phrases = JSON.parse(data);
                 
                 const currentPhraseText = PHRASES[phraseIndex];
-                // Проверяем, нет ли уже такой фразы (чтобы не дублировать)
                 const exists = phrases.some(p => p.text === currentPhraseText);
 
                 if (!exists) {
-                    const words = currentPhraseText.split(' '); // Берем все 5 слов как есть
+                    const words = currentPhraseText.split(' '); 
                     phrases.push({ 
                         text: currentPhraseText,
                         words: words, 
                         timestamp: Date.now() 
                     });
 
-                    // Оставляем только 10 фраз, но защищаем эталонные, пока Архив не починен
                     if (phrases.length > 10) {
                         const isArchiveFixed = localStorage.getItem('s9_archive_fixed') === 'true';
                         
@@ -54,4 +52,20 @@
             }
         }
     }, 1000); 
+
+    // ТАЙМЕР ОХЛАЖДЕНИЯ ЯДРА (Только проверка окончания)
+    setInterval(() => {
+        const timerStart = localStorage.getItem('s9_core_timer_start');
+        const coreOverheated = localStorage.getItem('s9_core_overheated') === 'true';
+        const coreFixed = localStorage.getItem('s9_core_fixed') === 'true';
+
+        if (timerStart && !coreOverheated && !coreFixed) {
+            const elapsed = Date.now() - parseInt(timerStart, 10);
+            if (elapsed >= 64000) { 
+                localStorage.setItem('s9_core_overheated', 'true');
+                localStorage.removeItem('s9_core_timer_start');
+                console.log("SYSTEM: CORE OVERHEATED!");
+            }
+        }
+    }, 1000);
 })();

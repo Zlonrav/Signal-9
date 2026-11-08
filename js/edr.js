@@ -1,7 +1,7 @@
 // js/edr.js
 (function() {
     const content = document.getElementById('edrContent');
-    const hint = document.getElementById('edr-hint');
+    const terminalWrapper = document.querySelector('.terminal-wrapper'); // Наш контейнер-рамка
     
     const osPassed = localStorage.getItem('s9_edr_os_passed') === 'true';
     const gatewayPassed = localStorage.getItem('s9_edr_gateway_passed') === 'true';
@@ -18,7 +18,6 @@
         startMastermind();
     } 
     else {
-        if (hint) hint.style.display = 'none';
         if (osPassed && gatewayPassed) {
             initShieldVisual(false);
         } else if (osPassed || gatewayPassed) {
@@ -29,50 +28,67 @@
     }
 
     // ==========================================
-    // ЛОГИКА ПЕСОЧНИЦЫ
+    // ЛОГИКА ПЕСОЧНИЦЫ (ЧЕРЕЗ КОНСОЛЬ)
     // ==========================================
     function startSandbox() {
-        if (hint) hint.style.display = 'block';
+        // ПОЛНОСТЬЮ СКРЫВАЕМ РАМКУ И КОНТЕНТ, ЧТОБЫ НЕ МЕШАЛИ КОНСОЛИ
+        if (terminalWrapper) terminalWrapper.style.display = 'none';
+        if (content) content.style.display = 'none';
+
         let currentLevel = 1;
         let errorCount = 0;
         let correctAnswer = 0;
 
+        // Блокируем консоль и открываем её
+        setTimeout(() => {
+            if (window.printToConsole) {
+                window.printToConsole(`<span class="warn">[EDR] ЗАПУЩЕНА ПЕСОЧНИЦА. ВСЕ ОТВЕТЫ ВВОДИТЕ В КОНСОЛИ.</span>`);
+                window.dispatchEvent(new Event('lockConsole'));
+                generateLevel(1);
+            }
+        }, 500);
+
         const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
         function generateLevel(level) {
-            let htmlCode = '';
-            let ans = 0;
             errorCount = 0;
-
+            let codeHtml = '';
+            
             if (level === 1) {
                 const startX = rand(2, 5);
                 const addVal = rand(2, 4);
                 const multVal = rand(2, 3);
-                ans = startX;
+                let ans = startX;
                 for(let i=0; i<3; i++) { ans += addVal; ans *= multVal; }
+                correctAnswer = ans;
 
-                htmlCode = `
-                    <div class="code-line"><span class="kw">LET</span> <span class="var">X</span> <span class="op">=</span> <span class="num">${startX}</span></div>
-                    <div class="code-line"><span class="kw">LOOP</span> <span class="num">3</span> TIMES:</div>
-                    <div class="code-line indent"><span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">+</span> <span class="num">${addVal}</span></div>
-                    <div class="code-line indent"><span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">*</span> <span class="num">${multVal}</span></div>
-                    <div class="code-line"><span class="kw">PRINT</span> <span class="var">X</span></div>
+                codeHtml = `
+                    <div class="console-code-block">
+                        <span class="kw">LET</span> <span class="var">X</span> <span class="op">=</span> <span class="num">${startX}</span><br>
+                        <span class="kw">LOOP</span> <span class="num">3</span> TIMES:<br>
+                        &nbsp;&nbsp;<span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">+</span> <span class="num">${addVal}</span><br>
+                        &nbsp;&nbsp;<span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">*</span> <span class="num">${multVal}</span><br>
+                        <span class="kw">PRINT</span> <span class="var">X</span>
+                    </div>
                 `;
             } 
             else if (level === 2) {
                 const startX = rand(4, 8);
                 const addVal = rand(2, 4);
                 const threshold = rand(12, 15);
-                ans = startX;
+                let ans = startX;
                 for(let i=0; i<3; i++) { ans += addVal; if (ans > threshold) ans *= 2; }
+                correctAnswer = ans;
 
-                htmlCode = `
-                    <div class="code-line"><span class="kw">LET</span> <span class="var">X</span> <span class="op">=</span> <span class="num">${startX}</span></div>
-                    <div class="code-line"><span class="kw">LOOP</span> <span class="num">3</span> TIMES:</div>
-                    <div class="code-line indent"><span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">+</span> <span class="num">${addVal}</span></div>
-                    <div class="code-line indent"><span class="kw">IF</span> <span class="var">X</span> <span class="op">></span> <span class="num">${threshold}</span>:</div>
-                    <div class="code-line indent" style="padding-left: 40px;"><span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">*</span> <span class="num">2</span></div>
-                    <div class="code-line"><span class="kw">PRINT</span> <span class="var">X</span></div>
+                codeHtml = `
+                    <div class="console-code-block">
+                        <span class="kw">LET</span> <span class="var">X</span> <span class="op">=</span> <span class="num">${startX}</span><br>
+                        <span class="kw">LOOP</span> <span class="num">3</span> TIMES:<br>
+                        &nbsp;&nbsp;<span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">+</span> <span class="num">${addVal}</span><br>
+                        &nbsp;&nbsp;<span class="kw">IF</span> <span class="var">X</span> <span class="op">></span> <span class="num">${threshold}</span>:<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">*</span> <span class="num">2</span><br>
+                        <span class="kw">PRINT</span> <span class="var">X</span>
+                    </div>
                 `;
             } 
             else if (level === 3) {
@@ -86,135 +102,83 @@
                     else if (x > 5) y *= 2;
                     else y -= 1;
                 }
-                ans = y;
+                correctAnswer = y;
 
-                htmlCode = `
-                    <div class="code-line"><span class="kw">LET</span> <span class="var">X</span> <span class="op">=</span> <span class="num">${startX}</span></div>
-                    <div class="code-line"><span class="kw">LET</span> <span class="var">Y</span> <span class="op">=</span> <span class="num">${startY}</span></div>
-                    <div class="code-line"><span class="kw">LOOP</span> <span class="num">3</span> TIMES:</div>
-                    <div class="code-line indent"><span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">*</span> <span class="num">${multVal}</span></div>
-                    <div class="code-line indent"><span class="kw">IF</span> <span class="var">X</span> <span class="op">></span> <span class="num">10</span>:</div>
-                    <div class="code-line indent" style="padding-left: 40px;"><span class="var">Y</span> <span class="op">=</span> <span class="var">Y</span> <span class="op">+</span> <span class="var">X</span></div>
-                    <div class="code-line indent"><span class="kw">ELSE IF</span> <span class="var">X</span> <span class="op">></span> <span class="num">5</span>:</div>
-                    <div class="code-line indent" style="padding-left: 40px;"><span class="var">Y</span> <span class="op">=</span> <span class="var">Y</span> <span class="op">*</span> <span class="num">2</span></div>
-                    <div class="code-line indent"><span class="kw">ELSE</span>:</div>
-                    <div class="code-line indent" style="padding-left: 40px;"><span class="var">Y</span> <span class="op">=</span> <span class="var">Y</span> <span class="op">-</span> <span class="num">1</span></div>
-                    <div class="code-line"><span class="kw">PRINT</span> <span class="var">Y</span></div>
+                codeHtml = `
+                    <div class="console-code-block">
+                        <span class="kw">LET</span> <span class="var">X</span> <span class="op">=</span> <span class="num">${startX}</span><br>
+                        <span class="kw">LET</span> <span class="var">Y</span> <span class="op">=</span> <span class="num">${startY}</span><br>
+                        <span class="kw">LOOP</span> <span class="num">3</span> TIMES:<br>
+                        &nbsp;&nbsp;<span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">*</span> <span class="num">${multVal}</span><br>
+                        &nbsp;&nbsp;<span class="kw">IF</span> <span class="var">X</span> <span class="op">></span> <span class="num">10</span>:<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="var">Y</span> <span class="op">=</span> <span class="var">Y</span> <span class="op">+</span> <span class="var">X</span><br>
+                        &nbsp;&nbsp;<span class="kw">ELSE IF</span> <span class="var">X</span> <span class="op">></span> <span class="num">5</span>:<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="var">Y</span> <span class="op">=</span> <span class="var">Y</span> <span class="op">*</span> <span class="num">2</span><br>
+                        &nbsp;&nbsp;<span class="kw">ELSE</span>:<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="var">Y</span> <span class="op">=</span> <span class="var">Y</span> <span class="op">-</span> <span class="num">1</span><br>
+                        <span class="kw">PRINT</span> <span class="var">Y</span>
+                    </div>
                 `;
             }
 
-            correctAnswer = ans;
-
-            content.innerHTML = `
-                <div style="width: 100%; max-width: 450px; text-align: left; box-sizing: border-box;">
-                    <div style="color: var(--neon); margin-bottom: 10px; font-size: 11px; letter-spacing: 1px;">// ВЫПОЛНЕНИЕ СКРИПТА В ИЗОЛИРОВАННОЙ СРЕДЕ</div>
-                    <div id="codeOutput" style="margin-bottom: 15px;"></div>
-                    
-                    <div style="text-align: center;">
-                        <div style="margin-bottom: 8px; color: #aaa; font-size: 12px;">ЭТАП ${level} / 3 — ВВЕДИТЕ РЕЗУЛЬТАТ:</div>
-                        <input type="text" id="sbAnswer" class="terminal-input" autocomplete="off" inputmode="numeric" pattern="[0-9]*">
-                        <button id="sbBtn" class="mobile-btn">ВЫПОЛНИТЬ</button>
-                        <div id="sbStatus" class="status-msg"></div>
-                    </div>
-                </div>
-            `;
-
-            const codeOutput = document.getElementById('codeOutput');
-            const lines = htmlCode.trim().split('\n');
-            let lineIdx = 0;
-            
-            function typeLine() {
-                if (lineIdx < lines.length) {
-                    const div = document.createElement('div');
-                    div.innerHTML = lines[lineIdx].trim(); 
-                    if (lines[lineIdx].includes('class="code-line indent"')) {
-                        div.className = 'code-line indent';
-                        if(lines[lineIdx].includes('style="padding-left: 40px;"')) div.style.paddingLeft = '40px';
-                    } else {
-                        div.className = 'code-line';
-                    }
-                    codeOutput.appendChild(div);
-                    if (typeof window.playTypeSound === 'function') window.playTypeSound();
-                    lineIdx++;
-                    setTimeout(typeLine, 150);
-                } else {
-                    document.getElementById('sbAnswer').focus();
-                }
+            // Выводим в консоль
+            if (window.printToConsole) {
+                window.printToConsole(`<span class="topic-header">[EDR] ЭТАП ${level} / 3</span>`);
+                window.printToConsole(codeHtml);
+                window.printToConsole(`ВВЕДИТЕ РЕЗУЛЬТАТ: <span class="cmd-text">edr --answer <ЧИСЛО></span>`);
             }
-            typeLine();
-
-            const input = document.getElementById('sbAnswer');
-            const status = document.getElementById('sbStatus');
-            const btn = document.getElementById('sbBtn');
-
-            function checkAnswer() {
-                const val = input.value.trim();
-                if (!val) return;
-
-                if (parseInt(val, 10) === correctAnswer) {
-                    status.innerText = "> ЛОГИКА ПОДТВЕРЖДЕНА.";
-                    status.style.color = "#00ff44";
-                    input.disabled = true;
-                    if(btn) btn.disabled = true;
-                    if(hint) hint.style.display = 'none';
-                    
-                    setTimeout(() => {
-                        if (currentLevel < 3) {
-                            currentLevel++;
-                            generateLevel(currentLevel);
-                            if(hint) hint.style.display = 'block';
-                        } else {
-                            localStorage.setItem('s9_edr_os_passed', 'true');
-                            localStorage.removeItem('s9_edr_os_trigger');
-                            localStorage.setItem('s9_os_fixed', 'true');
-                            localStorage.setItem('s9_os_errors', '0');
-                            content.innerHTML = `<h2 style="color: #00ff44; font-family: Michroma; text-shadow: 0 0 10px #00ff44;">ЛОГИКА ВОССТАНОВЛЕНА</h2><p style="color: var(--neon);">Возврат в ОС...</p>`;
-                            setTimeout(() => { window.location.href = 'os.html'; }, 2000);
-                        }
-                    }, 1500);
-                } else {
-                    errorCount++;
-                    input.classList.add('shake');
-                    input.value = '';
-                    setTimeout(() => { input.classList.remove('shake'); }, 400);
-
-                    if (errorCount >= 3) {
-                        status.innerText = "> СБРОС ПАМЯТИ. ГЕНЕРАЦИЯ НОВОГО ЗАДАНИЯ...";
-                        status.style.color = "#ff3333";
-                        input.disabled = true;
-                        if(btn) btn.disabled = true;
-                        if(hint) hint.style.display = 'none';
-                        setTimeout(() => { generateLevel(currentLevel); if(hint) hint.style.display = 'block'; }, 2000);
-                    } else {
-                        status.innerText = `> ОШИБКА ${errorCount}/3. ПОПРОБУЙТЕ СНОВА.`;
-                        status.style.color = "#ff3333";
-                    }
-                }
-            }
-
-            input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); checkAnswer(); } });
-            if (btn) btn.addEventListener('click', checkAnswer);
         }
-        generateLevel(1);
+
+        // Экспортируем функцию для консоли
+        window.checkEdrAnswer = function(val) {
+            const num = parseInt(val, 10);
+            
+            if (num === correctAnswer) {
+                if (window.printToConsole) window.printToConsole(`<span class="ok">> ЛОГИКА ПОДТВЕРЖДЕНА.</span>`);
+                
+                if (currentLevel < 3) {
+                    currentLevel++;
+                    setTimeout(() => generateLevel(currentLevel), 1000);
+                } else {
+                    localStorage.setItem('s9_edr_os_passed', 'true');
+                    localStorage.removeItem('s9_edr_os_trigger');
+                    localStorage.setItem('s9_os_fixed', 'true');
+                    localStorage.setItem('s9_os_errors', '0');
+                    
+                    if (window.printToConsole) window.printToConsole(`<span class="ok">> ВСЕ ТЕСТЫ ПРОЙДЕНЫ. ВОЗВРАТ В ОС...</span>`);
+                    window.dispatchEvent(new Event('unlockConsole'));
+                    setTimeout(() => { window.location.href = 'os.html'; }, 2000);
+                }
+            } else {
+                errorCount++;
+                if (window.printToConsole) window.printToConsole(`<span class="err">> ОШИБКА ${errorCount}/3.</span>`);
+
+                if (errorCount >= 3) {
+                    if (window.printToConsole) window.printToConsole(`<span class="warn">> СБРОС ПАМЯТИ. ГЕНЕРАЦИЯ НОВОГО ЗАДАНИЯ...</span>`);
+                    setTimeout(() => generateLevel(currentLevel), 1500);
+                }
+            }
+        };
     }
 
     // ==========================================
-    // ЛОГИКА ВЗЛОМА ШИФРА
+    // ЛОГИКА ВЗЛОМА ШИФРА (Возвращаем рамку)
     // ==========================================
     function startMastermind() {
-        if (hint) hint.style.display = 'block';
+        if (terminalWrapper) terminalWrapper.style.display = 'flex';
+        if (content) content.style.display = 'flex';
+
         const targetCode = Array.from({length: 5}, () => Math.floor(Math.random() * 10)).join('');
         content.innerHTML = `
             <div style="margin-bottom: 15px; color: var(--neon); text-align:center; font-size: 12px; line-height: 1.5;">
                 > ДОСТУП К ШЛЮЗУ ЗАБЛОКИРОВАН.<br>
                 > ПОДБЕРИТЕ 5-ЗНАЧНЫЙ КОД.<br>
-                > <span style="color:#00ff44">ЗЕЛЕНЫЙ</span> - ЦИФРА НА СВОЕМ МЕСТЕ. <span style="color:#ffaa00">ЖЕЛТЫЙ</span> - ЕСТЬ, НО НЕ ТАМ.
             </div>
-            <div class="mm-logs" id="mmLogs">> СИСТЕМА ГОТОВА К ВВОДУ...</div>
-            <div class="mm-inputs" id="mmInputs">
-                <input type="text" maxlength="1" oninput="moveFocus(this)"><input type="text" maxlength="1" oninput="moveFocus(this)"><input type="text" maxlength="1" oninput="moveFocus(this)"><input type="text" maxlength="1" oninput="moveFocus(this)"><input type="text" maxlength="1" oninput="moveFocus(this)">
+            <div class="mm-logs" id="mmLogs" style="width: 100%; max-width: 320px; height: 120px; overflow-y: auto; border: 1px solid rgba(0,242,255,0.2); padding: 10px; font-size: 11px; margin-bottom: 15px; text-align: left; font-family: monospace; background: rgba(0,0,0,0.5);">> СИСТЕМА ГОТОВА К ВВОДУ...</div>
+            <div class="mm-inputs" id="mmInputs" style="display: flex; gap: 8px; justify-content: center; margin-bottom: 15px;">
+                <input type="text" maxlength="1" oninput="moveFocus(this)" style="width: 35px; height: 45px; background: transparent; border: 1px solid var(--neon); color: var(--neon); font-size: 20px; text-align: center; font-family: monospace; outline: none;"><input type="text" maxlength="1" oninput="moveFocus(this)" style="width: 35px; height: 45px; background: transparent; border: 1px solid var(--neon); color: var(--neon); font-size: 20px; text-align: center; font-family: monospace; outline: none;"><input type="text" maxlength="1" oninput="moveFocus(this)" style="width: 35px; height: 45px; background: transparent; border: 1px solid var(--neon); color: var(--neon); font-size: 20px; text-align: center; font-family: monospace; outline: none;"><input type="text" maxlength="1" oninput="moveFocus(this)" style="width: 35px; height: 45px; background: transparent; border: 1px solid var(--neon); color: var(--neon); font-size: 20px; text-align: center; font-family: monospace; outline: none;"><input type="text" maxlength="1" oninput="moveFocus(this)" style="width: 35px; height: 45px; background: transparent; border: 1px solid var(--neon); color: var(--neon); font-size: 20px; text-align: center; font-family: monospace; outline: none;">
             </div>
-            <button id="mmBtn" class="mobile-btn" style="display: block;">ПРОВЕРИТЬ</button>
+            <button id="mmBtn" class="mobile-btn" style="display: block; background: transparent; border: 1px solid var(--neon); color: var(--neon); padding: 10px 20px; font-family: 'JetBrains Mono', monospace; font-size: 12px; cursor: pointer;">ПРОВЕРИТЬ</button>
         `;
         window.moveFocus = (el) => { if (el.value.length === 1 && el.nextElementSibling) el.nextElementSibling.focus(); };
 
@@ -233,7 +197,6 @@
             log.scrollTop = log.scrollHeight;
 
             if (exact === 5) {
-                if (hint) hint.style.display = 'none';
                 localStorage.setItem('s9_edr_gateway_passed', 'true');
                 localStorage.removeItem('s9_edr_gateway_trigger');
                 content.innerHTML = `<h2 style="color: #00ff44;">ШЛЮЗ РАЗБЛОКИРОВАН</h2><p>Возврат на Карту...</p>`;
@@ -245,16 +208,11 @@
         };
 
         document.getElementById('mmBtn').onclick = checkCode;
-        
         document.querySelectorAll('#mmInputs input').forEach((inp, idx, arr) => {
             inp.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
-                    if (idx < 4 && inp.value.length === 1) {
-                        arr[idx+1].focus();
-                    } else {
-                        checkCode();
-                    }
+                    if (idx < 4 && inp.value.length === 1) arr[idx+1].focus(); else checkCode();
                 }
             });
         });
@@ -263,9 +221,12 @@
     }
 
     // ==========================================
-    // РАБОЧИЙ РЕЖИМ (ЩИТ)
+    // РАБОЧИЙ РЕЖИМ (ЩИТ) - Возвращаем рамку
     // ==========================================
     function initShieldVisual(isPartial = false, moduleName = '') {
+        if (terminalWrapper) terminalWrapper.style.display = 'flex';
+        if (content) content.style.display = 'flex';
+
         content.innerHTML = `
             <div class="main-layout">
                 <div class="shield-wrapper">
@@ -325,7 +286,7 @@
             if (logBox.children.length > 35) logBox.removeChild(logBox.firstChild);
         }
 
-        for(let i=0; i<20; i++) addLog("> SYS_MONITOR: BACKGROUND OK");
+        for(let i=0; i<25; i++) addLog("> SYS_MONITOR: BACKGROUND OK");
 
         window.edrScanInterval = setInterval(() => {
             const idx = Math.floor(Math.random() * cells.length);
