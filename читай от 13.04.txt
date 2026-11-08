@@ -1,0 +1,136 @@
+Это происходит потому, что у нас сейчас «лечение» станции завязано на одну команду. Как только ты вводишь координаты в терминале, срабатывает triggerSignalLoss(false), который отключает всю аварию целиком.
+Чтобы реактор стал обязательным этапом, нам нужно разделить внешнюю проблему (орбита) и внутреннюю (код ядра).
+Вот как мы это перенастроим:
+1. Изменяем логику "лечения" в tools.html
+Найди в tools.html место, где ты вводишь код 142.0458.13.70. Нам нужно, чтобы он не выключал аварийный режим полностью, а только стабилизировал орбиту, оставляя станцию «красной», пока не починят реактор.
+Замени логику внутри if (rawVal === "142.0458.13.70") на эту:
+javascript
+if (rawVal === "142.0458.13.70") {
+    // 1. Ставим флаг, что орбита в норме
+    localStorage.setItem('s9_orbit_stabilized', 'active');
+    
+    // 2. Выводим сообщение в терминале
+    const label = document.getElementById('statusLabel');
+    if (label) {
+        label.innerText = "ОРБИТА СТАБИЛЬНА. ВНИМАНИЕ: ОШИБКА ЯДРА РЕАКТОРА!";
+        label.style.color = "#ffaa00"; // Оранжевый (предупреждение)
+    }
+
+    // 3. МЫ НЕ ВЫЗЫВАЕМ triggerSignalLoss(false) здесь!
+    // Станция остается красной, пока пользователь не пойдет в реактор.
+    
+    setTimeout(() => {
+        // Просто возвращаем надпись "соедините точки", не перезагружая страницу
+        if(label) { label.innerText = "соедините точки"; label.style.color = ""; }
+    }, 4000);
+}
+Используйте код с осторожностью.
+2. Обновляем js/mapEngine.js
+Теперь научим карту подсвечивать реактор, если орбита уже исправлена, а ядро — еще нет.
+javascript
+// Внутри цикла создания узлов в mapEngine.js
+const isEmergency = localStorage.getItem('s9_emergency_flag') === 'active';
+const isOrbitFixed = localStorage.getItem('s9_orbit_stabilized') === 'active';
+const isReactorFixed = localStorage.getItem('s9_reactor_fixed') === 'true';
+
+if (s.id === 'РЕАКТОР') {
+    // Реактор активен, если идет авария и он еще не починен окончательно
+    if (isEmergency && !isReactorFixed) {
+        node.classList.add('emergency-active');
+        node.classList.add('unlocked');
+        node.href = 'reactor.html';
+    }
+}
+Используйте код с осторожностью.
+3. Финальный аккорд в js/reactorEngine.js
+Теперь, когда ты вводишь «БЭКАП» в реакторе, мы завершаем всё приключение и выводим твое сообщение в чат.
+Добавь это в блок проверки слова «БЭКАП»:
+javascript
+if (val === "БЭКАП") {
+    localStorage.setItem('s9_reactor_fixed', 'true');
+    localStorage.removeItem('s9_orbit_stabilized'); // Сбрасываем временный флаг орбиты
+    
+    // ВЫКЛЮЧАЕМ АВАРИЮ ПОЛНОСТЬЮ
+    if (typeof window.triggerSignalLoss === 'function') {
+        window.triggerSignalLoss(false); 
+    }
+
+    // ВЫВОД СООБЩЕНИЯ В ЧАТ (через твой движок чата)
+    const aField = document.getElementById('answer-field');
+    const qField = document.getElementById('quest-field');
+    if (aField && qField) {
+        qField.innerText = "> СИСТЕМНОЕ УВЕДОМЛЕНИЕ";
+        aField.innerText = "ЯДРО СТАБИЛИЗИРОВАНА. БЭКАП-ОБРАЗ СОЗДАН И СОХРАНЕН В СЕКТОРЕ 0x01";
+        aField.style.color = "#00ff44";
+    }
+
+    setTimeout(() => {
+        window.location.href = "index.html";
+    }, 4000);
+}
+Используйте код с осторожностью.
+Как теперь выглядит прохождение:
+Вспышка: Всё красное. Карта показывает, что в реактор нельзя (или он заблокирован), пока не стабилизируешь орбиту.
+Терминал: Вводишь координаты. Станция всё еще красная, но в чате или на карте узел Реактора становится ярко-красным и доступным.
+Реактор: Идешь туда, вводишь «БЭКАП». Станция синеет, в чате победное сообщение, тебя возвращает в Рубку.
+Теперь логика стала более "игровой"? Поле ввода в реакторе появилось?
+Следующий шаг: Настроим автоматику? Чтобы после этого первого раза реактор сам «чистился» при вспышках. [INDEX: 1]
+
+
+
+
+if (rawVal === "142.0458.13.70") { // 1. Ставим флаг, что орбита в норме localStorage.setItem('s9_orbit_stabilized', 'active'); // 2. Выводим сообщение в терминале const label = document.getElementById('statusLabel'); if (label) { label.innerText = "ОРБИТА СТАБИЛЬНА. ВНИМАНИЕ: ОШИБКА ЯДРА РЕАКТОРА!"; label.style.color = "#ffaa00"; // Оранжевый (предупреждение) } // 3. МЫ НЕ ВЫЗЫВАЕМ triggerSignalLoss(false) здесь! // Станция остается красной, пока пользователь не пойдет в реактор. setTimeout(() => { // Просто возвращаем надпись "соедините точки", не перезагружая страницу if(label) { label.innerText = "соедините точки"; label.style.color = ""; } }, 4000); }
+// 1. ПРОВЕРКА КОДА СПАСЕНИЯif (rawVal === "142") { // Убедись, что код полныйconsole.log("ВЕКТОР ПРИНЯТ");localStorage.removeItem('s9_emergency_flag');document.body.classList.remove('emergency-mode');document.body.classList.remove('mode-error');document.documentElement.style.setProperty('--neon', '#00f2ff');// --- ИСПРАВЛЕНИЕ ТУТ ---// Мы НЕ вызываем resolveEmergency сразу, так как в ней сидит reload().// Вместо этого мы вызываем её через 4 секунды (одновременно с исчезновением надписи)setTimeout(() => {if (typeof window.resolveEmergency === 'function') {window.resolveEmergency(); }}, 4000); // ВЫВОДИМ ЗЕЛЕНОЕ СООБЩЕНИЕ (твой код)const label = document.getElementById('statusLabel'); if (label) { const genUI = document.getElementById('gen-ui'); const readUI = document.getElementById('read-ui'); const isReadMode = document.getElementById('mode-switch').checked; // 1. Показываем статус, скрываем инпут genUI.classList.add('hidden'); readUI.classList.remove('hidden'); label.innerText = "ВЕКТОР ПРИНЯТ: ОРБИТА СТАБИЛИЗИРОВАНА"; label.style.color = "#00ff44"; label.style.textShadow = "0 0 15px #00ff44"; // 2. Через 4 секунды возвращаем всё как было до ввода кода setTimeout(() => { label.innerText = "соедините точки"; label.style.color = ""; label.style.textShadow = ""; // Если мы НЕ в режиме рисования (тумблер слева), // то возвращаем инпут и прячем статус обратно if (!isReadMode) { genUI.classList.remove('hidden'); readUI.classList.add('hidden'); } }, 4000); }куда это вставлять?
+Для того чтобы разделить квесты (Орбита и Реактор), тебе нужно заменить старый блок кода в файле tools.html.
+Найди в скрипте терминала условие if (rawVal === "142") (или 142.0458.13.70) и полностью замени его содержимое на этот вариант.
+Исправленный блок для tools.html:
+javascript
+// 1. ПРОВЕРКА КОДА СПАСЕНИЯ (ОРБИТА)
+if (rawVal === "142.0458.13.70") { 
+    console.log("ВЕКТОР ПРИНЯТ: ОРБИТА СТАБИЛИЗИРОВАНА");
+
+    // ВАЖНО: Мы НЕ удаляем s9_emergency_flag здесь.
+    // Мы только помечаем, что первая часть квеста выполнена.
+    localStorage.setItem('s9_orbit_stabilized', 'active');
+
+    const label = document.getElementById('statusLabel');
+    if (label) {
+        const genUI = document.getElementById('gen-ui');
+        const readUI = document.getElementById('read-ui');
+        const isReadMode = document.getElementById('mode-switch').checked;
+
+        // Показываем статус, скрываем инпут
+        if (genUI) genUI.classList.add('hidden');
+        if (readUI) readUI.classList.remove('hidden');
+        
+        // НОВЫЙ ТЕКСТ: предупреждаем о реакторе
+        label.innerText = "ОРБИТА СТАБИЛЬНА. ВНИМАНИЕ: ОШИБКА ЯДРА РЕАКТОРА!";
+        label.style.color = "#ffaa00"; // Оранжевый цвет тревоги
+        label.style.textShadow = "0 0 15px #ffaa00";
+        
+        // Через 4 секунды возвращаем интерфейс в норму, но станция остается КРАСНОЙ
+        setTimeout(() => {
+            label.innerText = "соедините точки";
+            label.style.color = "";
+            label.style.textShadow = "";
+
+            if (!isReadMode && genUI && readUI) {
+                genUI.classList.remove('hidden');
+                readUI.classList.add('hidden');
+            }
+            
+            // Мы НЕ делаем reload(), чтобы пользователь мог уйти на карту сам
+        }, 4000);
+    }
+
+    e.target.value = ""; // Очищаем поле ввода
+    return;
+}
+Используйте код с осторожностью.
+Почему это правильно:
+Удалены команды деактивации ЧС: Теперь строки localStorage.removeItem('s9_emergency_flag') и document.body.classList.remove('emergency-mode') стерты из этого блока. Это значит, что после ввода кода в терминале станция не посинеет.
+Флаг s9_orbit_stabilized: Эта запись в памяти даст понять карте (map.html), что теперь можно пустить тебя в Реактор.
+Сообщение: Теперь терминал прямо говорит игроку: «Орбита в норме, но теперь иди чини реактор».
+Что нужно сделать следующим шагом:
+Тебе нужно зайти в js/mapEngine.js и сделать так, чтобы узел Реактора становился доступным (unlocked) только когда localStorage.getItem('s9_orbit_stabilized') === 'active'.
+Проверим теперь в терминале? При вводе кода надпись должна стать оранжевой, а станция должна остаться красной. [INDEX: 1]

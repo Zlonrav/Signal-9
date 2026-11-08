@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <title>СИГНАЛ-9 // ОШИБКА ДОСТУПА</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="style-tools.css">
+    <link rel="stylesheet" type="text/css" href="style-chat-terminal.css">
+    <link rel="stylesheet" href="style-terminal.css">
+    <style>
+        /* Специфичные стили для 404 */
+        body.tools-page {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #010306;
+            overflow: hidden;
+        }
+
+        /* Контейнер галактики */
+        .galaxy-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+
+        /* Ядро галактики */
+        .galaxy-core {
+            width: 20px;
+            height: 20px;
+            background: var(--neon);
+            border-radius: 50%;
+            box-shadow: 0 0 40px var(--neon), 0 0 80px var(--neon);
+            z-index: 10;
+        }
+
+        /* Спиральные рукава */
+        .galaxy-arm {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px dashed rgba(0, 242, 255, 0.2);
+            border-top-color: var(--neon);
+            animation: spin 10s linear infinite;
+        }
+        
+        .galaxy-arm:nth-child(2) {
+            width: 70%;
+            height: 70%;
+            border: 1px solid rgba(0, 242, 255, 0.1);
+            border-bottom-color: var(--neon);
+            animation: spin-reverse 7s linear infinite;
+        }
+
+        /* Орбитальная станция (наша точка) */
+        .station-dot {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 15px #fff;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: orbit 4s linear infinite;
+            transform-origin: 0 200px; /* Центр круга */
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes spin-reverse { 100% { transform: rotate(-360deg); } }
+        @keyframes orbit {
+            0% { transform: translateX(-50%) rotate(0deg); }
+            100% { transform: translateX(-50%) rotate(360deg); }
+        }
+
+        /* Текст ошибки */
+        .error-code {
+            font-family: 'Michroma', sans-serif;
+            font-size: 60px;
+            color: #ff3333;
+            text-shadow: 0 0 20px #ff3333, 0 0 50px rgba(255, 51, 51, 0.5);
+            margin: 0;
+            letter-spacing: 10px;
+            animation: glitch 2s infinite;
+        }
+
+        .error-message {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            color: #ff3333;
+            letter-spacing: 3px;
+            margin-top: 10px;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .error-subtext {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: #888;
+            margin-top: 20px;
+            letter-spacing: 2px;
+            text-align: center;
+        }
+
+        /* Кнопка возврата */
+        .return-btn {
+            margin-top: 40px;
+            padding: 10px 20px;
+            background: transparent;
+            border: 1px solid var(--neon);
+            color: var(--neon);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: 0.3s;
+            text-decoration: none;
+        }
+
+        .return-btn:hover {
+            background: rgba(0, 242, 255, 0.1);
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.3);
+        }
+
+        @keyframes glitch {
+            0%, 100% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(2px, -2px); }
+            60% { transform: translate(-1px, 1px); }
+        }
+    </style>
+</head>
+<body class="tools-page">
+
+    <!-- 1. СИСТЕМНЫЙ ЖУРНАЛ (Скрыт на странице ошибки, чтобы не мешать) -->
+    <div class="chat-system" style="display: none;"></div>
+
+    <!-- 2. ФОНОВЫЕ СЛОИ -->
+    <canvas id="starfield"></canvas>
+    <div id="scanner-line"></div>
+    <div id="overlay-noise"></div>
+
+    <!-- 3. КОНТЕНТ ОШИБКИ -->
+    <div class="galaxy-container">
+        <div class="galaxy-core"></div>
+        <div class="galaxy-arm"></div>
+        <div class="galaxy-arm"></div>
+        <div class="station-dot"></div>
+    </div>
+
+    <div class="error-code">404</div>
+    <div class="error-message">
+        ДОСТУП ЗАПРЕЩЕН<br>
+        МОДУЛЬ НЕ ИНИЦИАЛИЗИРОВАН
+    </div>
+    <div class="error-subtext">
+        СЕКТОР НЕ ОТМЕЧЕН НА НАВИГАЦИОННОЙ КАРТЕ.<br>
+        ВОЗМОЖНО, ТРЕБУЕТСЯ АВТОРИЗАЦИЯ ИЛИ СКАНИРОВАНИЕ.
+    </div>
+
+    <a href="index.html" class="return-btn">ВЕРНУТЬСЯ В ХАБ</a>
+
+    <!-- 4. ПОДКЛЮЧЕНИЕ РЕСУРСОВ -->
+    <script src="js/loader.js"></script>
+</body>
+</html>

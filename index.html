@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <script src="js/auth.js"></script> 
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <title>СТАНЦИЯ "СИГНАЛ-9"</title>
+    
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="style-chat-terminal.css">
+</head>
+<body>
+
+    <!-- ТЕЛЕМЕТРИЯ СТАНЦИИ -->
+    <div class="telemetry-panel">
+        <div class="telemetry-row">
+            <svg width="25" height="25" viewBox="0 0 100 100" style="stroke: var(--neon); fill: none; margin-right: 10px;">
+                <path d="M10 10 L30 10 M10 10 L10 30 M90 90 L70 90 M90 90 L90 70 M50 10 L50 90 M10 50 L90 50" stroke-width="4"></path>
+            </svg>
+            <span id="timer">ПОИСК СИГНАЛА: 128s</span>
+        </div>
+        <div class="telemetry-row">
+            <span id="vector-label">ВЕКТОР:</span> <span id="station-coords">149.6000.00</span>
+        </div>
+        <div class="telemetry-row" id="orbit-status">СТАТУС: ГЕОСТАЦИОНАР</div>
+    </div>
+
+    <!-- СИСТЕМНЫЙ ЖУРНАЛ -->
+    <div class="chat-system">
+        <div id="quest-field" class="question" onclick="handleChatClick()"></div>
+        <div id="answer-field" class="answer-field"></div>
+    </div>
+    
+    <!-- ФОНОВЫЕ СЛОИ -->
+    <canvas id="starfield"></canvas>
+    <div id="scanner-line"></div>
+    <div id="overlay-noise"></div>
+
+    <!-- НИЖНЯЯ ПАНЕЛЬ -->
+    <div class="audio-control-fixed" id="audio-toggle">
+        <span id="audio-status-icon">○</span>
+        <span id="audio-status">audio_sensors: false</span> 
+    </div>
+    
+    <!-- КНОПКА ВЫЗОВА КОНСОЛИ -->
+    <button id="console-toggle-btn" style="
+        position: fixed; bottom: 25px; right: 25px; z-index: 1000; 
+        background: rgba(0, 20, 30, 0.5); border: 1px solid rgba(0, 242, 255, 0.3); 
+        color: var(--neon); padding: 8px 12px; font-family: monospace; font-size: 14px; 
+        cursor: pointer; transition: 0.3s;
+    " onmouseover="this.style.background='rgba(0, 242, 255, 0.1)'" onmouseout="this.style.background='rgba(0, 20, 30, 0.5)'">
+        &gt;_
+    </button>
+
+    <!-- ОСНОВНОЙ КОНТЕНТ (ГЛИФЫ) -->
+    <div id="display">
+        <div class="glyph-row" id="currentPhrase"></div>
+    </div>
+
+    <!-- СТАТУС-БАР ПРИЕМА -->
+    <div id="connection-status">
+        <div id="status-meta" class="status-meta">УРОВЕНЬ СИГНАЛА: 98% | ПРИЁМ: АКТИВНЫЙ</div>
+        <div class="status-main">
+            <span id="status-icon">●</span>
+            <span id="status-text">ИНИЦИАЛИЗАЦИЯ</span><span id="status-dots"></span>
+        </div>
+        <div class="status-progress-container">
+            <div id="status-progress-bar"></div>
+        </div>
+        <div id="status-footer" class="status-footer">DECODING PACKET: 0x4F2A / SECURE CHANNEL 07</div>
+    </div>
+
+    <!-- 1. Подключаем общие ресурсы (включая новые движки журнала и консоли) -->
+    <script src="js/loader.js"></script>
+    
+    <!-- 2. Подключаем специфичный скрипт для Хаба (отрисовка глифов и таймеры) -->
+    <script src="js/core.js"></script>
+
+</body>
+</html>

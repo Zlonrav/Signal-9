@@ -1,0 +1,106 @@
+/* style-terminal.css */
+
+/* Затемняющий фон */
+#tilde-overlay-bg {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 999998;
+}
+#tilde-overlay-bg.active { display: block; }
+
+/* Сама консоль */
+#tilde-console {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    
+    width: 800px;
+    max-width: 90vw;
+    height: 450px; /* ФИКСИРОВАННАЯ ВЫСОТА КОНСОЛИ */
+    
+    background: #020508; 
+    border: 1px solid var(--neon);
+    box-shadow: 0 0 50px rgba(0, 242, 255, 0.2);
+    z-index: 2147483647 !important; 
+    
+    font-family: 'JetBrains Mono', monospace;
+    flex-direction: column;
+    padding: 25px;
+}
+#tilde-console.active { display: flex; }
+
+.console-header {
+    color: var(--neon);
+    font-size: 12px;
+    letter-spacing: 2px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid rgba(0, 242, 255, 0.3);
+    padding-bottom: 10px;
+    text-transform: uppercase;
+}
+
+.console-output {
+    color: #ccc;
+    font-size: 11px;
+    margin-bottom: 15px;
+    line-height: 1.6;
+    
+    /* РАСТЯГИВАЕМ БЛОК ВЫВОДА НА ВСЁ ДОСТУПНОЕ МЕСТО */
+    flex-grow: 1; 
+    height: auto;
+    overflow-y: auto;
+}
+
+/* СТИЛИЗАЦИЯ СКРОЛЛБАРА */
+.console-output::-webkit-scrollbar { width: 4px; }
+.console-output::-webkit-scrollbar-track { background: #000; }
+.console-output::-webkit-scrollbar-thumb {
+    background: var(--neon);
+    box-shadow: 0 0 10px var(--neon);
+    border-radius: 2px;
+}
+
+.console-output .sys { color: var(--neon); font-weight: bold; }
+.console-output .err { color: #ff3333; }
+.console-output .ok { color: #00ff44; }
+.console-output .warn { color: #ffaa00; }
+
+.console-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: auto; /* Прижимаем к низу */
+}
+.console-input-wrapper span {
+    color: var(--neon);
+    font-size: 14px;
+    font-weight: bold;
+}
+
+#terminal-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(0, 242, 255, 0.5);
+    color: var(--neon);
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+    padding: 5px 0;
+    text-transform: uppercase;
+}
+#terminal-input:focus {
+    border-bottom-color: var(--neon);
+    box-shadow: 0 5px 10px -5px var(--neon);
+}
+.console-hint {
+    margin-top: 15px;
+    font-size: 9px;
+    color: #555;
+    display: flex;
+    justify-content: space-between;
+}
