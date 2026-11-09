@@ -627,6 +627,7 @@ function render(dt) {
     gl.uniformMatrix4fv(gl.getUniformLocation(progJupiter, 'uModel'), false, jupiterModel);
     gl.uniform3f(gl.getUniformLocation(progJupiter, 'uCamPos'), cx, cy, cz);
     gl.uniform3f(gl.getUniformLocation(progJupiter, 'uSunDir'), 1.0, 0.2, -0.5); 
+    gl.uniform1f(gl.getUniformLocation(progJupiter, 'uTime'), simTime);
     
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, jupiterTex);
     gl.uniform1i(gl.getUniformLocation(progJupiter, 'uMap'), 0);
