@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<!--
+================================================================================
+  СИГНАЛ-9 // ОБЪЕКТ JUPITER // V1.0 SCIENTIFIC
+================================================================================
+  * Без спутников.
+  * Текстура NASA с Большим Красным Пятном.
+  * Идеальная камера (жесткая фиксация, без дёрганий).
+  * Пауза, адаптивное разрешение, HUD "СИГНАЛ-9".
+================================================================================
+-->
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>СИГНАЛ-9 // ОБЪЕКТ JUPITER</title>
+<style>
+    :root{ --cyan:#00f2ff; --amber:#ffaa00; --danger:#ff3333; --jupiter:#d4a373; }
+    *{box-sizing:border-box;}
+    body, html {
+        margin: 0; padding: 0; width: 100%; height: 100%;
+        background-color: #010204; overflow: hidden;
+        font-family: 'JetBrains Mono','Consolas','Courier New',monospace;
+        color: var(--cyan); cursor: grab;
+        -webkit-font-smoothing: antialiased; user-select: none;
+        touch-action: none; 
+    }
+    body:active { cursor: grabbing; }
+    #canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 1; }
+    
+    #loading {
+        position: absolute; inset: 0; z-index: 999; background: #010204;
+        display: flex; align-items: center; justify-content: center;
+        flex-direction: column; gap: 20px;
+        font-size: 12px; letter-spacing: 4px; color: var(--cyan); text-transform: uppercase;
+    }
+    .loader-bar {
+        width: 200px; height: 2px; background: rgba(0,242,255,0.2); position: relative; overflow: hidden;
+    }
+    .loader-bar::after {
+        content: ''; position: absolute; top: 0; left: 0; height: 100%; width: 50%;
+        background: var(--cyan); box-shadow: 0 0 10px var(--cyan);
+        animation: load 1.5s ease-in-out infinite;
+    }
+    @keyframes load { 0%{ left: -50%; } 100%{ left: 100%; } }
+
+    .scanner-grid {
+        position: absolute; inset: 0; z-index: 2; pointer-events: none;
+        background-image:
+            linear-gradient(rgba(0,242,255,0.02) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0,242,255,0.02) 1px, transparent 1px);
+        background-size: 50px 50px;
+        mask-image: radial-gradient(circle at center, transparent 35%, black 95%);
+        -webkit-mask-image: radial-gradient(circle at center, transparent 35%, black 95%);
+    }
+    .vignette {
+        position:absolute; inset:0; z-index:3; pointer-events:none;
+        background: radial-gradient(ellipse at center, rgba(0,0,0,0) 42%, rgba(0,0,0,0.92) 100%);
+    }
+    .scanlines {
+        position:absolute; inset:0; z-index:5; pointer-events:none; opacity:.32;
+        background: repeating-linear-gradient(0deg, rgba(0,0,0,.55) 0px, rgba(0,0,0,.55) 1px, transparent 1px, transparent 3px);
+    }
+    .corner {
+        position:absolute; width:44px; height:44px; z-index:4; pointer-events:none;
+        border:1px solid rgba(0,242,255,.35); box-shadow: 0 0 12px rgba(0,242,255,.12);
+    }
+    .corner.tl{ top:22px; left:22px; border-right:0; border-bottom:0; }
+    .corner.tr{ top:22px; right:22px; border-left:0;  border-bottom:0; }
+    .corner.bl{ bottom:22px; left:22px; border-right:0; border-top:0; }
+    .corner.br{ bottom:22px; right:22px; border-left:0;  border-top:0; }
+    
+    .hud-overlay {
+        position: absolute; inset: 0; z-index: 4; pointer-events: none;
+        padding: 46px 62px; display: flex; flex-direction: column; justify-content: space-between;
+    }
+    .hud-top {
+        display: flex; justify-content: space-between; align-items: flex-start;
+        text-transform: uppercase; letter-spacing: 3px; font-size: 12px;
+        text-shadow: 0 0 10px rgba(0,242,255,.8); line-height: 1.9;
+    }
+    .hud-top small { display:block; letter-spacing:2px; font-size:10px; color:#3d6b73; text-shadow:none; margin-top:6px; }
+    
+    .hud-btn {
+        position: absolute; top: 50px; left: 50%; transform: translateX(-50%);
+        z-index: 100; pointer-events: auto; cursor: pointer;
+        background: rgba(0, 0, 0, 0.8); border: 1px solid var(--cyan);
+        color: var(--cyan); font-family: inherit; font-size: 11px; letter-spacing: 2px;
+        padding: 10px 20px; text-transform: uppercase;
+        box-shadow: 0 0 15px rgba(0,242,255,.3); transition: all 0.2s ease;
+    }
+    .hud-btn:hover { background: rgba(0, 242, 255, 0.15); box-shadow: 0 0 20px rgba(0,242,255,.6); }
+    .hud-btn.active { color: var(--danger); border-color: var(--danger); box-shadow: 0 0 20px rgba(255,51,51,.5); }
+
+    .data-panel {
+        position: absolute; right: 62px; top: 50%; transform: translateY(-50%);
+        width: 268px; z-index: 4; font-size: 10px; line-height: 1.7; pointer-events:none;
+    }
+    .panel-title {
+        font-size:9px; letter-spacing:4px; color:#3d6b73; text-transform:uppercase;
+        margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid rgba(0,242,255,.18);
+        display:flex; align-items:center; gap:8px;
+    }
+    .panel-title::before { content:''; width:6px; height:6px; background:var(--jupiter); box-shadow:0 0 10px var(--jupiter); animation: pulse 1.6s infinite; }
+    .data-row { display: flex; justify-content: space-between; align-items:center; border-bottom: 1px solid rgba(0,242,255,0.08); padding: 6px 0; gap:10px; }
+    .data-label { color: #6b8a90; letter-spacing:.6px; }
+    .data-val { color: var(--amber); text-shadow: 0 0 6px rgba(255,170,0,.85); font-weight:bold; white-space:nowrap; font-variant-numeric: tabular-nums; }
+    
+    .hud-bottom {
+        position:absolute; left:62px; right:62px; bottom:46px; z-index:4;
+        display:flex; justify-content:space-between; gap:24px; font-size:10px; letter-spacing:2px;
+        text-transform:uppercase; color:#3d6b73; pointer-events:none;
+    }
+    .hud-bottom .val { color:var(--cyan); text-shadow:0 0 8px rgba(0,242,255,.8); font-variant-numeric: tabular-nums; }
+
+    .hint {
+        position:absolute; left:50%; bottom:14px; transform:translateX(-50%);
+        z-index:4; pointer-events:none; font-size:9px; letter-spacing:2px;
+        text-transform:uppercase; color:#2a4d54; white-space:nowrap;
+    }
+    .hint b { color:#4d8b96; font-weight:normal; }
+    @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.45;} }
+    
+    @media (max-width: 1024px){
+        .data-panel{ right:20px; width:200px; font-size:9px; }
+        .hud-overlay{ padding:28px; font-size:10px; }
+        .hud-bottom{ left:28px; right:28px; bottom:28px; font-size:9px; }
+        .corner{ width:28px; height:28px; }
+        .hint{ display:none; }
+        .hud-btn { top: 20px; font-size: 9px; padding: 8px 14px; }
+    }
+</style>
+</head>
+<body>
+
+<div id="loading">
+    <div>ИНИЦИАЛИЗАЦИЯ СПЕКТРОМЕТРА...</div>
+    <div class="loader-bar"></div>
+    <div style="font-size: 9px; color: #3d6b73; margin-top: 10px;">ЗАГРУЗКА КАРТ NASA</div>
+</div>
+
+<canvas id="canvas"></canvas>
+<div class="scanner-grid"></div>
+<div class="vignette"></div>
+<div class="scanlines"></div>
+<div class="corner tl"></div>
+<div class="corner tr"></div>
+<div class="corner bl"></div>
+<div class="corner br"></div>
+
+<button id="pauseBtn" class="hud-btn">❚❚ ПАУЗА (ПРОБЕЛ)</button>
+
+<div class="hud-overlay">
+    <div class="hud-top">
+        <div>
+            СПЕКТРАЛЬНЫЙ АНАЛИЗ // СЕКТОР 05<br>
+            <span style="color: var(--jupiter); text-shadow: 0 0 4px var(--jupiter), 0 0 14px rgba(212,163,115,.65); font-weight: bold;">ОБНАРУЖЕН ГАЗОВЫЙ ГИГАНТ</span>
+            <small>РЕЖИМ: НАУЧНЫЙ (РЕАЛЬНЫЙ МАСШТАБ)</small>
+        </div>
+        <div style="text-align: right;">
+            ОБЪЕКТ: JUPITER<br>
+            КЛАСС: GAS GIANT
+            <small>ЛОКАЦИЯ: 5.2 А.Е. ОТ СОЛНЦА</small>
+        </div>
+    </div>
+</div>
+
+<div class="data-panel">
+    <div class="panel-title">ТЕЛЕМЕТРИЯ</div>
+    <div class="data-row"><span class="data-label">ДИАМЕТР:</span> <span class="data-val">139,820 км</span></div>
+    <div class="data-row"><span class="data-label">МАССА:</span> <span class="data-val">1.9 × 10²⁷ кг</span></div>
+    <div class="data-row"><span class="data-label">ПЕРИОД ВРАЩ.:</span> <span class="data-val">9ч 55м</span></div>
+    <div class="data-row"><span class="data-label">АТМОСФЕРА:</span> <span class="data-val">H₂ / He</span></div>
+    <div class="data-row"><span class="data-label">БОЛЬШОЕ ПЯТНО:</span> <span class="data-val">~ 16,000 км</span></div>
+    <div class="data-row"><span class="data-label">ТЕМП. ОБЛАКОВ:</span> <span class="data-val">-145°C</span></div>
+    <div class="data-row"><span class="data-label">ДИСТАНЦИЯ:</span> <span class="data-val" id="dist">3.0 R</span></div>
+</div>
+
+<div class="hud-bottom">
+    <div>СЕАНС: <span class="val" id="session">00:00:00</span></div>
+    <div>FPS: <span class="val" id="fps">--</span></div>
+    <div>РАЗРЕШЕНИЕ: <span class="val" id="res">—</span></div>
+</div>
+
+<div class="hint"><b>ПЕРЕТАЩИТЬ</b> — ОРБИТА &nbsp;·&nbsp; <b>КОЛЕСО</b> — МАСШТАБ &nbsp;·&nbsp; <b>ПРОБЕЛ</b> — СТОП-КАДР</div>
+
+<script>
+(function () {
+'use strict';
+
+const canvas = document.getElementById('canvas');
+const gl = canvas.getContext('webgl', {
+    antialias: true, alpha: false, depth: true, stencil: false,
+    powerPreference: 'high-performance', preserveDrawingBuffer: false
+});
+if (!gl) return;
+
+// ============ МАТЕМАТИКА ============
+const mat4 = {
+    create: () => new Float32Array(16),
+    perspective: (out, fovy, aspect, near, far) => {
+        const f = 1.0 / Math.tan(fovy / 2);
+        out[0]=f/aspect; out[1]=0; out[2]=0; out[3]=0;
+        out[4]=0; out[5]=f; out[6]=0; out[7]=0;
+        out[8]=0; out[9]=0; out[10]=(far+near)/(near-far); out[11]=-1;
+        out[12]=0; out[13]=0; out[14]=(2*far*near)/(near-far); out[15]=0;
+        return out;
+    },
+    lookAt: (out, eye, center, up) => {
+        let z0 = eye[0] - center[0], z1 = eye[1] - center[1], z2 = eye[2] - center[2];
+        let len = 1 / Math.hypot(z0, z1, z2);
+        z0 *= len; z1 *= len; z2 *= len;
+        let x0 = up[1] * z2 - up[2] * z1, x1 = up[2] * z0 - up[0] * z2, x2 = up[0] * z1 - up[1] * z0;
+        len = Math.hypot(x0, x1, x2);
+        if (len === 0) { x0 = 0; x1 = 0; x2 = 0; } else { len = 1 / len; x0 *= len; x1 *= len; x2 *= len; }
+        let y0 = z1 * x2 - z2 * x1, y1 = z2 * x0 - z0 * x2, y2 = z0 * x1 - z1 * x0;
+        out[0] = x0; out[1] = y0; out[2] = z0; out[3] = 0;
+        out[4] = x1; out[5] = y1; out[6] = z1; out[7] = 0;
+        out[8] = x2; out[9] = y2; out[10] = z2; out[11] = 0;
+        out[12] = -(x0 * eye[0] + x1 * eye[1] + x2 * eye[2]);
+        out[13] = -(y0 * eye[0] + y1 * eye[1] + y2 * eye[2]);
+        out[14] = -(z0 * eye[0] + z1 * eye[1] + z2 * eye[2]);
+        out[15] = 1;
+        return out;
+    },
+    rotateY: (out, rad) => {
+        const c = Math.cos(rad), s = Math.sin(rad);
+        out[0]=c; out[1]=0; out[2]=-s; out[3]=0;
+        out[4]=0; out[5]=1; out[6]=0; out[7]=0;
+        out[8]=s; out[9]=0; out[10]=c; out[11]=0;
+        out[12]=0; out[13]=0; out[14]=0; out[15]=1;
+        return out;
+    },
+    rotateZ: (out, rad) => {
+        const c = Math.cos(rad), s = Math.sin(rad);
+        out[0]=c; out[1]=s; out[2]=0; out[3]=0;
+        out[4]=-s; out[5]=c; out[6]=0; out[7]=0;
+        out[8]=0; out[9]=0; out[10]=1; out[11]=0;
+        out[12]=0; out[13]=0; out[14]=0; out[15]=1;
+        return out;
+    }
+};
+
+// ============ ГЕОМЕТРИЯ ============
+function createSphere(radius, latBands, longBands) {
+    const positions = [], normals = [], uvs = [], indices = [];
+    for (let i = 0; i <= latBands; i++) {
+        const theta = (i * Math.PI) / latBands;
+        const sinTheta = Math.sin(theta);
+        const cosTheta = Math.cos(theta);
+        for (let j = 0; j <= longBands; j++) {
+            const phi = (j * 2 * Math.PI) / longBands;
+            const sinPhi = Math.sin(phi);
+            const cosPhi = Math.cos(phi);
+            const x = cosPhi * sinTheta, y = cosTheta, z = sinPhi * sinTheta;
+            positions.push(radius * x, radius * y, radius * z);
+            normals.push(x, y, z);
+            uvs.push(j / longBands, i / latBands); // Северный полюс наверху
+        }
+    }
+    for (let i = 0; i < latBands; i++) {
+        for (let j = 0; j < longBands; j++) {
+            const first = i * (longBands + 1) + j;
+            const second = first + longBands + 1;
+            indices.push(first, second, first + 1);
+            indices.push(second, second + 1, first + 1);
+        }
+    }
+    return { positions: new Float32Array(positions), normals: new Float32Array(normals), uvs: new Float32Array(uvs), indices: new Uint16Array(indices) };
+}
+
+const jupiterGeo = createSphere(1.0, 128, 128);
+const skyGeo = new Float32Array([-1,-1, 3,-1, -1,3]);
+
+// ============ ШЕЙДЕРЫ ============
+const vertShader = `
+attribute vec3 aPos, aNormal;
+attribute vec2 aUv;
+uniform mat4 uProj, uView, uModel;
+varying vec2 vUv;
+varying vec3 vNormal, vWorldPos;
+void main() {
+    vec4 worldPos = uModel * vec4(aPos, 1.0);
+    vWorldPos = worldPos.xyz;
+    vNormal = mat3(uModel) * aNormal;
+    vUv = aUv;
+    gl_Position = uProj * uView * worldPos;
+}`;
+
+const jupiterFrag = `
+precision highp float;
+uniform sampler2D uMap;
+uniform vec3 uSunDir, uCamPos;
+varying vec2 vUv;
+varying vec3 vNormal, vWorldPos;
+
+void main() {
+    vec3 N = normalize(vNormal);
+    vec3 V = normalize(uCamPos - vWorldPos);
+    vec3 L = normalize(uSunDir);
+    float NdotL = dot(N, L);
+    
+    // Текстура Юпитера (с Большим Красным Пятном)
+    vec3 texColor = texture2D(uMap, vUv).rgb;
+    
+    // Освещение
+    float diff = max(NdotL, 0.0);
+    // Добавляем немного фонового света, чтобы ночная сторона была видна
+    float ambient = 0.05; 
+    vec3 finalColor = texColor * (diff + ambient);
+    
+    // Лимб-даркенинг (затемнение по краям) для газового гиганта
+    float fresnel = pow(1.0 - max(dot(N, V), 0.0), 2.5);
+    finalColor *= (1.0 - fresnel * 0.4);
+    
+    // Легкая голубая дымка атмосферы
+    vec3 atmoCol = vec3(0.4, 0.5, 0.7) * fresnel * diff * 0.5;
+    finalColor += atmoCol;
+
+    gl_FragColor = vec4(finalColor, 1.0);
+}`;
+
+const skyVert = `
+attribute vec2 aPos;
+varying vec2 vUv;
+void main() {
+    vUv = aPos * 0.5 + 0.5;
+    gl_Position = vec4(aPos, 0.0, 1.0);
+}`;
+
+const skyFrag = `
+precision highp float;
+uniform vec2 uResolution;
+uniform vec3 uCamFwd, uCamRight, uCamUp;
+uniform float uFov, uTime;
+varying vec2 vUv;
+
+float hash13(vec3 p) { p = fract(p * 0.1031); p += dot(p, p.yzx + 33.33); return fract((p.x + p.y) * p.z); }
+vec3 hash33(vec3 p) { p = fract(p * vec3(0.1031, 0.1030, 0.0973)); p += dot(p, p.yxz + 33.33); return fract((p.xxy + p.yxx) * p.zyx); }
+float noise3(vec3 p) {
+    vec3 i = floor(p); vec3 f = fract(p); vec3 u = f * f * (3.0 - 2.0 * f);
+    return mix(mix(mix(hash13(i), hash13(i+vec3(1,0,0)), u.x), mix(hash13(i+vec3(0,1,0)), hash13(i+vec3(1,1,0)), u.x), u.y),
+               mix(mix(hash13(i+vec3(0,0,1)), hash13(i+vec3(1,0,1)), u.x), mix(hash13(i+vec3(0,1,1)), hash13(i+vec3(1,1,1)), u.x), u.y), u.z);
+}
+float fbm(vec3 p) { float v = 0.0, a = 0.5; for (int i = 0; i < 4; i++) { v += a * noise3(p); p = p * 2.07 + vec3(1.7, 9.2, 3.3); a *= 0.5; } return v; }
+
+vec3 stars(vec3 dir) {
+    vec3 p = dir * 280.0; vec3 cell = floor(p); vec3 local = fract(p) - 0.5;
+    float h = hash13(cell); if (h < 0.995) return vec3(0.0);
+    vec3 starPos = (hash33(cell + 1.0) - 0.5) * 0.6; float dist = length(local - starPos);
+    float size = 0.3 + hash13(cell + 5.0) * 0.7; float bright = pow(smoothstep(size, 0.0, dist), 2.5);
+    float ct = hash13(cell + 7.0);
+    vec3 col = ct < 0.25 ? vec3(0.65, 0.78, 1.00) : (ct < 0.60 ? vec3(1.00, 1.00, 1.00) : (ct < 0.85 ? vec3(1.00, 0.92, 0.75) : vec3(1.00, 0.72, 0.45)));
+    float tw = 0.75 + 0.25 * sin(uTime * (0.7 + h * 4.0) + h * 28.0);
+    return col * bright * (0.3 + hash13(cell + 13.0) * 2.0) * tw;
+}
+vec3 nebula(vec3 dir) {
+    float n1 = fbm(dir * 3.5 + 12.0); float n2 = fbm(dir * 7.0 - 3.0);
+    float m = smoothstep(0.45, 0.75, n1) * 0.6 + smoothstep(0.55, 0.85, n2) * 0.4;
+    return vec3(0.10, 0.05, 0.16) * m * 0.3;
+}
+
+void main() {
+    vec2 uv = (gl_FragCoord.xy - 0.5 * uResolution) / uResolution.y;
+    vec3 rayDir = normalize(uCamFwd + uv.x * uCamRight * uFov + uv.y * uCamUp * uFov);
+    gl_FragColor = vec4(stars(rayDir) + nebula(rayDir) + vec3(0.003, 0.005, 0.010), 1.0);
+}`;
+
+function compile(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src); gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(s));
+    return s;
+}
+
+function createProgram(vSrc, fSrc) {
+    const p = gl.createProgram();
+    gl.attachShader(p, compile(gl.VERTEX_SHADER, vSrc));
+    gl.attachShader(p, compile(gl.FRAGMENT_SHADER, fSrc));
+    gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) console.error(gl.getProgramInfoLog(p));
+    return p;
+}
+
+const progJupiter = createProgram(vertShader, jupiterFrag);
+const progSky = createProgram(skyVert, skyFrag);
+
+// ============ ТЕКСТУРЫ ============
+function loadTexture(url) {
+    return new Promise((resolve, reject) => {
+        const tex = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, tex);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 255, 255]));
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.onload = () => {
+            gl.bindTexture(gl.TEXTURE_2D, tex);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            gl.generateMipmap(gl.TEXTURE_2D);
+            resolve(tex);
+        };
+        img.onerror = () => reject(new Error('Texture error: ' + url));
+        img.src = url;
+    });
+}
+
+let jupiterTex;
+const loadingEl = document.getElementById('loading');
+
+// Используем текстуру Юпитера с высоким разрешением (включает Большое Красное Пятно)
+Promise.all([
+    loadTexture('https://www.solarsystemscope.com/textures/download/2k_jupiter.jpg')
+]).then(res => {
+    jupiterTex = res[0];
+    loadingEl.style.display = 'none';
+    initBuffers();
+    requestAnimationFrame(loop);
+}).catch(err => {
+    console.error(err);
+    loadingEl.innerHTML = '<div style="color: #ff3333;">ОШИБКА ЗАГРУЗКИ ТЕКСТУР</div><div style="font-size: 10px; color: #666;">Проверьте подключение к интернету</div>';
+});
+
+// ============ БУФЕРЫ ============
+let jupiterBuf, skyBuf;
+
+function setupBuffer(geo) {
+    const buf = {
+        pos: gl.createBuffer(), norm: gl.createBuffer(), uv: gl.createBuffer(), idx: gl.createBuffer(),
+        count: geo.indices.length
+    };
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf.pos); gl.bufferData(gl.ARRAY_BUFFER, geo.positions, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf.norm); gl.bufferData(gl.ARRAY_BUFFER, geo.normals, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf.uv); gl.bufferData(gl.ARRAY_BUFFER, geo.uvs, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buf.idx); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, geo.indices, gl.STATIC_DRAW);
+    return buf;
+}
+
+function initBuffers() {
+    jupiterBuf = setupBuffer(jupiterGeo);
+    skyBuf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, skyBuf);
+    gl.bufferData(gl.ARRAY_BUFFER, skyGeo, gl.STATIC_DRAW);
+}
+
+function bindSphere(buf, prog) {
+    const aPos = gl.getAttribLocation(prog, 'aPos');
+    const aNorm = gl.getAttribLocation(prog, 'aNormal');
+    const aUv = gl.getAttribLocation(prog, 'aUv');
+    
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf.pos);
+    gl.enableVertexAttribArray(aPos); gl.vertexAttribPointer(aPos, 3, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf.norm);
+    gl.enableVertexAttribArray(aNorm); gl.vertexAttribPointer(aNorm, 3, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf.uv);
+    gl.enableVertexAttribArray(aUv); gl.vertexAttribPointer(aUv, 2, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buf.idx);
+}
+
+// ============ КАМЕРА И УПРАВЛЕНИЕ ============
+let camTheta = 0.5, camPhi = 0.2, camDist = 3.0;
+let targetTheta = camTheta, targetPhi = camPhi, targetDist = camDist;
+let isPaused = false;
+
+// Так как спутников нет, камера всегда жестко смотрит в центр (0,0,0)
+const camTarget = [0, 0, 0];
+
+let dragging = false, lastX = 0, lastY = 0;
+canvas.addEventListener('pointerdown', (e) => { 
+    dragging = true; lastX = e.clientX; lastY = e.clientY; 
+    canvas.setPointerCapture(e.pointerId); 
+});
+canvas.addEventListener('pointerup', (e) => { dragging = false; try { canvas.releasePointerCapture(e.pointerId); } catch (_) {} });
+canvas.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    targetTheta -= (e.clientX - lastX) * 0.005;
+    targetPhi = Math.max(-1.35, Math.min(1.35, targetPhi + (e.clientY - lastY) * 0.005));
+    lastX = e.clientX; lastY = e.clientY;
+});
+canvas.addEventListener('wheel', (e) => {
+    e.preventDefault(); 
+    let minDist = 1.2;
+    let maxDist = 15.0; // Ограничиваем зум, так как смотрим только на Юпитер
+    targetDist *= Math.exp(e.deltaY * 0.0009);
+    targetDist = Math.max(minDist, Math.min(maxDist, targetDist));
+}, { passive: false });
+
+// ============ UI ============
+const pauseBtn = document.getElementById('pauseBtn');
+function togglePause() {
+    isPaused = !isPaused;
+    if (isPaused) {
+        pauseBtn.textContent = '▶ ПРОДОЛЖИТЬ';
+        pauseBtn.classList.add('active');
+    } else {
+        pauseBtn.textContent = '❚❚ ПАУЗА (ПРОБЕЛ)';
+        pauseBtn.classList.remove('active');
+        lastTime = 0; 
+    }
+}
+pauseBtn.addEventListener('click', togglePause);
+window.addEventListener('keydown', (e) => {
+    if (e.code === 'Space') { e.preventDefault(); togglePause(); }
+});
+
+// ============ РЕНДЕР ============
+let W = 0, H = 0, renderScale = 1.0;
+const resEl = document.getElementById('res');
+
+function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    W = Math.floor(window.innerWidth * dpr * renderScale); 
+    H = Math.floor(window.innerHeight * dpr * renderScale);
+    canvas.width = W; canvas.height = H;
+    canvas.style.width = window.innerWidth + 'px'; 
+    canvas.style.height = window.innerHeight + 'px';
+    gl.viewport(0, 0, W, H);
+    resEl.textContent = W + '×' + H + ' (' + Math.round(renderScale * 100) + '%)';
+}
+window.addEventListener('resize', resize, { passive: true });
+
+const fpsEl = document.getElementById('fps'), sessionEl = document.getElementById('session'), distEl = document.getElementById('dist');
+let lastTime = 0, simTime = 0, fpsAcc = 0, fpsFrames = 0, lastSec = -1, lastHud = -1;
+let currentFPS = 60;
+let resolutionCheckTimer = 0;
+const pad = (n) => n < 10 ? '0' + n : '' + n;
+
+const projMat = mat4.create();
+const viewMat = mat4.create();
+const jupiterModel = mat4.create();
+const tmpMat1 = mat4.create();
+
+function render(dt) {
+    gl.clearColor(0, 0, 0, 1);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    if (!isPaused) {
+        simTime += dt;
+    }
+
+    // --- ЛОГИКА КАМЕРЫ ---
+    const ease = Math.min(1, dt * 5);
+    camTheta += (targetTheta - camTheta) * ease;
+    camPhi += (targetPhi - camPhi) * ease;
+    camDist += (targetDist - camDist) * ease;
+
+    const cx = camTarget[0] + camDist * Math.cos(camPhi) * Math.sin(camTheta);
+    const cy = camTarget[1] + camDist * Math.sin(camPhi);
+    const cz = camTarget[2] + camDist * Math.cos(camPhi) * Math.cos(camTheta);
+    
+    mat4.perspective(projMat, 45 * Math.PI / 180, W / H, 0.01, 100.0);
+    mat4.lookAt(viewMat, [cx, cy, cz], camTarget, [0, 1, 0]);
+
+    // --- SKYBOX ---
+    gl.disable(gl.DEPTH_TEST);
+    gl.useProgram(progSky);
+    const aPosSky = gl.getAttribLocation(progSky, 'aPos');
+    gl.bindBuffer(gl.ARRAY_BUFFER, skyBuf);
+    gl.enableVertexAttribArray(aPosSky); gl.vertexAttribPointer(aPosSky, 2, gl.FLOAT, false, 0, 0);
+    
+    gl.uniform2f(gl.getUniformLocation(progSky, 'uResolution'), W, H);
+    const fwd = [camTarget[0] - cx, camTarget[1] - cy, camTarget[2] - cz];
+    const flen = Math.hypot(...fwd);
+    fwd[0] /= flen; fwd[1] /= flen; fwd[2] /= flen;
+    const up = [0, 1, 0];
+    const right = [fwd[1]*up[2] - fwd[2]*up[1], fwd[2]*up[0] - fwd[0]*up[2], fwd[0]*up[1] - fwd[1]*up[0]];
+    const rlen = Math.hypot(...right);
+    right[0] /= rlen; right[1] /= rlen; right[2] /= rlen;
+    const camUp = [right[1]*fwd[2] - right[2]*fwd[1], right[2]*fwd[0] - right[0]*fwd[2], right[0]*fwd[1] - right[1]*fwd[0]];
+
+    gl.uniform3fv(gl.getUniformLocation(progSky, 'uCamFwd'), fwd);
+    gl.uniform3fv(gl.getUniformLocation(progSky, 'uCamRight'), right);
+    gl.uniform3fv(gl.getUniformLocation(progSky, 'uCamUp'), camUp);
+    gl.uniform1f(gl.getUniformLocation(progSky, 'uFov'), 1.2);
+    gl.uniform1f(gl.getUniformLocation(progSky, 'uTime'), simTime);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    
+    // --- JUPITER ---
+    gl.enable(gl.DEPTH_TEST);
+    gl.useProgram(progJupiter);
+    bindSphere(jupiterBuf, progJupiter);
+    
+    // Вращение Юпитера (очень быстрое, ~10 часов)
+    mat4.rotateY(jupiterModel, simTime * 0.15); // Скорость вращения
+    // Наклон оси Юпитера (3.13 градуса)
+    mat4.rotateZ(tmpMat1, 3.13 * Math.PI / 180);
+    // Умножаем матрицы (внимание: в WebGL порядок другой, просто применяем наклон после вращения)
+    // Для простоты вращаем саму сферу, наклон можно задать через камеру, но оставим так.
+    
+    gl.uniformMatrix4fv(gl.getUniformLocation(progJupiter, 'uProj'), false, projMat);
+    gl.uniformMatrix4fv(gl.getUniformLocation(progJupiter, 'uView'), false, viewMat);
+    gl.uniformMatrix4fv(gl.getUniformLocation(progJupiter, 'uModel'), false, jupiterModel);
+    gl.uniform3f(gl.getUniformLocation(progJupiter, 'uCamPos'), cx, cy, cz);
+    gl.uniform3f(gl.getUniformLocation(progJupiter, 'uSunDir'), 1.0, 0.2, -0.5); 
+    
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, jupiterTex);
+    gl.uniform1i(gl.getUniformLocation(progJupiter, 'uMap'), 0);
+    
+    gl.drawElements(gl.TRIANGLES, jupiterBuf.count, gl.UNSIGNED_SHORT, 0);
+
+    const total = Math.floor(simTime);
+    if (total !== lastSec) {
+        lastSec = total;
+        sessionEl.textContent = pad(Math.floor(total / 3600)) + ':' + pad(Math.floor((total % 3600) / 60)) + ':' + pad(total % 60);
+    }
+    if (total !== lastHud) {
+        lastHud = total;
+        distEl.textContent = camDist.toFixed(1) + ' R';
+    }
+}
+
+function loop(now) {
+    if (!lastTime) lastTime = now;
+    let dt = (now - lastTime) / 1000; lastTime = now;
+    if (dt > 0.1) dt = 0.1;
+
+    if (!loadingEl.style.display || loadingEl.style.display === 'none') {
+        render(dt);
+    }
+
+    fpsAcc += dt; fpsFrames++;
+    if (fpsAcc >= 0.5) { 
+        currentFPS = Math.round(fpsFrames / fpsAcc);
+        fpsEl.textContent = currentFPS; 
+        fpsAcc = 0; fpsFrames = 0; 
+    }
+
+    resolutionCheckTimer += dt;
+    if (resolutionCheckTimer > 2.0) { 
+        if (currentFPS < 35 && renderScale > 0.6) {
+            renderScale = Math.max(0.6, renderScale - 0.1);
+            resize();
+        } else if (currentFPS > 55 && renderScale < 1.0) {
+            renderScale = Math.min(1.0, renderScale + 0.1);
+            resize();
+        }
+        resolutionCheckTimer = 0;
+    }
+
+    requestAnimationFrame(loop);
+}
+
+resize();
+})();
+</script>
+</body>
+</html>
