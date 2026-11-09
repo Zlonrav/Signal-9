@@ -1,12 +1,11 @@
 <!DOCTYPE html>
 <!--
 ================================================================================
-  СИГНАЛ-9 // ОБЪЕКТ JUPITER // V1.0 SCIENTIFIC
+  СИГНАЛ-9 // ОБЪЕКТ JUPITER // V1.1 CORS FIX
 ================================================================================
+  * Исправлена ошибка загрузки текстуры (CORS Proxy).
   * Без спутников.
-  * Текстура NASA с Большим Красным Пятном.
-  * Идеальная камера (жесткая фиксация, без дёрганий).
-  * Пауза, адаптивное разрешение, HUD "СИГНАЛ-9".
+  * Идеальная камера и вращение.
 ================================================================================
 -->
 <html lang="ru">
@@ -255,7 +254,7 @@ function createSphere(radius, latBands, longBands) {
             const x = cosPhi * sinTheta, y = cosTheta, z = sinPhi * sinTheta;
             positions.push(radius * x, radius * y, radius * z);
             normals.push(x, y, z);
-            uvs.push(j / longBands, i / latBands); // Северный полюс наверху
+            uvs.push(j / longBands, i / latBands);
         }
     }
     for (let i = 0; i < latBands; i++) {
@@ -300,20 +299,15 @@ void main() {
     vec3 L = normalize(uSunDir);
     float NdotL = dot(N, L);
     
-    // Текстура Юпитера (с Большим Красным Пятном)
     vec3 texColor = texture2D(uMap, vUv).rgb;
     
-    // Освещение
     float diff = max(NdotL, 0.0);
-    // Добавляем немного фонового света, чтобы ночная сторона была видна
     float ambient = 0.05; 
     vec3 finalColor = texColor * (diff + ambient);
     
-    // Лимб-даркенинг (затемнение по краям) для газового гиганта
     float fresnel = pow(1.0 - max(dot(N, V), 0.0), 2.5);
     finalColor *= (1.0 - fresnel * 0.4);
     
-    // Легкая голубая дымка атмосферы
     vec3 atmoCol = vec3(0.4, 0.5, 0.7) * fresnel * diff * 0.5;
     finalColor += atmoCol;
 
@@ -411,9 +405,9 @@ function loadTexture(url) {
 let jupiterTex;
 const loadingEl = document.getElementById('loading');
 
-// Используем текстуру Юпитера с высоким разрешением (включает Большое Красное Пятно)
+// ИСПОЛЬЗУЕМ CORS-ПРОКСИ ДЛЯ ЗАГРУЗКИ ТЕКСТУРЫ
 Promise.all([
-    loadTexture('https://www.solarsystemscope.com/textures/download/2k_jupiter.jpg')
+    loadTexture('https://api.allorigins.win/raw?url=https://www.solarsystemscope.com/textures/download/2k_jupiter.jpg')
 ]).then(res => {
     jupiterTex = res[0];
     loadingEl.style.display = 'none';
@@ -465,7 +459,6 @@ let camTheta = 0.5, camPhi = 0.2, camDist = 3.0;
 let targetTheta = camTheta, targetPhi = camPhi, targetDist = camDist;
 let isPaused = false;
 
-// Так как спутников нет, камера всегда жестко смотрит в центр (0,0,0)
 const camTarget = [0, 0, 0];
 
 let dragging = false, lastX = 0, lastY = 0;
@@ -483,7 +476,7 @@ canvas.addEventListener('pointermove', (e) => {
 canvas.addEventListener('wheel', (e) => {
     e.preventDefault(); 
     let minDist = 1.2;
-    let maxDist = 15.0; // Ограничиваем зум, так как смотрим только на Юпитер
+    let maxDist = 15.0;
     targetDist *= Math.exp(e.deltaY * 0.0009);
     targetDist = Math.max(minDist, Math.min(maxDist, targetDist));
 }, { passive: false });
@@ -541,7 +534,6 @@ function render(dt) {
         simTime += dt;
     }
 
-    // --- ЛОГИКА КАМЕРЫ ---
     const ease = Math.min(1, dt * 5);
     camTheta += (targetTheta - camTheta) * ease;
     camPhi += (targetPhi - camPhi) * ease;
@@ -554,7 +546,7 @@ function render(dt) {
     mat4.perspective(projMat, 45 * Math.PI / 180, W / H, 0.01, 100.0);
     mat4.lookAt(viewMat, [cx, cy, cz], camTarget, [0, 1, 0]);
 
-    // --- SKYBOX ---
+    // SKYBOX
     gl.disable(gl.DEPTH_TEST);
     gl.useProgram(progSky);
     const aPosSky = gl.getAttribLocation(progSky, 'aPos');
@@ -578,17 +570,13 @@ function render(dt) {
     gl.uniform1f(gl.getUniformLocation(progSky, 'uTime'), simTime);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     
-    // --- JUPITER ---
+    // JUPITER
     gl.enable(gl.DEPTH_TEST);
     gl.useProgram(progJupiter);
     bindSphere(jupiterBuf, progJupiter);
     
-    // Вращение Юпитера (очень быстрое, ~10 часов)
-    mat4.rotateY(jupiterModel, simTime * 0.15); // Скорость вращения
-    // Наклон оси Юпитера (3.13 градуса)
+    mat4.rotateY(jupiterModel, simTime * 0.15);
     mat4.rotateZ(tmpMat1, 3.13 * Math.PI / 180);
-    // Умножаем матрицы (внимание: в WebGL порядок другой, просто применяем наклон после вращения)
-    // Для простоты вращаем саму сферу, наклон можно задать через камеру, но оставим так.
     
     gl.uniformMatrix4fv(gl.getUniformLocation(progJupiter, 'uProj'), false, projMat);
     gl.uniformMatrix4fv(gl.getUniformLocation(progJupiter, 'uView'), false, viewMat);
