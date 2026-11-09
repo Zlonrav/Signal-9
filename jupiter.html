@@ -289,8 +289,18 @@ const jupiterFrag = `
 precision highp float;
 uniform sampler2D uMap;
 uniform vec3 uSunDir, uCamPos;
+uniform float uTime; // ДОБАВИЛИ ВРЕМЯ ДЛЯ АНИМАЦИИ
 varying vec2 vUv;
 varying vec3 vNormal, vWorldPos;
+
+// --- ШУМ ДЛЯ БУРЛЕНИЯ ПЯТНА ---
+float hash13(vec3 p) { p = fract(p * 0.1031); p += dot(p, p.yzx + 33.33); return fract((p.x + p.y) * p.z); }
+float noise3(vec3 p) {
+    vec3 i = floor(p); vec3 f = fract(p); vec3 u = f * f * (3.0 - 2.0 * f);
+    return mix(mix(mix(hash13(i), hash13(i+vec3(1,0,0)), u.x), mix(hash13(i+vec3(0,1,0)), hash13(i+vec3(1,1,0)), u.x), u.y),
+               mix(mix(hash13(i+vec3(0,0,1)), hash13(i+vec3(1,0,1)), u.x), mix(hash13(i+vec3(0,1,1)), hash13(i+vec3(1,1,1)), u.x), u.y), u.z);
+}
+float fbm(vec3 p) { float v = 0.0, a = 0.5; for (int i = 0; i < 4; i++) { v += a * noise3(p); p = p * 2.07 + vec3(1.7, 9.2, 3.3); a *= 0.5; } return v; }
 
 void main() {
     vec3 N = normalize(vNormal);
@@ -298,15 +308,50 @@ void main() {
     vec3 L = normalize(uSunDir);
     float NdotL = dot(N, L);
     
-    vec3 texColor = texture2D(uMap, vUv).rgb;
+    // --- АНИМАЦИЯ БОЛЬШОГО КРАСНОГО ПЯТНА ---
+    // Центр пятна на текстуре (подобрано для текстуры 2k_jupiter.jpg)
+    vec2 grsCenter = vec2(0.72, 0.62);
+    float distToGrs = distance(vUv, grsCenter);
     
+    // Маска: 1.0 внутри пятна, 0.0 снаружи
+    float grsMask = smoothstep(0.15, 0.05, distToGrs);
+    
+    // Искажаем UV только внутри пятна, чтобы закрутить облака
+    vec2 uvAnimated = vUv;
+    if (grsMask > 0.01) {
+        // Вращение (закрутка)
+        float angle = uTime * 1.5 * grsMask; 
+        vec2 rel = vUv - grsCenter;
+        float c = cos(angle);
+        float s = sin(angle);
+        vec2 rotated = vec2(rel.x * c - rel.y * s, rel.x * s + rel.y * c);
+        uvAnimated = grsCenter + mix(rel, rotated, grsMask);
+        
+        // Бурление (шум)
+        float turbulence = fbm(vec3(uvAnimated * 30.0, uTime * 0.5));
+        uvAnimated += (turbulence - 0.5) * 0.02 * grsMask;
+    }
+    
+    // Читаем текстуру с учетом искажений
+    vec3 texColor = texture2D(uMap, uvAnimated).rgb;
+    
+    // Добавляем немного процедурного шума поверх пятна для объема
+    if (grsMask > 0.01) {
+        float swirl = fbm(vec3(vUv * 50.0, uTime * 0.3));
+        vec3 stormColor = vec3(0.8, 0.3, 0.1); // Красно-оранжевый
+        texColor = mix(texColor, stormColor * (0.5 + swirl), grsMask * 0.4);
+    }
+    
+    // --- ОСВЕЩЕНИЕ ---
     float diff = max(NdotL, 0.0);
     float ambient = 0.05; 
     vec3 finalColor = texColor * (diff + ambient);
     
+    // Лимб-даркенинг
     float fresnel = pow(1.0 - max(dot(N, V), 0.0), 2.5);
     finalColor *= (1.0 - fresnel * 0.4);
     
+    // Дымка атмосферы
     vec3 atmoCol = vec3(0.4, 0.5, 0.7) * fresnel * diff * 0.5;
     finalColor += atmoCol;
 
