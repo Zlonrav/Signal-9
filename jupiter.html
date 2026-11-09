@@ -406,7 +406,7 @@ const loadingEl = document.getElementById('loading');
 
 // ИСПОЛЬЗУЕМ WESERV.NL — НАДЕЖНЫЙ ПРОКСИ ДЛЯ КАРТИНОК С CORS
 Promise.all([
-    loadTexture('https://images.weserv.nl/?url=www.solarsystemscope.com/textures/download/2k_jupiter.jpg')
+    loadTexture('/2k_jupiter.jpg')
 ]).then(res => {
     jupiterTex = res[0];
     loadingEl.style.display = 'none';
