@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <!--
 ================================================================================
-  СИГНАЛ-9 // ОБЪЕКТ JUPITER // V1.1 CORS FIX
+  СИГНАЛ-9 // ОБЪЕКТ JUPITER // V1.2 WESERV FIX
 ================================================================================
-  * Исправлена ошибка загрузки текстуры (CORS Proxy).
-  * Без спутников.
-  * Идеальная камера и вращение.
+  * Исправлена загрузка текстуры через надежный прокси images.weserv.nl
+  * Если хочешь локальную текстуру: скачай 2k_jupiter.jpg и замени URL на './2k_jupiter.jpg'
 ================================================================================
 -->
 <html lang="ru">
@@ -405,9 +404,9 @@ function loadTexture(url) {
 let jupiterTex;
 const loadingEl = document.getElementById('loading');
 
-// ИСПОЛЬЗУЕМ CORS-ПРОКСИ ДЛЯ ЗАГРУЗКИ ТЕКСТУРЫ
+// ИСПОЛЬЗУЕМ WESERV.NL — НАДЕЖНЫЙ ПРОКСИ ДЛЯ КАРТИНОК С CORS
 Promise.all([
-    loadTexture('https://api.allorigins.win/raw?url=https://www.solarsystemscope.com/textures/download/2k_jupiter.jpg')
+    loadTexture('https://images.weserv.nl/?url=www.solarsystemscope.com/textures/download/2k_jupiter.jpg')
 ]).then(res => {
     jupiterTex = res[0];
     loadingEl.style.display = 'none';
