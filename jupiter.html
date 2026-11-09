@@ -309,37 +309,44 @@ void main() {
     float NdotL = dot(N, L);
     
     // --- АНИМАЦИЯ БОЛЬШОГО КРАСНОГО ПЯТНА ---
-    // Центр пятна на текстуре (подобрано для текстуры 2k_jupiter.jpg)
-    vec2 grsCenter = vec2(0.72, 0.62);
-    float distToGrs = distance(vUv, grsCenter);
+    // --- РЕАЛИСТИЧНОЕ ВРАЩЕНИЕ БОЛЬШОГО КРАСНОГО ПЯТНА ---
+    // Центр БКП на текстуре (подобрано для 2k_jupiter.jpg)
+    vec2 grsCenter = vec2(0.73, 0.61);
+    
+    // Делаем область пятна эллиптической (оно сплюснуто по широте)
+    vec2 delta = (vUv - grsCenter) * vec2(1.0, 1.5); 
+    float distToGrs = length(delta);
     
     // Маска: 1.0 внутри пятна, 0.0 снаружи
-    float grsMask = smoothstep(0.15, 0.05, distToGrs);
+    float grsMask = smoothstep(0.12, 0.04, distToGrs);
     
-    // Искажаем UV только внутри пятна, чтобы закрутить облака
     vec2 uvAnimated = vUv;
     if (grsMask > 0.01) {
-        // Вращение (закрутка)
-        float angle = uTime * 1.5 * grsMask; 
+        // Скорость вращения (0.5 = полный оборот за ~12 секунд)
+        // Умножаем на маску, чтобы скорость плавно затухала к краям
+        float angle = uTime * 0.5 * grsMask; 
+        
         vec2 rel = vUv - grsCenter;
         float c = cos(angle);
         float s = sin(angle);
+        // Матрица поворота
         vec2 rotated = vec2(rel.x * c - rel.y * s, rel.x * s + rel.y * c);
+        
+        // Применяем вращение
         uvAnimated = grsCenter + mix(rel, rotated, grsMask);
         
-        // Бурление (шум)
-        float turbulence = fbm(vec3(uvAnimated * 30.0, uTime * 0.5));
-        uvAnimated += (turbulence - 0.5) * 0.02 * grsMask;
+        // Добавляем "кипение" (турбулентность), чтобы размыть пиксели текстуры
+        float turbulence = fbm(vec3(uvAnimated * 25.0, uTime * 0.3));
+        uvAnimated += (turbulence - 0.5) * 0.015 * grsMask;
     }
     
-    // Читаем текстуру с учетом искажений
+    // Читаем текстуру с учетом вращения
     vec3 texColor = texture2D(uMap, uvAnimated).rgb;
     
-    // Добавляем немного процедурного шума поверх пятна для объема
+    // Опционально: слегка подкрашиваем пятно, чтобы оно было более насыщенным
     if (grsMask > 0.01) {
-        float swirl = fbm(vec3(vUv * 50.0, uTime * 0.3));
-        vec3 stormColor = vec3(0.8, 0.3, 0.1); // Красно-оранжевый
-        texColor = mix(texColor, stormColor * (0.5 + swirl), grsMask * 0.4);
+        vec3 stormColor = vec3(0.8, 0.35, 0.15); // Красно-оранжевый
+        texColor = mix(texColor, stormColor * (0.6 + turbulence), grsMask * 0.3);
     }
     
     // --- ОСВЕЩЕНИЕ ---
