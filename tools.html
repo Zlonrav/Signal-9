@@ -266,6 +266,54 @@
             if (isReadMode && statusLabel) {
                 const key = readIndices.join('-');
                 
+                if (localStorage.getItem('s9_archive_training') === 'true') {
+                    if (expectedIndices.length > 0 && key === expectedIndices.join('-')) {
+                        trainingIndex++;
+                        localStorage.setItem('s9_glyph_' + expectedWord, 'true');
+                        
+                        if (trainingIndex >= 5) {
+                            localStorage.setItem('s9_archive_calibrated', 'true');
+                            localStorage.removeItem('s9_archive_training');
+                            document.body.classList.remove('training-mode');
+                            statusLabel.innerText = "ОБУЧЕНИЕ ЗАВЕРШЕНО";
+                            statusLabel.style.color = "#00ff44";
+                            document.getElementById('textInput').value = "ОБУЧЕНИЕ ЗАВЕРШЕНО";
+                            
+                            document.getElementById('mode-switch').checked = false;
+                            document.getElementById('gen-view').classList.remove('hidden');
+                            document.getElementById('gen-ui').classList.remove('hidden');
+                            document.getElementById('read-view').classList.add('hidden');
+                            document.getElementById('read-ui').classList.add('hidden');
+                            
+                            if (window.printToConsole) {
+                                window.printToConsole(`<span class="ok">[УСПЕХ] АРХИВ ОБУЧЕН. АВТОСОХРАНЕНИЕ ВКЛЮЧЕНО.</span>`);
+                            }
+                        } else {
+                            statusLabel.innerText = `ПРИНЯТО (${trainingIndex}/5). ВВЕДИТЕ СЛЕДУЮЩЕЕ СЛОВО В РЕЖИМЕ ТЕКСТ.`;
+                            statusLabel.style.color = "#00ff44";
+                            
+                            document.getElementById('mode-switch').checked = false;
+                            document.getElementById('gen-view').classList.remove('hidden');
+                            document.getElementById('gen-ui').classList.remove('hidden');
+                            document.getElementById('read-view').classList.add('hidden');
+                            document.getElementById('read-ui').classList.add('hidden');
+                            document.getElementById('textInput').value = "";
+                            expectedWord = "";
+                            expectedIndices = [];
+                        }
+                        readIndices = [];
+                        renderPath('readPath', [], false);
+                        setTimeout(() => updatePointsUI(), 100);
+                    } else if (readIndices.length >= 5) {
+                        statusLabel.innerText = "ОШИБКА ПАТТЕРНА. СБРОСЬТЕ (×) И ПОПРОБУЙТЕ СНОВА.";
+                        statusLabel.style.color = "#ff3333";
+                    } else {
+                        statusLabel.innerText = `НАРИСУЙТЕ ГЛИФ: ${expectedWord}`;
+                        statusLabel.style.color = "#ffaa00";
+                    }
+                    return;
+                }
+
                 if (dictionary[key]) {
                     const foundWord = dictionary[key]; 
                     statusLabel.classList.remove('error-state');
@@ -437,7 +485,36 @@
         // Запуск
         initDictionary();
         updatePointsUI();
-    </script>
+
+        // Восстановление режима обучения при перезагрузке
+        if (localStorage.getItem('s9_archive_training') === 'true') {
+            document.body.classList.add('training-mode');
+            let learnedCount = 0;
+            TRAINING_WORDS.forEach(w => {
+                if (localStorage.getItem('s9_glyph_' + w) === 'true') learnedCount++;
+            });
+            trainingIndex = learnedCount;
+            
+            if (trainingIndex >= 5) {
+                localStorage.setItem('s9_archive_calibrated', 'true');
+                localStorage.removeItem('s9_archive_training');
+                document.body.classList.remove('training-mode');
+            } else {
+                const label = document.getElementById('statusLabel');
+                if (label) {
+                    label.innerText = `ПРИНЯТО (${trainingIndex}/5). ВВЕДИТЕ СЛЕДУЮЩЕЕ СЛОВО В РЕЖИМЕ ТЕКСТ.`;
+                    label.style.color = "#ffaa00";
+                }
+                const input = document.getElementById('textInput');
+                if (input) input.value = "";
+                document.getElementById('mode-switch').checked = false;
+                document.getElementById('gen-view').classList.remove('hidden');
+                document.getElementById('gen-ui').classList.remove('hidden');
+                document.getElementById('read-view').classList.add('hidden');
+                document.getElementById('read-ui').classList.add('hidden');
+            }
+        }
+    </script>>
 
 </body>
 </html>
