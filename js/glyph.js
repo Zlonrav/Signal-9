@@ -86,10 +86,16 @@ window.renderSmoothPath = function(pathId, indices, isContinuing = false) {
 
 // Функция для генерации недешифрованного текста (Подменная соль)
 function getWrongLabel(word) {
-    // Если правильная соль уже найдена (например, s9_salt_found === 'true'), возвращаем слово как есть
+    // 1. Если правильная соль уже найдена (глобальный фикс), возвращаем всё как есть
     if (localStorage.getItem('s9_salt_found') === 'true') return word;
 
-    // Используем другую соль (не 5381, а 7777)
+    // 2. Если слово есть в VOCABULARY (эталонная выборка), оно не шифруется, 
+    // так как физически записано в памяти терминала.
+    if (typeof VOCABULARY !== 'undefined' && VOCABULARY.includes(word)) {
+        return word;
+    }
+
+    // 3. Всё остальное шифруем (Подменная соль 7777)
     let hash = 7777;
     for (let i = 0; i < word.length; i++) hash = ((hash << 5) + hash) + word.charCodeAt(i);
     let seed = Math.abs(hash);
