@@ -288,7 +288,32 @@
             }
             return;
         }		
+        // --- КОМАНДА ОБУЧЕНИЯ АРХИВА ---
+        if (cmd === 'archive --traning') {
+            if (currentPage !== 'tools.html') {
+                print(`<span class="err">ОШИБКА: КОМАНДА ДОСТУПНА ТОЛЬКО В ИНЖЕНЕРНОМ ТЕРМИНАЛЕ.</span>`);
+                return;
+            }
+            if (localStorage.getItem('s9_archive_calibrated') === 'true') {
+                print(`<span class="err">АРХИВ УЖЕ ОБУЧЕН. КАЛИБРОВКА НЕ ТРЕБУЕТСЯ.</span>`);
+                return;
+            }
+            if (localStorage.getItem('s9_archive_training') === 'true') {
+                print(`<span class="warn">РЕЖИМ ОБУЧЕНИЯ УЖЕ АКТИВЕН.</span>`);
+                return;
+            }
+            
+            localStorage.setItem('s9_archive_training', 'true');
+            window.dispatchEvent(new CustomEvent('start_archive_training'));
+            
+            print(`<span class="warn">[ОБУЧЕНИЕ] РЕЖИМ КАЛИБРОВКИ АКТИВЕН. ВВЕДИТЕ ТЕКСТ И НАРИСУЙТЕ ПАТТЕРН ДЛЯ 5 СЛОВ.</span>`);
+            print(`СЛОВА: ХАБ, ГЛИФ, ПУЛЬТ, СЕРВЕР, КОНСОЛЬ.`);
+            return;
+        }
+        // ------------------------------
 
+        // --- КОМАНДА ДЛЯ ОС ---
+        if (cmd.startsWith('os --reset qubit ')) {
         // --- КОМАНДА ДЛЯ ОС ---
         if (cmd.startsWith('os --reset qubit ')) {
             if (currentPage !== 'os.html') {
