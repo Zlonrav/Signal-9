@@ -362,8 +362,9 @@
                             }, 2000);
                         }
                     } else {
-                        // Если это просто случайное слово
-                        statusLabel.innerText = foundWord;
+                        // Если это просто случайное слово (не из эталонных 5)
+                        // Терминал знает его, но выводит зашифрованную версию
+                        statusLabel.innerText = getWrongLabel(foundWord);
                         statusLabel.style.color = "";
                     }
                     // ---------------------------------
