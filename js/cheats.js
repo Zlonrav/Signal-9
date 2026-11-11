@@ -133,18 +133,17 @@
                 localStorage.removeItem('s9_archive_training');
                 const words = ["ХАБ", "ГЛИФ", "ПУЛЬТ", "СЕРВЕР", "КОНСОЛЬ"];
                 const now = Date.now();
-                const phrasesData = [
-                    { text: words.slice(0, 3).join(' '), words: words.slice(0, 3), timestamp: now - 1000 },
-                    { text: words.slice(3, 5).join(' '), words: words.slice(3, 5), timestamp: now }
-                ];
+                const phrasesData = [{ text: words.join(' '), words: words, timestamp: now }];
                 localStorage.setItem('s9_phrases_data', JSON.stringify(phrasesData));
                 localStorage.setItem('s9_archive_calibrated', 'true');
                 localStorage.setItem('s9_archive_fixed', 'true');
+                localStorage.setItem('s9_archive_baseline_count', '1');
                 print('<span class="ok">[ЧИТ] 5 ЭТАЛОННЫХ ТРАССИТОВ ВВЕДЕНО. АРХИВ ПОЧИНЕН.</span>');
                 setTimeout(() => { window.location.href = 'archive.html'; }, 1500);
                 return true; 
             }
 
+            // --- ЧИТ ДЛЯ СБРОСА АРХИВА ---
             // --- ЧИТ ДЛЯ СБРОСА АРХИВА ---
             if (cmd.toLowerCase() === 'reset_archive') {
                 localStorage.removeItem('s9_archive_calibrated');
@@ -152,8 +151,8 @@
                 localStorage.removeItem('s9_archive_baseline_count');
                 localStorage.removeItem('s9_phrases_data');
                 localStorage.removeItem('s9_archive_training');
-                const words = ["ХАБ", "ГЛИФ", "ПУЛЬТ", "СЕРВЕР", "КОНСОЛЬ"];
-                words.forEach(w => localStorage.removeItem('s9_glyph_' + w));
+                const trainWords = ["ХАБ", "ГЛИФ", "ПУЛЬТ", "СЕРВЕР", "КОНСОЛЬ"];
+                trainWords.forEach(w => localStorage.removeItem('s9_glyph_' + w));
                 const oldWords = ["СИСТЕМА", "ПАМЯТЬ", "КОД", "СИГНАЛ", "ВЕКТОР", "АРХИВ", "ЗВЕЗДА", "ОРБИТА", "МОДУЛЬ", "ДАННЫЕ"];
                 oldWords.forEach(w => localStorage.removeItem('s9_glyph_' + w));
                 print('<span class="ok">[ЧИТ] ЗАДАНИЕ С АРХИВОМ СБРОШЕНО.</span>');
