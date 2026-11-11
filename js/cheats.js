@@ -130,18 +130,17 @@
 
             // --- ЧИТ ДЛЯ АРХИВА (ПОЧИНКА) ---
             if (cmd.toLowerCase() === 'fix_archive') {
-                const words = ["СИСТЕМА", "ПАМЯТЬ", "КОД", "СИГНАЛ", "ВЕКТОР", "АРХИВ", "ЗВЕЗДА", "ОРБИТА", "МОДУЛЬ", "ДАННЫЕ"];
-                const phrase1 = words.slice(0, 5);
-                const phrase2 = words.slice(5, 10);
+                localStorage.removeItem('s9_archive_training');
+                const words = ["ХАБ", "ГЛИФ", "ПУЛЬТ", "СЕРВЕР", "КОНСОЛЬ"];
                 const now = Date.now();
                 const phrasesData = [
-                    { text: phrase1.join(' '), words: phrase1, timestamp: now - 1000 },
-                    { text: phrase2.join(' '), words: phrase2, timestamp: now }
+                    { text: words.slice(0, 3).join(' '), words: words.slice(0, 3), timestamp: now - 1000 },
+                    { text: words.slice(3, 5).join(' '), words: words.slice(3, 5), timestamp: now }
                 ];
                 localStorage.setItem('s9_phrases_data', JSON.stringify(phrasesData));
                 localStorage.setItem('s9_archive_calibrated', 'true');
                 localStorage.setItem('s9_archive_fixed', 'true');
-                print('<span class="ok">[ЧИТ] 10 ЭТАЛОННЫХ ТРАССИТОВ ВВЕДЕНО. АРХИВ ПОЧИНЕН.</span>');
+                print('<span class="ok">[ЧИТ] 5 ЭТАЛОННЫХ ТРАССИТОВ ВВЕДЕНО. АРХИВ ПОЧИНЕН.</span>');
                 setTimeout(() => { window.location.href = 'archive.html'; }, 1500);
                 return true; 
             }
@@ -166,13 +165,12 @@
             if (cmd.toLowerCase() === 'calibrate_archive') {
                 localStorage.removeItem('s9_phrases_data');
                 localStorage.removeItem('s9_archive_fixed');
-                const words = ["СИСТЕМА", "ПАМЯТЬ", "КОД", "СИГНАЛ", "ВЕКТОР", "АРХИВ", "ЗВЕЗДА", "ОРБИТА", "МОДУЛЬ", "ДАННЫЕ"];
-                const phrase1 = words.slice(0, 5);
-                const phrase2 = words.slice(5, 10);
+                localStorage.removeItem('s9_archive_training');
+                const words = ["ХАБ", "ГЛИФ", "ПУЛЬТ", "СЕРВЕР", "КОНСОЛЬ"];
                 const now = Date.now();
                 const phrasesData = [
-                    { text: phrase1.join(' '), words: phrase1, timestamp: now - 1000 },
-                    { text: phrase2.join(' '), words: phrase2, timestamp: now }
+                    { text: words.slice(0, 3).join(' '), words: words.slice(0, 3), timestamp: now - 1000 },
+                    { text: words.slice(3, 5).join(' '), words: words.slice(3, 5), timestamp: now }
                 ];
                 localStorage.setItem('s9_phrases_data', JSON.stringify(phrasesData));
                 localStorage.setItem('s9_archive_calibrated', 'true');
