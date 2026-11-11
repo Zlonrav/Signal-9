@@ -330,7 +330,10 @@
 
         if (cmd.startsWith('help ')) {
             const topic = cmd.split(' ')[1];
-            if (topic === 'terminal') {
+            if (topic === 'archive') {
+                print(`<span class="topic-header">[АРХИВ]</span>`);
+                print(`ДЛЯ КАЛИБРОВКИ АРХИВА ВВЕДИТЕ ${printCmd('archive --traning')}`);
+            } else if (topic === 'terminal') {
                 print(`<span class="topic-header">[ИНЖЕНЕРНЫЙ ТЕРМИНАЛ]</span>`);
                 print(`ДОСТУПНЫЕ СЕРВИСНЫЕ КОДЫ:`);
                 print(`> ${printCmd('archive --traning')} - Запуск протокола обучения автосохранения (требует 5 эталонных паттернов).`);
