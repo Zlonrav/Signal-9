@@ -61,16 +61,20 @@ function update() {
 
         const revealStart = idx * timePerGlyph;
         let html = "";
+        
+        // Получаем текст для вывода (правильный или зашифрованный)
+        const displayWord = getWrongLabel(word);
+        
         if (timePassed < revealStart) {
             html = `<span class="char-noise">${getNoise(14)}</span>`;
             unit.classList.remove('done', 'pulse-trigger');
         } else if (timePassed >= (revealStart + timePerGlyph)) {
-            html = `<span class="char-fixed">${word}</span>`;
+            html = `<span class="char-fixed">${displayWord}</span>`;
             if (!unit.classList.contains('done')) unit.classList.add('done', 'pulse-trigger');
         } else {
             const progress = (timePassed - revealStart) / timePerGlyph;
-            const revealCount = Math.floor(word.length * progress);
-            html = `<span class="char-fixed">${word.substring(0, revealCount)}</span><span class="char-noise">${getNoise(Math.max(14, word.length) - revealCount)}</span>`;
+            const revealCount = Math.floor(displayWord.length * progress);
+            html = `<span class="char-fixed">${displayWord.substring(0, revealCount)}</span><span class="char-noise">${getNoise(Math.max(14, displayWord.length) - revealCount)}</span>`;
             unit.classList.remove('done', 'pulse-trigger');
         }
         if (label.innerHTML !== html) label.innerHTML = html;
