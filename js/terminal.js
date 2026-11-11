@@ -305,8 +305,8 @@
             localStorage.setItem('s9_archive_training', 'true');
             window.dispatchEvent(new CustomEvent('start_archive_training'));
             
-            print(`<span class="warn">[ОБУЧЕНИЕ] РЕЖИМ КАЛИБРОВКИ АКТИВЕН. ВВЕДИТЕ ТЕКСТ И НАРИСУЙТЕ ПАТТЕРН ДЛЯ 5 СЛОВ.</span>`);
-            print(`СЛОВА: ХАБ, ГЛИФ, ПУЛЬТ, СЕРВЕР, КОНСОЛЬ.`);
+            print(`<span class="warn">[ОБУЧЕНИЕ] ИНЖЕНЕРНЫЙ ТЕРМИНАЛ ПЕРЕВЕДЁН В РЕЖИМ ОБУЧЕНИЯ.</span>`);
+            print(`ДЛЯ КАЛИБРОВКИ АРХИВА ВВЕДИТЕ ЭТАЛОННЫЕ ГЛИФЫ: ХАБ, ГЛИФ, ПУЛЬТ, СЕРВЕР, КОНСОЛЬ.`);
             return;
         }
         // ------------------------------
