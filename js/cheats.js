@@ -152,8 +152,11 @@
                 localStorage.removeItem('s9_archive_fixed');
                 localStorage.removeItem('s9_archive_baseline_count');
                 localStorage.removeItem('s9_phrases_data');
-                const words = ["СИСТЕМА", "ПАМЯТЬ", "КОД", "СИГНАЛ", "ВЕКТОР", "АРХИВ", "ЗВЕЗДА", "ОРБИТА", "МОДУЛЬ", "ДАННЫЕ"];
+                localStorage.removeItem('s9_archive_training');
+                const words = ["ХАБ", "ГЛИФ", "ПУЛЬТ", "СЕРВЕР", "КОНСОЛЬ"];
                 words.forEach(w => localStorage.removeItem('s9_glyph_' + w));
+                const oldWords = ["СИСТЕМА", "ПАМЯТЬ", "КОД", "СИГНАЛ", "ВЕКТОР", "АРХИВ", "ЗВЕЗДА", "ОРБИТА", "МОДУЛЬ", "ДАННЫЕ"];
+                oldWords.forEach(w => localStorage.removeItem('s9_glyph_' + w));
                 print('<span class="ok">[ЧИТ] ЗАДАНИЕ С АРХИВОМ СБРОШЕНО.</span>');
                 setTimeout(() => { location.reload(); }, 1500);
                 return true;
