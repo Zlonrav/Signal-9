@@ -308,7 +308,11 @@
 
         if (cmd.startsWith('help ')) {
             const topic = cmd.split(' ')[1];
-            if (topic === 'login') {
+            if (topic === 'terminal') {
+                print(`<span class="topic-header">[ИНЖЕНЕРНЫЙ ТЕРМИНАЛ]</span>`);
+                print(`ДОСТУПНЫЕ СЕРВИСНЫЕ КОДЫ:`);
+                print(`> ${printCmd('archive --traning')} - Запуск протокола обучения автосохранения (требует 5 эталонных паттернов).`);
+            } else if (topic === 'login') {
                 print(`<span class="topic-header">[ЛОГИН]</span>`);
                 print(`ВВЕДИТЕ ТЕКСТ «ТРАССИТ» В ИНЖЕНЕРНОМ ТЕРМИНАЛЕ (${printCmd('terminal')}) ДЛЯ ПОЛУЧЕНИЯ КЛЮЧА.`);
             } else if (topic === 'os') {
