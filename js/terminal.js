@@ -229,17 +229,16 @@
         }
 
         // --- КОМАНДА ВЕРИФИКАЦИИ ОС ---
-			if (cmd === 'login --id') {
-				print(`<span class="err">ОШИБКА: УКАЖИТЕ ID. ПРИМЕР: <span class="cmd-text">login --id <ВАШ_ID></span></span>`);
-				return;
-			}
-			// --- КОМАНДА ВЕРИФИКАЦИИ ОС ---
-				if (cmd.startsWith('login --id ')) {
-				if (currentPage !== 'os.html') {
-					print(`<span class="err">ОШИБКА: КОМАНДА ДОСТУПНА ТОЛЬКО В ОПЕРАЦИОННОЙ СИСТЕМЕ.</span>`);
-					return;
-				}
-				const id = cmd.replace('login --id ', '').trim().replace('0x', '').toLowerCase();
+        if (cmd === 'login --id') {
+            print(`<span class="err">ОШИБКА: УКАЖИТЕ ID. ПРИМЕР: <span class="cmd-text">login --id <ВАШ_ID></span></span>`);
+            return;
+        }
+        if (cmd.startsWith('login --id ')) {
+            if (currentPage !== 'os.html') {
+                print(`<span class="err">ОШИБКА: КОМАНДА ДОСТУПНА ТОЛЬКО В ОПЕРАЦИОННОЙ СИСТЕМЕ.</span>`);
+                return;
+            }
+            const id = cmd.replace('login --id ', '').trim().replace('0x', '').toLowerCase();
             if (id === '7f930cb4ddb0') {
                 localStorage.setItem('s9_os_captcha', 'true');
                 print(`<span class="ok">[УСПЕХ] ИДЕНТИФИКАТОР ПРИНЯТ. ДОСТУП К ЯДРУ РАЗРЕШЕН.</span>`);
