@@ -314,8 +314,6 @@
 
         // --- КОМАНДА ДЛЯ ОС ---
         if (cmd.startsWith('os --reset qubit ')) {
-        // --- КОМАНДА ДЛЯ ОС ---
-        if (cmd.startsWith('os --reset qubit ')) {
             if (currentPage !== 'os.html') {
                 print(`ОШИБКА: КОМАНДА ДОСТУПНА ТОЛЬКО В ОПЕРАЦИОННОЙ СИСТЕМЕ.`, 'err');
             } else {
