@@ -135,6 +135,32 @@
         let dictionary = {};    
         const allDots = [];     
 
+        // --- ЛОГИКА ОБУЧЕНИЯ АРХИВА ---
+        let trainingIndex = 0;
+        const TRAINING_WORDS = ["ХАБ", "ГЛИФ", "ПУЛЬТ", "СЕРВЕР", "КОНСОЛЬ"];
+        let expectedWord = "";
+        let expectedIndices = [];
+
+        window.addEventListener('start_archive_training', () => {
+            document.body.classList.add('training-mode');
+            trainingIndex = 0;
+            expectedWord = "";
+            expectedIndices = [];
+            const label = document.getElementById('statusLabel');
+            if (label) {
+                label.innerText = "ОЖИДАНИЕ ВВОДА ТЕКСТА...";
+                label.style.color = "#ffaa00";
+            }
+            const input = document.getElementById('textInput');
+            if (input) input.value = "";
+            
+            document.getElementById('mode-switch').checked = false;
+            document.getElementById('gen-view').classList.remove('hidden');
+            document.getElementById('gen-ui').classList.remove('hidden');
+            document.getElementById('read-view').classList.add('hidden');
+            document.getElementById('read-ui').classList.add('hidden');
+        });   
+
         function getPathData(indices) {
             if (!indices || !indices.length) return '';
             const svgString = createSVG(indices);
