@@ -279,6 +279,13 @@
                             statusLabel.style.color = "#00ff44";
                             document.getElementById('textInput').value = "ОБУЧЕНИЕ ЗАВЕРШЕНО";
                             
+                            // Создаем 1 базовую фразу
+                            const phrase1 = ["ХАБ", "ГЛИФ", "ПУЛЬТ", "СЕРВЕР", "КОНСОЛЬ"];
+                            const now = Date.now();
+                            const phrasesData = [{ text: phrase1.join(' '), words: phrase1, timestamp: now }];
+                            localStorage.setItem('s9_phrases_data', JSON.stringify(phrasesData));
+                            localStorage.setItem('s9_archive_baseline_count', '1');
+
                             document.getElementById('mode-switch').checked = false;
                             document.getElementById('gen-view').classList.remove('hidden');
                             document.getElementById('gen-ui').classList.remove('hidden');
@@ -286,8 +293,9 @@
                             document.getElementById('read-ui').classList.add('hidden');
                             
                             if (window.printToConsole) {
-                                window.printToConsole(`<span class="ok">[УСПЕХ] АРХИВ ОБУЧЕН. АВТОСОХРАНЕНИЕ ВКЛЮЧЕНО.</span>`);
+                                window.printToConsole(`<span class="ok">[УСПЕХ] АРХИВ ОБУЧЕН. ПЕРЕЙДИТЕ В АРХИВ И ЗАФИКСИРУЙТЕ ЗАГРУЗКУ 2 НОВЫХ ПАРТИЙ ГЛИФОВ.</span>`);
                             }
+                        }
                         } else {
                             statusLabel.innerText = `ПРИНЯТО (${trainingIndex}/5). ВВЕДИТЕ СЛЕДУЮЩЕЕ СЛОВО В РЕЖИМЕ ТЕКСТ.`;
                             statusLabel.style.color = "#00ff44";
