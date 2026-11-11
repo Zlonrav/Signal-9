@@ -81,7 +81,7 @@
                     
                     cell.innerHTML = `
                         <div class="glyph-svg">${svgMarkup}</div>
-                        <div class="glyph-label">${word}</div>
+                        <div class="glyph-label">${getWrongLabel(word)}</div>
                     `;
                     grid.appendChild(cell);
                 } else {
