@@ -44,6 +44,19 @@
         
         /* ИСПРАВЛЕНО: добавили .dot перед nth-child(9) */
         .dot:nth-child(9) .dot-order { bottom: -15px; right: -15px; }
+
+        /* Стили для режима обучения Архива */
+        body.training-mode {
+            --neon: #ffaa00 !important;
+        }
+        body.training-mode .main-frame { border-color: var(--neon); box-shadow: 0 0 15px rgba(255, 170, 0, 0.2); }
+        body.training-mode path { stroke: var(--neon); filter: drop-shadow(0 0 5px var(--neon)) drop-shadow(0 0 2px #fff); }
+        body.training-mode .mode-label { color: var(--neon); text-shadow: 0 0 8px var(--neon); }
+        body.training-mode .dot { background: rgba(255, 170, 0, 0.2); }
+        body.training-mode .dot:hover { background: var(--neon); box-shadow: 0 0 8px var(--neon); }
+        body.training-mode .dot.active { background: #fff; box-shadow: 0 0 12px var(--neon); }
+        body.training-mode .status-label { color: var(--neon) !important; border-color: rgba(255, 170, 0, 0.3); }
+    </style>
     </style>
 </head>
 <body>
