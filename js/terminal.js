@@ -419,23 +419,27 @@
                 print(`> ${printCmd('clear')} - Очистка`);
                 break;
             case 'clear': output.innerHTML = ''; break;
-            case 'hub': if (isModuleOnline('hub')) window.location.href = 'index.html'; break;
-            case 'map': if (isModuleOnline('map')) window.location.href = 'map.html'; break;
+            case 'hub': 
+                if (isModuleOnline('hub')) window.location.href = 'index.html'; 
+                else print(`<span class="err">ОШИБКА: МОДУЛЬ [ХАБ] НЕДОСТУПЕН.</span>`, 'err');
+                break;
+            case 'map': 
+                if (isModuleOnline('map')) window.location.href = 'map.html'; 
+                else print(`<span class="err">ОШИБКА: МОДУЛЬ [КАРТА] НЕДОСТУПЕН.</span>`, 'err');
+                break;
             case 'terminal': window.location.href = 'tools.html'; break;
             case 'login': window.location.href = 'login.html'; break;
-            case 'archive': if (isModuleOnline('archive')) window.location.href = 'archive.html'; break;
-            case 'os': if (isModuleOnline('os')) window.location.href = 'os.html'; break;
-            case 'edr': if (isModuleOnline('edr')) window.location.href = 'edr.html'; break;
-			case 'telemetry': 
-                if (isModuleOnline('telemetry')) window.location.href = 'telemetry.html'; 
-                else print(`ОШИБКА: МОДУЛЬ [ТЕЛЕМЕТРИЯ] НЕДОСТУПЕН.`, 'err');
+            case 'archive': 
+                if (isModuleOnline('archive')) window.location.href = 'archive.html'; 
+                else print(`<span class="err">ОШИБКА: МОДУЛЬ [АРХИВ] НЕДОСТУПЕН. ТРЕБУЕТСЯ ДОСТУП К КАРТЕ.</span>`, 'err');
                 break;
-            case 'core': 
-                if (localStorage.getItem('s9_core_overheated') === 'true' || localStorage.getItem('s9_core_fixed') === 'true') {
-                    window.location.href = 'core.html';
-                } else {
-                    print(`<span class="err">ОШИБКА: ЭНЕРГОЯДРО НАХОДИТСЯ В РЕЖИМЕ ОХЛАЖДЕНИЯ. ДОСТУП ЗАПРЕЩЕН.</span>`);
-                }
+            case 'os': 
+                if (isModuleOnline('os')) window.location.href = 'os.html'; 
+                else print(`<span class="err">ОШИБКА: МОДУЛЬ [ОС] НЕДОСТУПЕН. СНАЧАЛА ПОЧИНИТЕ АРХИВ.</span>`, 'err');
+                break;
+            case 'edr': 
+                if (isModuleOnline('edr')) window.location.href = 'edr.html'; 
+                else print(`<span class="err">ОШИБКА: МОДУЛЬ [EDR] НЕДОСТУПЕН.</span>`, 'err');
                 break;
             default:
                 print(`НЕИЗВЕСТНАЯ КОМАНДА. ВВЕДИТЕ ${printCmd('help')}.`, 'err');
