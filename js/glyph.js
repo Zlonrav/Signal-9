@@ -84,3 +84,21 @@ window.renderSmoothPath = function(pathId, indices, isContinuing = false) {
     }
 };
 
+// Функция для генерации недешифрованного текста (Подменная соль)
+function getWrongLabel(word) {
+    // Если правильная соль уже найдена (например, s9_salt_found === 'true'), возвращаем слово как есть
+    if (localStorage.getItem('s9_salt_found') === 'true') return word;
+
+    // Используем другую соль (не 5381, а 7777)
+    let hash = 7777;
+    for (let i = 0; i < word.length; i++) hash = ((hash << 5) + hash) + word.charCodeAt(i);
+    let seed = Math.abs(hash);
+    
+    const cyrillic = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
+    let res = "";
+    for (let i = 0; i < word.length; i++) {
+        seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+        res += cyrillic[seed % cyrillic.length];
+    }
+    return res;
+}
