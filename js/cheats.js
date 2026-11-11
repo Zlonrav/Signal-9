@@ -167,14 +167,11 @@
                 localStorage.removeItem('s9_archive_training');
                 const words = ["ХАБ", "ГЛИФ", "ПУЛЬТ", "СЕРВЕР", "КОНСОЛЬ"];
                 const now = Date.now();
-                const phrasesData = [
-                    { text: words.slice(0, 3).join(' '), words: words.slice(0, 3), timestamp: now - 1000 },
-                    { text: words.slice(3, 5).join(' '), words: words.slice(3, 5), timestamp: now }
-                ];
+                const phrasesData = [{ text: words.join(' '), words: words, timestamp: now }];
                 localStorage.setItem('s9_phrases_data', JSON.stringify(phrasesData));
                 localStorage.setItem('s9_archive_calibrated', 'true');
-                localStorage.setItem('s9_archive_baseline_count', '2');
-                print('<span class="ok">[ЧИТ] КАЛИБРОВКА ПРОЙДЕНА. В ПАМЯТИ 2 ФРАЗЫ.</span>');
+                localStorage.setItem('s9_archive_baseline_count', '1');
+                print('<span class="ok">[ЧИТ] ОБУЧЕНИЕ ПРОЙДЕНО. В ПАМЯТИ 1 БАЗОВАЯ ФРАЗА.</span>');
                 setTimeout(() => { window.location.href = 'archive.html'; }, 1500);
                 return true; 
             }
