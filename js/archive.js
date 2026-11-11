@@ -48,7 +48,7 @@
 
         // --- ЛОГИКА ЗАВЕРШЕНИЯ ТЕСТА ---
         if (isCalibrated && !isFixed) {
-            const baseline = parseInt(localStorage.getItem('s9_archive_baseline_count') || '2', 10);
+            const baseline = parseInt(localStorage.getItem('s9_archive_baseline_count') || '1', 10);
             if (phrases.length >= baseline + 2) {
                 localStorage.setItem('s9_archive_fixed', 'true');
                 setTimeout(() => { location.reload(); }, 1000);
