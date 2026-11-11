@@ -155,13 +155,13 @@
     // 4. ПРОВЕРКА ДОСТУПА К МОДУЛЯМ
     function isModuleOnline(moduleId) {
         const isAuthorized = localStorage.getItem('s9_access_granted') === 'true';
+        const currentPage = window.location.pathname.split('/').pop() || 'index.html';
 
         switch(moduleId) {
             case 'terminal': return true; 
             case 'hub':
             case 'map': return isAuthorized; 
-            case 'archive': return localStorage.getItem('s9_map_visited') === 'true';
-            case 'os': return localStorage.getItem('s9_archive_fixed') === 'true';
+            case 'archive': return localStorage.getItem('s9_map_visited') === 'true' || currentPage === 'map.html';
             case 'edr': return localStorage.getItem('s9_os_fixed') === 'true';
             case 'telemetry': return localStorage.getItem('s9_core_fixed') === 'true';
             case 'core': return localStorage.getItem('s9_core_overheated') === 'true' || localStorage.getItem('s9_core_fixed') === 'true';
@@ -421,25 +421,25 @@
             case 'clear': output.innerHTML = ''; break;
             case 'hub': 
                 if (isModuleOnline('hub')) window.location.href = 'index.html'; 
-                else print(`<span class="err">ОШИБКА: МОДУЛЬ [ХАБ] НЕДОСТУПЕН.</span>`, 'err');
+                else print(`НЕИЗВЕСТНАЯ КОМАНДА. ВВЕДИТЕ ${printCmd('help')}.`, 'err');
                 break;
             case 'map': 
                 if (isModuleOnline('map')) window.location.href = 'map.html'; 
-                else print(`<span class="err">ОШИБКА: МОДУЛЬ [КАРТА] НЕДОСТУПЕН.</span>`, 'err');
+                else print(`НЕИЗВЕСТНАЯ КОМАНДА. ВВЕДИТЕ ${printCmd('help')}.`, 'err');
                 break;
             case 'terminal': window.location.href = 'tools.html'; break;
             case 'login': window.location.href = 'login.html'; break;
             case 'archive': 
                 if (isModuleOnline('archive')) window.location.href = 'archive.html'; 
-                else print(`<span class="err">ОШИБКА: МОДУЛЬ [АРХИВ] НЕДОСТУПЕН. ТРЕБУЕТСЯ ДОСТУП К КАРТЕ.</span>`, 'err');
+                else print(`НЕИЗВЕСТНАЯ КОМАНДА. ВВЕДИТЕ ${printCmd('help')}.`, 'err');
                 break;
             case 'os': 
                 if (isModuleOnline('os')) window.location.href = 'os.html'; 
-                else print(`<span class="err">ОШИБКА: МОДУЛЬ [ОС] НЕДОСТУПЕН. СНАЧАЛА ПОЧИНИТЕ АРХИВ.</span>`, 'err');
+                else print(`НЕИЗВЕСТНАЯ КОМАНДА. ВВЕДИТЕ ${printCmd('help')}.`, 'err');
                 break;
             case 'edr': 
                 if (isModuleOnline('edr')) window.location.href = 'edr.html'; 
-                else print(`<span class="err">ОШИБКА: МОДУЛЬ [EDR] НЕДОСТУПЕН.</span>`, 'err');
+                else print(`НЕИЗВЕСТНАЯ КОМАНДА. ВВЕДИТЕ ${printCmd('help')}.`, 'err');
                 break;
             default:
                 print(`НЕИЗВЕСТНАЯ КОМАНДА. ВВЕДИТЕ ${printCmd('help')}.`, 'err');
