@@ -364,9 +364,44 @@
 
         document.getElementById('textInput').oninput = (e) => {
             const rawVal = e.target.value.trim();
-
-            // Обычная логика глифов
             const val = rawVal.toUpperCase().replace(/[^А-ЯЁA-Z]/g, '');
+
+            if (localStorage.getItem('s9_archive_training') === 'true') {
+                if (trainingIndex >= 5) {
+                    e.target.value = "ОБУЧЕНИЕ ЗАВЕРШЕНО";
+                    return;
+                }
+                
+                const targetWord = TRAINING_WORDS[trainingIndex];
+                if (val === targetWord) {
+                    expectedWord = val;
+                    expectedIndices = getPath(val);
+                    renderPath('genPath', expectedIndices, false);
+                    const label = document.getElementById('statusLabel');
+                    if (label) {
+                        label.innerText = `СЛОВО: ${val}. ТЕПЕРЬ НАРИСУЙТЕ ЕГО В РЕЖИМЕ ТРАССИТ.`;
+                    }
+                    
+                    document.getElementById('mode-switch').checked = true;
+                    document.getElementById('gen-view').classList.add('hidden');
+                    document.getElementById('gen-ui').classList.add('hidden');
+                    document.getElementById('read-view').classList.remove('hidden');
+                    document.getElementById('read-ui').classList.remove('hidden');
+                    
+                    readIndices = [];
+                    renderPath('readPath', [], false);
+                    updatePointsUI();
+                } else {
+                    genIndices = getPath(val);
+                    renderPath('genPath', genIndices, false);
+                    const label = document.getElementById('statusLabel');
+                    if (label) {
+                        label.innerText = `ОЖИДАНИЕ СЛОВА: ${targetWord} (${targetWord.length} БУКВ)`;
+                    }
+                }
+                return;
+            }
+
             genIndices = (val && typeof getPath === 'function') ? getPath(val) : [];
             renderPath('genPath', genIndices, false);
             updatePointsUI();
