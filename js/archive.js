@@ -62,6 +62,34 @@
         let currentList = (currentPage === 1) ? buffer1 : buffer2;
 
         grid.innerHTML = '';
+
+        // --- ПРОВЕРКА СЕКТОРА ВЕРИФИКАЦИИ ---
+        const isSaltFound = localStorage.getItem('s9_salt_found') === 'true';
+        
+        if (currentPage === 2 && !isSaltFound) {
+            // Если мы на вкладке верификации, но соль не найдена — показываем ошибку
+            grid.style.display = 'flex'; // Используем flex для центрирования
+            grid.style.flexDirection = 'column';
+            grid.style.alignItems = 'center';
+            grid.style.justifyContent = 'center';
+            grid.style.gridTemplateColumns = 'none'; // Отключаем сетку
+            
+            grid.innerHTML = `
+                <div style="text-align: center; border: 1px solid #ff3333; padding: 40px; background: rgba(15, 2, 2, 0.85); box-shadow: 0 0 30px rgba(255, 51, 51, 0.3); border-radius: 8px;">
+                    <div style="color: #ff3333; font-size: 24px; font-weight: bold; font-family: 'Michroma', sans-serif; margin-bottom: 20px; letter-spacing: 2px; text-shadow: 0 0 10px #ff3333;">ОШИБКА ВЕРИФИКАЦИИ</div>
+                    <div style="color: #ff6666; font-size: 14px; font-family: 'JetBrains Mono', monospace; line-height: 1.6;">
+                        СИГНАЛ ЗАШИФРОВАН.<br>КЛЮЧ-ПАРОЛЬ НЕ НАЙДЕН.<br><br>
+                        <span style="opacity: 0.7; font-size: 12px;">ДЕШИФРОВКА НЕВОЗМОЖНА.</span>
+                    </div>
+                </div>
+            `;
+            return; // Прерываем дальнейшую отрисовку сетки
+        } else {
+            // Возвращаем стандартные стили сетки для Буфера (или если соль найдена)
+            grid.style.display = 'grid';
+            grid.style.gridTemplateColumns = 'repeat(5, 110px)';
+        }
+        // ------------------------------------
         
         for (let row = 0; row < 5; row++) {
             const phraseObj = currentList[row];
