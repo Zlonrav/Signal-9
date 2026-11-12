@@ -137,10 +137,8 @@
 
         // --- ЛОГИКА ОБУЧЕНИЯ АРХИВА ---
         let trainingIndex = 0;
+        // --- ЛОГИКА ОБУЧЕНИЯ АРХИВА ---
         const TRAINING_WORDS = ["ХАБ", "ГЛИФ", "ПУЛЬТ", "СЕРВЕР", "КОНСОЛЬ"];
-        let expectedWord = "";
-        let expectedIndices = [];
-
         window.addEventListener('start_archive_training', () => {
             document.body.classList.add('training-mode');
             trainingIndex = 0;
@@ -265,72 +263,70 @@
             const statusLabel = document.getElementById('statusLabel');
             if (isReadMode && statusLabel) {
                 const key = readIndices.join('-');
-                
+                const foundWord = dictionary[key];
+
+                // --- ЛОГИКА ОБУЧЕНИЯ АРХИВА (Проверка нарисованного глифа) ---
                 if (localStorage.getItem('s9_archive_training') === 'true') {
-                    if (expectedIndices.length === 0) {
-                        statusLabel.innerText = "СНАЧАЛА ВВЕДИТЕ ТЕКСТ СЛОВА В РЕЖИМЕ «ТЕКСТ»";
-                        statusLabel.style.color = "#ffaa00";
-                        return;
-                    }
-
-                    // 1. Проверяем, правильная ли точка была нажата последней
-                    const lastIndex = readIndices.length - 1;
-                    const isCurrentPathValid = readIndices.every((val, index) => val === expectedIndices[index]);
-
-                    if (!isCurrentPathValid) {
-                        statusLabel.innerText = "ОШИБКА ПАТТЕРНА. СБРОСЬТЕ (×) И ПОПРОБУЙТЕ СНОВА.";
-                        statusLabel.style.color = "#ff3333";
-                    } else if (readIndices.length === expectedIndices.length) {
-                        // 2. Если нарисовали ровно столько точек, сколько нужно, и все они верны — УСПЕХ
-                        trainingIndex++;
-                        localStorage.setItem('s9_glyph_' + expectedWord, 'true');
-                        
-                        if (trainingIndex >= 5) {
-                            localStorage.setItem('s9_archive_calibrated', 'true');
-                            localStorage.removeItem('s9_archive_training');
-                            document.body.classList.remove('training-mode');
-                            statusLabel.innerText = "ОБУЧЕНИЕ ЗАВЕРШЕНО";
-                            statusLabel.style.color = "#00ff44";
-                            document.getElementById('textInput').value = "ОБУЧЕНИЕ ЗАВЕРШЕНО";
-                            
-                            const phrase1 = ["ХАБ", "ГЛИФ", "ПУЛЬТ", "СЕРВЕР", "КОНСОЛЬ"];
-                            const now = Date.now();
-                            const phrasesData = [{ text: phrase1.join(' '), words: phrase1, timestamp: now }];
-                            localStorage.setItem('s9_phrases_data', JSON.stringify(phrasesData));
-                            localStorage.setItem('s9_archive_baseline_count', '1');
-
-                            document.getElementById('mode-switch').checked = false;
-                            document.getElementById('gen-view').classList.remove('hidden');
-                            document.getElementById('gen-ui').classList.remove('hidden');
-                            document.getElementById('read-view').classList.add('hidden');
-                            document.getElementById('read-ui').classList.add('hidden');
-                            
-                            if (window.printToConsole) {
-                                window.printToConsole(`<span class="ok">[УСПЕХ] АРХИВ ОБУЧЕН. ПЕРЕЙДИТЕ В АРХИВ И ЗАФИКСИРУЙТЕ ЗАГРУЗКУ 2 НОВЫХ ПАРТИЙ ГЛИФОВ.</span>`);
-                            }
+                    if (foundWord && TRAINING_WORDS.includes(foundWord)) {
+                        // Нарисовали слово из обучающего списка
+                        if (localStorage.getItem('s9_glyph_' + foundWord) === 'true') {
+                            statusLabel.innerText = `СЛОВО "${foundWord}" УЖЕ ИЗУЧЕНО. НАРИСУЙТЕ ДРУГОЕ.`;
+                            statusLabel.style.color = "#ffaa00";
+                            readIndices = [];
+                            renderPath('readPath', [], false);
+                            setTimeout(() => updatePointsUI(), 100);
                         } else {
-                            statusLabel.innerText = `ПРИНЯТО (${trainingIndex}/5). ВВЕДИТЕ СЛЕДУЮЩЕЕ СЛОВО В РЕЖИМЕ ТЕКСТ.`;
-                            statusLabel.style.color = "#00ff44";
+                            // Слово верное и еще не изучено — Засчитываем!
+                            localStorage.setItem('s9_glyph_' + foundWord, 'true');
                             
-                            document.getElementById('gen-view').classList.remove('hidden');
-                            document.getElementById('gen-ui').classList.remove('hidden');
-                            document.getElementById('read-view').classList.add('hidden');
-                            document.getElementById('read-ui').classList.add('hidden');
-                            document.getElementById('textInput').value = "";
-                            expectedWord = "";
-                            expectedIndices = [];
-                            genIndices = []; // Очищаем и графический путь
+                            // Считаем, сколько всего изучено
+                            let learnedCount = 0;
+                            TRAINING_WORDS.forEach(w => {
+                                if (localStorage.getItem('s9_glyph_' + w) === 'true') learnedCount++;
+                            });
+
+                            if (learnedCount >= 5) {
+                                localStorage.setItem('s9_archive_calibrated', 'true');
+                                localStorage.removeItem('s9_archive_training');
+                                document.body.classList.remove('training-mode');
+                                statusLabel.innerText = "ОБУЧЕНИЕ ЗАВЕРШЕНО";
+                                statusLabel.style.color = "#00ff44";
+                                document.getElementById('textInput').value = "ОБУЧЕНИЕ ЗАВЕРШЕНО";
+                                
+                                const phrase1 = ["ХАБ", "ГЛИФ", "ПУЛЬТ", "СЕРВЕР", "КОНСОЛЬ"];
+                                const now = Date.now();
+                                const phrasesData = [{ text: phrase1.join(' '), words: phrase1, timestamp: now }];
+                                localStorage.setItem('s9_phrases_data', JSON.stringify(phrasesData));
+                                localStorage.setItem('s9_archive_baseline_count', '1');
+
+                                document.getElementById('mode-switch').checked = false;
+                                document.getElementById('gen-view').classList.remove('hidden');
+                                document.getElementById('gen-ui').classList.remove('hidden');
+                                document.getElementById('read-view').classList.add('hidden');
+                                document.getElementById('read-ui').classList.add('hidden');
+                                
+                                if (window.printToConsole) {
+                                    window.printToConsole(`<span class="ok">[УСПЕХ] АРХИВ ОБУЧЕН. ПЕРЕЙДИТЕ В АРХИВ И ЗАФИКСИРУЙТЕ ЗАГРУЗКУ 2 НОВЫХ ПАРТИЙ ГЛИФОВ.</span>`);
+                                }
+                            } else {
+                                statusLabel.innerText = `ПРИНЯТО (${learnedCount}/5). НАРИСУЙТЕ СЛЕДУЮЩИЙ ГЛИФ.`;
+                                statusLabel.style.color = "#00ff44";
+                                readIndices = [];
+                                renderPath('readPath', [], false);
+                                setTimeout(() => updatePointsUI(), 100);
+                            }
                         }
-                        readIndices = [];
-                        renderPath('readPath', [], false);
-                        setTimeout(() => updatePointsUI(), 100);
+                    } else if (readIndices.length >= 5) {
+                        // Нарисовали не то (или не из списка)
+                        statusLabel.innerText = "НЕ РАСПОЗНАНО";
+                        statusLabel.style.color = "#ff3333";
                     } else {
-                        // 3. Если путь верный, но точек еще мало — ждем продолжения
-                        statusLabel.innerText = `РИСУЙТЕ... (${readIndices.length}/${expectedIndices.length})`;
+                        statusLabel.innerText = "РИСУЙТЕ ЭТАЛОННЫЙ ГЛИФ...";
                         statusLabel.style.color = "#ffaa00";
                     }
                     return;
                 }
+                // -------------------------------------------------------------
 
                 if (dictionary[key]) {
                     const foundWord = dictionary[key]; 
@@ -433,34 +429,7 @@
             const rawVal = e.target.value.trim();
             const val = rawVal.toUpperCase().replace(/[^А-ЯЁA-Z]/g, '');
 
-            if (localStorage.getItem('s9_archive_training') === 'true') {
-                if (trainingIndex >= 5) {
-                    e.target.value = "ОБУЧЕНИЕ ЗАВЕРШЕНО";
-                    return;
-                }
-                
-                const targetWord = TRAINING_WORDS[trainingIndex];
-                if (val === targetWord) {
-                    expectedWord = val;
-                    expectedIndices = getPath(val);
-                    genIndices = [...expectedIndices]; // Синхронизируем пути
-                    renderPath('genPath', genIndices, false); // Рисуем из genIndices
-                    const label = document.getElementById('statusLabel');
-                    if (label) {
-                        label.innerText = `СЛОВО: ${val}. ПЕРЕКЛЮЧИТЕСЬ В РЕЖИМ "ТРАССИТ" И ПОВТОРИТЕ ГЛИФ.`;
-                        label.style.color = "#ffaa00";
-                    }
-                } else {
-                    genIndices = getPath(val);
-                    renderPath('genPath', genIndices, false);
-                    const label = document.getElementById('statusLabel');
-                    if (label) {
-                        label.innerText = `ОЖИДАНИЕ СЛОВА: ${targetWord} (${targetWord.length} БУКВ)`;
-                    }
-                }
-                return;
-            }
-
+            // В режиме "Текст" мы просто рисуем глиф, как и раньше
             genIndices = (val && typeof getPath === 'function') ? getPath(val) : [];
             renderPath('genPath', genIndices, false);
             updatePointsUI();
@@ -504,16 +473,15 @@
             TRAINING_WORDS.forEach(w => {
                 if (localStorage.getItem('s9_glyph_' + w) === 'true') learnedCount++;
             });
-            trainingIndex = learnedCount;
             
-            if (trainingIndex >= 5) {
+            if (learnedCount >= 5) {
                 localStorage.setItem('s9_archive_calibrated', 'true');
                 localStorage.removeItem('s9_archive_training');
                 document.body.classList.remove('training-mode');
             } else {
                 const label = document.getElementById('statusLabel');
                 if (label) {
-                    label.innerText = `ПРИНЯТО (${trainingIndex}/5). ВВЕДИТЕ СЛЕДУЮЩЕЕ СЛОВО В РЕЖИМЕ ТЕКСТ.`;
+                    label.innerText = `ПРИНЯТО (${learnedCount}/5). ВВЕДИТЕ ТЕКСТ ДЛЯ ПРОСМОТРА И НАРИСУЙТЕ ГЛИФ.`;
                     label.style.color = "#ffaa00";
                 }
                 const input = document.getElementById('textInput');
