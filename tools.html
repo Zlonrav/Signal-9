@@ -274,7 +274,7 @@
                     if (foundWord && TRAINING_WORDS.includes(foundWord)) {
                         // Нарисовали слово из обучающего списка
                         if (localStorage.getItem('s9_glyph_' + foundWord) === 'true') {
-                            statusLabel.innerText = `СЛОВО "${foundWord}" УЖЕ ИЗУЧЕНО. НАРИСУЙТЕ ДРУГОЕ.`;
+                            statusLabel.innerText = `"${foundWord}" - ИЗУЧЕНО`;
                             statusLabel.style.color = "#ffaa00";
                             
                             // Пауза 3 секунды, чтобы прочитать
