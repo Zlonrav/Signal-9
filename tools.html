@@ -139,6 +139,7 @@
         let trainingIndex = 0;
         // --- ЛОГИКА ОБУЧЕНИЯ АРХИВА ---
         const TRAINING_WORDS = ["ХАБ", "ГЛИФ", "ПУЛЬТ", "СЕРВЕР", "КОНСОЛЬ"];
+        window.isTrainingSuccessAnimating = false; // Блокировка кликов во время паузы
         window.addEventListener('start_archive_training', () => {
             document.body.classList.add('training-mode');
             trainingIndex = 0;
@@ -267,17 +268,29 @@
 
                 // --- ЛОГИКА ОБУЧЕНИЯ АРХИВА (Проверка нарисованного глифа) ---
                 if (localStorage.getItem('s9_archive_training') === 'true') {
+                    // Блокируем клики, если идет пауза после успеха
+                    if (window.isTrainingSuccessAnimating) return;
+
                     if (foundWord && TRAINING_WORDS.includes(foundWord)) {
                         // Нарисовали слово из обучающего списка
                         if (localStorage.getItem('s9_glyph_' + foundWord) === 'true') {
                             statusLabel.innerText = `СЛОВО "${foundWord}" УЖЕ ИЗУЧЕНО. НАРИСУЙТЕ ДРУГОЕ.`;
                             statusLabel.style.color = "#ffaa00";
-                            readIndices = [];
-                            renderPath('readPath', [], false);
-                            setTimeout(() => updatePointsUI(), 100);
+                            
+                            // Пауза 3 секунды, чтобы прочитать
+                            window.isTrainingSuccessAnimating = true;
+                            setTimeout(() => {
+                                readIndices = [];
+                                renderPath('readPath', [], false);
+                                statusLabel.innerText = "РИСУЙТЕ ЭТАЛОННЫЙ ГЛИФ...";
+                                statusLabel.style.color = "#ffaa00";
+                                window.isTrainingSuccessAnimating = false;
+                                updatePointsUI();
+                            }, 3000);
                         } else {
                             // Слово верное и еще не изучено — Засчитываем!
                             localStorage.setItem('s9_glyph_' + foundWord, 'true');
+                            window.isTrainingSuccessAnimating = true;
                             
                             // Считаем, сколько всего изучено
                             let learnedCount = 0;
@@ -289,7 +302,7 @@
                                 localStorage.setItem('s9_archive_calibrated', 'true');
                                 localStorage.removeItem('s9_archive_training');
                                 document.body.classList.remove('training-mode');
-                                statusLabel.innerText = "ОБУЧЕНИЕ ЗАВЕРШЕНО";
+                                statusLabel.innerText = "ОБУЧЕНИЕ ЗАВЕРШЕНО. ВСЕ 5 ГЛИФОВ ИЗУЧЕНЫ.";
                                 statusLabel.style.color = "#00ff44";
                                 document.getElementById('textInput').value = "ОБУЧЕНИЕ ЗАВЕРШЕНО";
                                 
@@ -305,28 +318,28 @@
                                 document.getElementById('read-view').classList.add('hidden');
                                 document.getElementById('read-ui').classList.add('hidden');
                                 
+                                window.isTrainingSuccessAnimating = false;
                                 if (window.printToConsole) {
                                     window.printToConsole(`<span class="ok">[УСПЕХ] АРХИВ ОБУЧЕН. ПЕРЕЙДИТЕ В АРХИВ И ЗАФИКСИРУЙТЕ ЗАГРУЗКУ 2 НОВЫХ ПАРТИЙ ГЛИФОВ.</span>`);
                                 }
                             } else {
-                                // 1. Показываем сообщение об успехе и оставляем глиф на экране
                                 statusLabel.innerText = `ПРИНЯТО (${learnedCount}/5). ГЛИФ ИЗУЧЕН.`;
                                 statusLabel.style.color = "#00ff44";
                                 
-                                // 2. Ждем 2 секунды, прежде чем очистить экран
+                                // Пауза 3 секунды для любования глифом
                                 setTimeout(() => {
                                     if (localStorage.getItem('s9_archive_training') === 'true') {
                                         readIndices = [];
                                         renderPath('readPath', [], false);
                                         statusLabel.innerText = "РИСУЙТЕ СЛЕДУЮЩИЙ ЭТАЛОННЫЙ ГЛИФ...";
                                         statusLabel.style.color = "#ffaa00";
+                                        window.isTrainingSuccessAnimating = false;
                                         updatePointsUI();
                                     }
-                                }, 2000);
+                                }, 3000);
                             }
                         }
                     } else if (readIndices.length >= 5) {
-                        // Нарисовали не то (или не из списка)
                         statusLabel.innerText = "НЕ РАСПОЗНАНО";
                         statusLabel.style.color = "#ff3333";
                     } else {
