@@ -309,11 +309,20 @@
                                     window.printToConsole(`<span class="ok">[УСПЕХ] АРХИВ ОБУЧЕН. ПЕРЕЙДИТЕ В АРХИВ И ЗАФИКСИРУЙТЕ ЗАГРУЗКУ 2 НОВЫХ ПАРТИЙ ГЛИФОВ.</span>`);
                                 }
                             } else {
-                                statusLabel.innerText = `ПРИНЯТО (${learnedCount}/5). НАРИСУЙТЕ СЛЕДУЮЩИЙ ГЛИФ.`;
+                                // 1. Показываем сообщение об успехе и оставляем глиф на экране
+                                statusLabel.innerText = `ПРИНЯТО (${learnedCount}/5). ГЛИФ ИЗУЧЕН.`;
                                 statusLabel.style.color = "#00ff44";
-                                readIndices = [];
-                                renderPath('readPath', [], false);
-                                setTimeout(() => updatePointsUI(), 100);
+                                
+                                // 2. Ждем 2 секунды, прежде чем очистить экран
+                                setTimeout(() => {
+                                    if (localStorage.getItem('s9_archive_training') === 'true') {
+                                        readIndices = [];
+                                        renderPath('readPath', [], false);
+                                        statusLabel.innerText = "РИСУЙТЕ СЛЕДУЮЩИЙ ЭТАЛОННЫЙ ГЛИФ...";
+                                        statusLabel.style.color = "#ffaa00";
+                                        updatePointsUI();
+                                    }
+                                }, 2000);
                             }
                         }
                     } else if (readIndices.length >= 5) {
