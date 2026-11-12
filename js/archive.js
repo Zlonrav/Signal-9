@@ -67,27 +67,33 @@
         const isSaltFound = localStorage.getItem('s9_salt_found') === 'true';
         
         if (currentPage === 2 && !isSaltFound) {
-            // Если мы на вкладке верификации, но соль не найдена — показываем ошибку
-            grid.style.display = 'flex'; // Используем flex для центрирования
-            grid.style.flexDirection = 'column';
-            grid.style.alignItems = 'center';
-            grid.style.justifyContent = 'center';
-            grid.style.gridTemplateColumns = 'none'; // Отключаем сетку
+            // 1. Сначала рендерим 25 пустых слотов для фона (как в Накопительном буфере)
+            for (let i = 0; i < 25; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'glyph-cell empty-slot';
+                grid.appendChild(cell);
+            }
             
-            grid.innerHTML = `
-                <div style="text-align: center; border: 1px solid #ff3333; padding: 40px; background: rgba(15, 2, 2, 0.85); box-shadow: 0 0 30px rgba(255, 51, 51, 0.3); border-radius: 8px;">
+            // 2. Накладываем поверх сетки плашку с ошибкой
+            const errorOverlay = document.createElement('div');
+            errorOverlay.style.position = 'absolute';
+            errorOverlay.style.inset = '0';
+            errorOverlay.style.display = 'flex';
+            errorOverlay.style.alignItems = 'center';
+            errorOverlay.style.justifyContent = 'center';
+            errorOverlay.style.zIndex = '10';
+            
+            errorOverlay.innerHTML = `
+                <div style="text-align: center; border: 1px solid #ff3333; padding: 40px; background: rgba(15, 2, 2, 0.95); box-shadow: 0 0 30px rgba(255, 51, 51, 0.5); border-radius: 8px; max-width: 80%;">
                     <div style="color: #ff3333; font-size: 24px; font-weight: bold; font-family: 'Michroma', sans-serif; margin-bottom: 20px; letter-spacing: 2px; text-shadow: 0 0 10px #ff3333;">ОШИБКА ВЕРИФИКАЦИИ</div>
                     <div style="color: #ff6666; font-size: 14px; font-family: 'JetBrains Mono', monospace; line-height: 1.6;">
                         СИГНАЛ ЗАШИФРОВАН.<br>КЛЮЧ-ПАРОЛЬ НЕ НАЙДЕН.<br><br>
-                        <span style="opacity: 0.7; font-size: 12px;">ВЕРИФИКАЦИЯ НЕВОЗМОЖНА.</span>
+                        <span style="opacity: 0.7; font-size: 12px;">ДЕШИФРОВКА НЕВОЗМОЖНА.</span>
                     </div>
                 </div>
             `;
-            return; // Прерываем дальнейшую отрисовку сетки
-        } else {
-            // Возвращаем стандартные стили сетки для Буфера (или если соль найдена)
-            grid.style.display = 'grid';
-            grid.style.gridTemplateColumns = 'repeat(5, 110px)';
+            grid.appendChild(errorOverlay);
+            return; // Прерываем отрисовку слов
         }
         // ------------------------------------
         
