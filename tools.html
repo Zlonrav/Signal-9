@@ -254,7 +254,8 @@
                 const dot = allDots[pointIdx];
                 if (!dot) return;
                 dot.classList.add('active');
-                if (!isReadMode) {
+                // Показываем номера в режиме "Текст" ИЛИ в режиме обучения
+                if (!isReadMode || localStorage.getItem('s9_archive_training') === 'true') {
                     dot.classList.add('show-order');
                     const lbl = dot.querySelector('.dot-order');
                     if (lbl) lbl.innerText = order + 1;
@@ -311,7 +312,6 @@
                             statusLabel.innerText = `ПРИНЯТО (${trainingIndex}/5). ВВЕДИТЕ СЛЕДУЮЩЕЕ СЛОВО В РЕЖИМЕ ТЕКСТ.`;
                             statusLabel.style.color = "#00ff44";
                             
-                            document.getElementById('mode-switch').checked = false;
                             document.getElementById('gen-view').classList.remove('hidden');
                             document.getElementById('gen-ui').classList.remove('hidden');
                             document.getElementById('read-view').classList.add('hidden');
@@ -319,6 +319,7 @@
                             document.getElementById('textInput').value = "";
                             expectedWord = "";
                             expectedIndices = [];
+                            genIndices = []; // Очищаем и графический путь
                         }
                         readIndices = [];
                         renderPath('readPath', [], false);
@@ -442,7 +443,8 @@
                 if (val === targetWord) {
                     expectedWord = val;
                     expectedIndices = getPath(val);
-                    renderPath('genPath', expectedIndices, false);
+                    genIndices = [...expectedIndices]; // Синхронизируем пути
+                    renderPath('genPath', genIndices, false); // Рисуем из genIndices
                     const label = document.getElementById('statusLabel');
                     if (label) {
                         label.innerText = `СЛОВО: ${val}. ПЕРЕКЛЮЧИТЕСЬ В РЕЖИМ "ТРАССИТ" И ПОВТОРИТЕ ГЛИФ.`;
