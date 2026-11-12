@@ -446,18 +446,11 @@
                     renderPath('genPath', expectedIndices, false);
                     const label = document.getElementById('statusLabel');
                     if (label) {
-                        label.innerText = `СЛОВО: ${val}. ТЕПЕРЬ НАРИСУЙТЕ ЕГО В РЕЖИМЕ ТРАССИТ.`;
+                        label.innerText = `СЛОВО: ${val}. ПЕРЕКЛЮЧИТЕСЬ В РЕЖИМ "ТРАССИТ" И ПОВТОРИТЕ ГЛИФ.`;
+                        label.style.color = "#ffaa00";
                     }
-                    
-                    document.getElementById('mode-switch').checked = true;
-                    document.getElementById('gen-view').classList.add('hidden');
-                    document.getElementById('gen-ui').classList.add('hidden');
-                    document.getElementById('read-view').classList.remove('hidden');
-                    document.getElementById('read-ui').classList.remove('hidden');
-                    
-                    readIndices = [];
-                    renderPath('readPath', [], false);
-                    updatePointsUI();
+                    // Тут больше нет принудительного переключения тумблера
+                }
                 } else {
                     genIndices = getPath(val);
                     renderPath('genPath', genIndices, false);
