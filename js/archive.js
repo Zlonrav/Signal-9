@@ -79,7 +79,7 @@
                     <div style="color: #ff3333; font-size: 24px; font-weight: bold; font-family: 'Michroma', sans-serif; margin-bottom: 20px; letter-spacing: 2px; text-shadow: 0 0 10px #ff3333;">ОШИБКА ВЕРИФИКАЦИИ</div>
                     <div style="color: #ff6666; font-size: 14px; font-family: 'JetBrains Mono', monospace; line-height: 1.6;">
                         СИГНАЛ ЗАШИФРОВАН.<br>КЛЮЧ-ПАРОЛЬ НЕ НАЙДЕН.<br><br>
-                        <span style="opacity: 0.7; font-size: 12px;">ДЕШИФРОВКА НЕВОЗМОЖНА.</span>
+                        <span style="opacity: 0.7; font-size: 12px;">ВЕРИФИКАЦИЯ НЕВОЗМОЖНА.</span>
                     </div>
                 </div>
             `;
