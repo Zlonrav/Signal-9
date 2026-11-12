@@ -267,7 +267,21 @@
                 const key = readIndices.join('-');
                 
                 if (localStorage.getItem('s9_archive_training') === 'true') {
-                    if (expectedIndices.length > 0 && key === expectedIndices.join('-')) {
+                    if (expectedIndices.length === 0) {
+                        statusLabel.innerText = "СНАЧАЛА ВВЕДИТЕ ТЕКСТ СЛОВА В РЕЖИМЕ «ТЕКСТ»";
+                        statusLabel.style.color = "#ffaa00";
+                        return;
+                    }
+
+                    // 1. Проверяем, правильная ли точка была нажата последней
+                    const lastIndex = readIndices.length - 1;
+                    const isCurrentPathValid = readIndices.every((val, index) => val === expectedIndices[index]);
+
+                    if (!isCurrentPathValid) {
+                        statusLabel.innerText = "ОШИБКА ПАТТЕРНА. СБРОСЬТЕ (×) И ПОПРОБУЙТЕ СНОВА.";
+                        statusLabel.style.color = "#ff3333";
+                    } else if (readIndices.length === expectedIndices.length) {
+                        // 2. Если нарисовали ровно столько точек, сколько нужно, и все они верны — УСПЕХ
                         trainingIndex++;
                         localStorage.setItem('s9_glyph_' + expectedWord, 'true');
                         
@@ -279,7 +293,6 @@
                             statusLabel.style.color = "#00ff44";
                             document.getElementById('textInput').value = "ОБУЧЕНИЕ ЗАВЕРШЕНО";
                             
-                            // Создаем 1 базовую фразу
                             const phrase1 = ["ХАБ", "ГЛИФ", "ПУЛЬТ", "СЕРВЕР", "КОНСОЛЬ"];
                             const now = Date.now();
                             const phrasesData = [{ text: phrase1.join(' '), words: phrase1, timestamp: now }];
@@ -311,11 +324,9 @@
                         readIndices = [];
                         renderPath('readPath', [], false);
                         setTimeout(() => updatePointsUI(), 100);
-                    } else if (readIndices.length >= 5) {
-                        statusLabel.innerText = "ОШИБКА ПАТТЕРНА. СБРОСЬТЕ (×) И ПОПРОБУЙТЕ СНОВА.";
-                        statusLabel.style.color = "#ff3333";
                     } else {
-                        statusLabel.innerText = `НАРИСУЙТЕ ГЛИФ: ${expectedWord}`;
+                        // 3. Если путь верный, но точек еще мало — ждем продолжения
+                        statusLabel.innerText = `РИСУЙТЕ... (${readIndices.length}/${expectedIndices.length})`;
                         statusLabel.style.color = "#ffaa00";
                     }
                     return;
