@@ -86,11 +86,13 @@
             z-index: 10;
             pointer-events: none;
             animation: pulseCorner 2s infinite alternate;
+            box-shadow: 0 0 10px var(--neon); /* Добавили свечение, чтобы выделялись */
         }
-        #tilde-console .cc-tl { top: -1px; left: -1px; border-right: none; border-bottom: none; }
-        #tilde-console .cc-tr { top: -1px; right: -1px; border-left: none; border-bottom: none; }
-        #tilde-console .cc-bl { bottom: -1px; left: -1px; border-right: none; border-top: none; }
-        #tilde-console .cc-br { bottom: -1px; right: -1px; border-left: none; border-top: none; }
+        /* Сдвигаем уголки на 5px внутрь, чтобы overflow: hidden их не срезал */
+        #tilde-console .cc-tl { top: 5px; left: 5px; border-right: none; border-bottom: none; }
+        #tilde-console .cc-tr { top: 5px; right: 5px; border-left: none; border-bottom: none; }
+        #tilde-console .cc-bl { bottom: 5px; left: 5px; border-right: none; border-top: none; }
+        #tilde-console .cc-br { bottom: 5px; right: 5px; border-left: none; border-top: none; }
 
         @keyframes pulseCorner {
             0% { opacity: 0.5; filter: drop-shadow(0 0 2px var(--neon)); }
