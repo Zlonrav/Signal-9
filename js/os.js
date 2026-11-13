@@ -47,6 +47,7 @@
         const isCaptchaPassed = localStorage.getItem('s9_os_captcha') === 'true';
 
         if (isCaptchaPassed) {
+            document.querySelector('.terminal-wrapper').style.display = 'flex'; // <--- ДОБАВЛЕНА ЭТА СТРОКА
             desktop.style.display = 'flex';
             initQubits();
             if (typeof window.startOsModemSound === 'function' && window.audioCtx) {
