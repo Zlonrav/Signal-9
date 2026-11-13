@@ -244,6 +244,7 @@
                 localStorage.setItem('s9_os_captcha', 'true');
                 print(`<span class="ok">[УСПЕХ] ИДЕНТИФИКАТОР ПРИНЯТ. ДОСТУП К ЯДРУ РАЗРЕШЕН.</span>`);
                 window.dispatchEvent(new Event('unlockConsole'));
+                setTimeout(() => { location.reload(); }, 2000);
                 setTimeout(() => { window.dispatchEvent(new Event('os_id_verified')); }, 500);
             } else {
                 print(`<span class="err">[ОШИБКА] НЕВЕРНЫЙ ИДЕНТИФИКАТОР. ПОПРОБУЙТЕ СНОВА.</span>`);
