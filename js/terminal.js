@@ -11,7 +11,25 @@
     style.innerHTML = `
         #tilde-overlay-bg { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85); z-index: 999998; backdrop-filter: blur(3px); }
         #tilde-overlay-bg.active { display: block; }
-        #tilde-console { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 850px; max-width: 95vw; height: 480px; background: #020508; border: 1px solid var(--neon); box-shadow: 0 0 50px rgba(0, 242, 255, 0.2), inset 0 0 20px rgba(0, 242, 255, 0.05); z-index: 2147483647 !important; font-family: 'JetBrains Mono', monospace; flex-direction: column; padding: 20px; box-sizing: border-box; overflow: hidden; }
+        #tilde-console { 
+            display: none; 
+            position: fixed; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            width: 850px; 
+            max-width: 95vw; 
+            height: 480px; 
+            background: #020508; 
+            border: 1px solid rgba(0, 242, 255, 0.2); /* ТУСКЛАЯ РАМКА, КАК НА КАРТЕ */
+            box-shadow: 0 0 50px rgba(0, 242, 255, 0.1), inset 0 0 20px rgba(0, 242, 255, 0.05); 
+            z-index: 2147483647 !important; 
+            font-family: 'JetBrains Mono', monospace; 
+            flex-direction: column; 
+            padding: 20px; 
+            box-sizing: border-box; 
+            overflow: hidden; 
+        }
         #tilde-console.active { display: flex; }
         #tilde-console * { box-sizing: border-box; margin: 0; padding: 0; }
         #tilde-console .console-header { color: var(--neon); font-size: 12px; letter-spacing: 2px; margin-bottom: 15px; border-bottom: 1px solid rgba(0, 242, 255, 0.3); padding-bottom: 10px; text-transform: uppercase; flex-shrink: 0; text-shadow: 0 0 5px var(--neon); display: flex; justify-content: space-between; align-items: center;}
