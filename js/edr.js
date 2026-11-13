@@ -55,17 +55,19 @@
             let codeHtml = '';
             
             if (level === 1) {
-                const startX = rand(2, 5);
-                const addVal = rand(2, 4);
-                const multVal = rand(2, 3);
+                const startX = rand(3, 10); // Расширено
+                const addVal = rand(2, 8);  // Расширено
+                const multVal = rand(2, 4); // Расширено
+                const loops = rand(2, 4);   // Случайное число циклов
+                
                 let ans = startX;
-                for(let i=0; i<3; i++) { ans += addVal; ans *= multVal; }
+                for(let i=0; i<loops; i++) { ans += addVal; ans *= multVal; }
                 correctAnswer = ans;
 
                 codeHtml = `
                     <div class="console-code-block">
                         <span class="kw">LET</span> <span class="var">X</span> <span class="op">=</span> <span class="num">${startX}</span><br>
-                        <span class="kw">LOOP</span> <span class="num">3</span> TIMES:<br>
+                        <span class="kw">LOOP</span> <span class="num">${loops}</span> TIMES:<br>
                         &nbsp;&nbsp;<span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">+</span> <span class="num">${addVal}</span><br>
                         &nbsp;&nbsp;<span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">*</span> <span class="num">${multVal}</span><br>
                         <span class="kw">PRINT</span> <span class="var">X</span>
@@ -73,17 +75,19 @@
                 `;
             } 
             else if (level === 2) {
-                const startX = rand(4, 8);
-                const addVal = rand(2, 4);
-                const threshold = rand(12, 15);
+                const startX = rand(5, 15);    // Расширено
+                const addVal = rand(3, 9);     // Расширено
+                const threshold = rand(20, 35); // Расширено
+                const loops = rand(2, 4);      // Случайное число циклов
+                
                 let ans = startX;
-                for(let i=0; i<3; i++) { ans += addVal; if (ans > threshold) ans *= 2; }
+                for(let i=0; i<loops; i++) { ans += addVal; if (ans > threshold) ans *= 2; }
                 correctAnswer = ans;
 
                 codeHtml = `
                     <div class="console-code-block">
                         <span class="kw">LET</span> <span class="var">X</span> <span class="op">=</span> <span class="num">${startX}</span><br>
-                        <span class="kw">LOOP</span> <span class="num">3</span> TIMES:<br>
+                        <span class="kw">LOOP</span> <span class="num">${loops}</span> TIMES:<br>
                         &nbsp;&nbsp;<span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">+</span> <span class="num">${addVal}</span><br>
                         &nbsp;&nbsp;<span class="kw">IF</span> <span class="var">X</span> <span class="op">></span> <span class="num">${threshold}</span>:<br>
                         &nbsp;&nbsp;&nbsp;&nbsp;<span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">*</span> <span class="num">2</span><br>
@@ -92,15 +96,17 @@
                 `;
             } 
             else if (level === 3) {
-                const startX = rand(2, 4);
-                const startY = rand(5, 10);
-                const multVal = rand(2, 3);
+                const startX = rand(2, 6);
+                const startY = rand(10, 20);
+                const multVal = rand(2, 4);
+                const loops = rand(2, 4);
+                
                 let x = startX, y = startY;
-                for(let i=0; i<3; i++) {
+                for(let i=0; i<loops; i++) {
                     x *= multVal;
-                    if (x > 10) y += x;
-                    else if (x > 5) y *= 2;
-                    else y -= 1;
+                    if (x > 20) y += x;
+                    else if (x > 10) y *= 2;
+                    else y -= 3;
                 }
                 correctAnswer = y;
 
@@ -108,14 +114,14 @@
                     <div class="console-code-block">
                         <span class="kw">LET</span> <span class="var">X</span> <span class="op">=</span> <span class="num">${startX}</span><br>
                         <span class="kw">LET</span> <span class="var">Y</span> <span class="op">=</span> <span class="num">${startY}</span><br>
-                        <span class="kw">LOOP</span> <span class="num">3</span> TIMES:<br>
+                        <span class="kw">LOOP</span> <span class="num">${loops}</span> TIMES:<br>
                         &nbsp;&nbsp;<span class="var">X</span> <span class="op">=</span> <span class="var">X</span> <span class="op">*</span> <span class="num">${multVal}</span><br>
-                        &nbsp;&nbsp;<span class="kw">IF</span> <span class="var">X</span> <span class="op">></span> <span class="num">10</span>:<br>
+                        &nbsp;&nbsp;<span class="kw">IF</span> <span class="var">X</span> <span class="op">></span> <span class="num">20</span>:<br>
                         &nbsp;&nbsp;&nbsp;&nbsp;<span class="var">Y</span> <span class="op">=</span> <span class="var">Y</span> <span class="op">+</span> <span class="var">X</span><br>
-                        &nbsp;&nbsp;<span class="kw">ELSE IF</span> <span class="var">X</span> <span class="op">></span> <span class="num">5</span>:<br>
+                        &nbsp;&nbsp;<span class="kw">ELSE IF</span> <span class="var">X</span> <span class="op">></span> <span class="num">10</span>:<br>
                         &nbsp;&nbsp;&nbsp;&nbsp;<span class="var">Y</span> <span class="op">=</span> <span class="var">Y</span> <span class="op">*</span> <span class="num">2</span><br>
                         &nbsp;&nbsp;<span class="kw">ELSE</span>:<br>
-                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="var">Y</span> <span class="op">=</span> <span class="var">Y</span> <span class="op">-</span> <span class="num">1</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="var">Y</span> <span class="op">=</span> <span class="var">Y</span> <span class="op">-</span> <span class="num">3</span><br>
                         <span class="kw">PRINT</span> <span class="var">Y</span>
                     </div>
                 `;
