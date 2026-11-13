@@ -76,6 +76,27 @@
         #tilde-console .console-code-block .num { color: #00ff44; }
         #tilde-console .console-code-block .var { color: #00f2ff; }
         #tilde-console .console-code-block .op { color: #fff; }
+
+        /* Декоративные уголки для консоли */
+        #tilde-console .console-corner {
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--neon);
+            z-index: 10;
+            pointer-events: none;
+            animation: pulseCorner 2s infinite alternate;
+        }
+        #tilde-console .cc-tl { top: -1px; left: -1px; border-right: none; border-bottom: none; }
+        #tilde-console .cc-tr { top: -1px; right: -1px; border-left: none; border-bottom: none; }
+        #tilde-console .cc-bl { bottom: -1px; left: -1px; border-right: none; border-top: none; }
+        #tilde-console .cc-br { bottom: -1px; right: -1px; border-left: none; border-top: none; }
+
+        @keyframes pulseCorner {
+            0% { opacity: 0.5; filter: drop-shadow(0 0 2px var(--neon)); }
+            100% { opacity: 1; filter: drop-shadow(0 0 8px var(--neon)); }
+        }
+    `;
     `;
     document.head.appendChild(style);
 
@@ -87,6 +108,10 @@
     const overlay = document.createElement('div');
     overlay.id = 'tilde-console';
     overlay.innerHTML = `
+        <div class="console-corner cc-tl"></div>
+        <div class="console-corner cc-tr"></div>
+        <div class="console-corner cc-bl"></div>
+        <div class="console-corner cc-br"></div>
         <div class="console-header">
             <span>Консоль Управления // Введите команду</span>
             <button id="console-close-btn" style="background: transparent; border: none; color: var(--neon); font-size: 16px; cursor: pointer; transition: 0.3s; padding: 0 5px;" onmouseover="this.style.color='#ff3333'; this.style.textShadow='0 0 10px #ff3333'" onmouseout="this.style.color='var(--neon)'; this.style.textShadow='none'">✕</button>
