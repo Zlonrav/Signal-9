@@ -73,8 +73,6 @@ const CHAT_DATABASE = {
             }
 
             if (osFixed && !coreOverheated && !coreFixed) {
-
-            if (osFixed && !coreOverheated && !coreFixed) {
                 return [
                     { q: "> СТАТУС ТОПОЛОГИИ", a: "КАРТА РАЗВЕРНУТА. ОБНАРУЖЕНЫ ОТКЛЮЧЕНИЯ." },
                     { q: "> ДИАГНОСТИКА ЯДРА", a: "ПОСЛЕ РЕМОНТА ОС НАГРУЗКА НА ЯДРО ВОЗРОСЛА." },
