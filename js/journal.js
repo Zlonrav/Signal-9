@@ -116,7 +116,7 @@ const CHAT_DATABASE = {
             ];
         }
 
-        if (page === 'archive.html') {
+               if (page === 'archive.html') {
             const isCalibrated = localStorage.getItem('s9_archive_calibrated') === 'true';
             const isFixed = localStorage.getItem('s9_archive_fixed') === 'true';
 
@@ -134,7 +134,7 @@ const CHAT_DATABASE = {
                 if (isSaltFound) {
                     return [
                         { q: "> ОТЧЁТ", a: "НАКОПИТЕЛЬНЫЙ БУФЕР СТАБИЛЕН, АВТОСОХРАНЕНИЕ АКТИВИРОВАНО." },
-                        { q: "> ДИАГНОСТИКА", a: "СЕКТОР ВЕРИФИКАЦИИ АКТИВЕН. КЛЮЧ-ПАРОЛЬ ПРИНЯТ. ДЕШИФРОВКА АКТИВИРОВАНА. ПЕРЕДАЧА СИГНАЛА В ГЛАВНЫЙ ХАБ СЕТИ «СИГНАЛ-0». }
+                        { q: "> ДИАГНОСТИКА", a: "СЕКТОР ВЕРИФИКАЦИИ АКТИВЕН. КЛЮЧ-ПАРОЛЬ ПРИНЯТ. ДЕШИФРОВКА АКТИВИРОВАНА. ПЕРЕДАЧА СИГНАЛА В ГЛАВНЫЙ ХАБ СЕТИ «СИГНАЛ-0»." }
                     ];
                 } else {
                     return [
@@ -143,6 +143,7 @@ const CHAT_DATABASE = {
                     ];
                 }
             }
+        }
 
         if (page === 'os.html') {
             const isCaptchaPassed = localStorage.getItem('s9_os_captcha') === 'true';
