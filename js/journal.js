@@ -59,8 +59,20 @@ const CHAT_DATABASE = {
 
         if (page === 'map.html') {
             const osFixed = localStorage.getItem('s9_os_fixed') === 'true';
+            const archiveFixed = localStorage.getItem('s9_archive_fixed') === 'true';
             const coreOverheated = localStorage.getItem('s9_core_overheated') === 'true';
             const coreFixed = localStorage.getItem('s9_core_fixed') === 'true';
+
+            // ДОБАВЛЯЕМ: Если Архив починен, но ОС еще нет
+            if (archiveFixed && !osFixed) {
+                return [
+                    { q: "> СТАТУС ТОПОЛОГИИ", a: "БАЗА ДАННЫХ ВОССТАНОВЛЕНА. ОБНАРУЖЕН СБОЙ ОПЕРАЦИОННОЙ СИСТЕМЫ." },
+                    { q: "> ДИАГНОСТИКА", a: "ЗАФИКСИРОВАНА ДЕКОГЕРЕНЦИЯ КУБИТОВ В МОДУЛЕ ОС." },
+                    { q: "> РЕШЕНИЕ", a: "ДЛЯ ВОССТАНОВЛЕНИЯ СИСТЕМЫ ПЕРЕЙДИТЕ В МОДУЛЬ ОС. ВВЕДИТЕ <cmd>os</cmd> В КОНСОЛИ." }
+                ];
+            }
+
+            if (osFixed && !coreOverheated && !coreFixed) {
 
             if (osFixed && !coreOverheated && !coreFixed) {
                 return [
