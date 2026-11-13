@@ -115,6 +115,45 @@
             0% { opacity: 0.4; filter: drop-shadow(0 0 1px var(--neon)); }
             100% { opacity: 1; filter: drop-shadow(0 0 6px var(--neon)); }
         }
+
+        /* --- ЭФФЕКТ ЭЛТ-МОНИТОРА (СКАНЛАЙНЫ) --- */
+        #tilde-console::before {
+            content: " ";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+            background-size: 100% 4px;
+            z-index: 100; /* Поверх контента */
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        /* --- СТАТУС-БАР В ШАПКЕ --- */
+        #tilde-console .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px; /* Расстояние между статусом и крестиком */
+        }
+        #tilde-console .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 10px;
+            opacity: 0.8;
+            letter-spacing: 1px;
+        }
+        #tilde-console .status-dot {
+            width: 6px;
+            height: 6px;
+            background: #00ff44;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #00ff44;
+            animation: blinkStatus 1s infinite alternate;
+        }
+        @keyframes blinkStatus {
+            0% { opacity: 1; }
+            100% { opacity: 0.2; }
+        }
     `;
     document.head.appendChild(style);
 
@@ -132,7 +171,13 @@
         <div class="console-corner cc-br"></div>
         <div class="console-header">
             <span>Консоль Управления // Введите команду</span>
-            <button id="console-close-btn" style="background: transparent; border: none; color: var(--neon); font-size: 16px; cursor: pointer; transition: 0.3s; padding: 0 5px;" onmouseover="this.style.color='#ff3333'; this.style.textShadow='0 0 10px #ff3333'" onmouseout="this.style.color='var(--neon)'; this.style.textShadow='none'">✕</button>
+            <div class="header-right">
+                <div class="status-indicator">
+                    <div class="status-dot"></div>
+                    <span>SYS.ONLINE</span>
+                </div>
+                <button id="console-close-btn" style="background: transparent; border: none; color: var(--neon); font-size: 16px; cursor: pointer; transition: 0.3s; padding: 0 5px;" onmouseover="this.style.color='#ff3333'; this.style.textShadow='0 0 10px #ff3333'" onmouseout="this.style.color='var(--neon)'; this.style.textShadow='none'">✕</button>
+            </div>
         </div>
         <div class="console-output" id="terminal-output"></div>
         <div class="console-input-wrapper">
