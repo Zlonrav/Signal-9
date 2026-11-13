@@ -179,7 +179,11 @@
                 <button id="console-close-btn" style="background: transparent; border: none; color: var(--neon); font-size: 16px; cursor: pointer; transition: 0.3s; padding: 0 5px;" onmouseover="this.style.color='#ff3333'; this.style.textShadow='0 0 10px #ff3333'" onmouseout="this.style.color='var(--neon)'; this.style.textShadow='none'">✕</button>
             </div>
         </div>
-        <div class="console-output" id="terminal-output"></div>
+        <div class="console-output" id="terminal-output">
+            <div style="color: var(--neon); font-weight: bold; margin-bottom: 5px;">[SIGNAL-9 CORE TERMINAL v9.4.2]</div>
+            <div style="color: #00ff44; margin-bottom: 15px;">[ИНИЦИАЛИЗАЦИЯ ЯДРА ЗАВЕРШЕНА. СТАТУС: ОЖИДАНИЕ]</div>
+            <div>Введите <span class="cmd-text">help</span> для получения списка доступных команд.</div>
+        </div>
         <div class="console-input-wrapper">
             <span>></span>
             <input type="text" id="terminal-input" autocomplete="off" spellcheck="false" placeholder="">
