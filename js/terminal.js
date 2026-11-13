@@ -86,17 +86,16 @@
             z-index: 10;
             pointer-events: none;
             animation: pulseCorner 2s infinite alternate;
-            box-shadow: 0 0 10px var(--neon); /* Добавили свечение, чтобы выделялись */
         }
-        /* Сдвигаем уголки на 5px внутрь, чтобы overflow: hidden их не срезал */
-        #tilde-console .cc-tl { top: 5px; left: 5px; border-right: none; border-bottom: none; }
-        #tilde-console .cc-tr { top: 5px; right: 5px; border-left: none; border-bottom: none; }
-        #tilde-console .cc-bl { bottom: 5px; left: 5px; border-right: none; border-top: none; }
-        #tilde-console .cc-br { bottom: 5px; right: 5px; border-left: none; border-top: none; }
+        /* Ставим ровно на границу (0px), чтобы не налезали на текст */
+        #tilde-console .cc-tl { top: 0; left: 0; border-right: none; border-bottom: none; }
+        #tilde-console .cc-tr { top: 0; right: 0; border-left: none; border-bottom: none; }
+        #tilde-console .cc-bl { bottom: 0; left: 0; border-right: none; border-top: none; }
+        #tilde-console .cc-br { bottom: 0; right: 0; border-left: none; border-top: none; }
 
         @keyframes pulseCorner {
-            0% { opacity: 0.5; filter: drop-shadow(0 0 2px var(--neon)); }
-            100% { opacity: 1; filter: drop-shadow(0 0 8px var(--neon)); }
+            0% { opacity: 0.4; filter: drop-shadow(0 0 1px var(--neon)); }
+            100% { opacity: 1; filter: drop-shadow(0 0 6px var(--neon)); }
         }
     `;
     document.head.appendChild(style);
