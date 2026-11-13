@@ -163,7 +163,7 @@
             case 'map': return isAuthorized; 
             case 'archive': return localStorage.getItem('s9_map_visited') === 'true' || currentPage === 'map.html';
             case 'os': return localStorage.getItem('s9_archive_fixed') === 'true';
-            case 'edr': return localStorage.getItem('s9_os_fixed') === 'true';
+            case 'edr': return localStorage.getItem('s9_os_fixed') === 'true'; 
             case 'telemetry': return localStorage.getItem('s9_core_fixed') === 'true';
             case 'core': return localStorage.getItem('s9_core_overheated') === 'true' || localStorage.getItem('s9_core_fixed') === 'true';
             case 'gateway': return localStorage.getItem('s9_core_unlocked') === 'true';
