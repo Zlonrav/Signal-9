@@ -143,7 +143,6 @@ const CHAT_DATABASE = {
                     ];
                 }
             }
-        }
 
         if (page === 'os.html') {
             const isCaptchaPassed = localStorage.getItem('s9_os_captcha') === 'true';
