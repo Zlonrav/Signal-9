@@ -97,7 +97,6 @@
             100% { opacity: 1; filter: drop-shadow(0 0 8px var(--neon)); }
         }
     `;
-    `;
     document.head.appendChild(style);
 
     // 2. СОЗДАЕМ HTML
