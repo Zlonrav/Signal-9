@@ -396,6 +396,20 @@ const CHAT_DATABASE = {
                 window.currentChatStep++;
 
                 let page = window.location.pathname.split('/').pop() || 'index.html';
+                
+                // --- УСТАНОВКА ФЛАГОВ ПРОЧТЕНИЯ ---
+                if (window.currentChatStep === data.length) {
+                    if (page === 'tools.html' && localStorage.getItem('s9_archive_calibrated') === 'true') localStorage.setItem('s9_read_success_tools', 'true');
+                    if (page === 'archive.html' && localStorage.getItem('s9_archive_fixed') === 'true') localStorage.setItem('s9_read_success_archive', 'true');
+                    if (page === 'os.html' && localStorage.getItem('s9_os_fixed') === 'true') localStorage.setItem('s9_read_success_os', 'true');
+                    if (page === 'telemetry.html' && localStorage.getItem('s9_telemetry_calibrated') === 'true') localStorage.setItem('s9_read_success_telemetry', 'true');
+                    if (page === 'core.html' && localStorage.getItem('s9_core_fixed') === 'true') localStorage.setItem('s9_read_success_core', 'true');
+                }
+                // ----------------------------------
+
+                if (page === 'index.html' && window.currentChatStep === data.length) {
+
+                let page = window.location.pathname.split('/').pop() || 'index.html';
                 if (page === 'index.html' && window.currentChatStep === data.length) {
                     if (localStorage.getItem('s9_lang_human') !== 'true') {
                         window.dispatchEvent(new CustomEvent('autoOpenConsole'));
