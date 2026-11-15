@@ -424,68 +424,98 @@
 
         if (cmd.startsWith('help ')) {
             const topic = cmd.split(' ')[1];
-            if (topic === 'archive') {
-                print(`<span class="topic-header">[АРХИВ]</span>`);
-                print(`ДЛЯ КАЛИБРОВКИ АРХИВА ВВЕДИТЕ ${printCmd('archive --traning')}`);
-            } else if (topic === 'terminal') {
-                print(`<span class="topic-header">[ИНЖЕНЕРНЫЙ ТЕРМИНАЛ]</span>`);
-                print(`ДОСТУПНЫЕ СЕРВИСНЫЕ КОДЫ:`);
-                print(`> ${printCmd('archive --traning')} - Запуск протокола обучения автосохранения (требует 5 эталонных паттернов).`);
-            } else if (topic === 'login') {
-                print(`<span class="topic-header">[ЛОГИН]</span>`);
-                print(`ВВЕДИТЕ ТЕКСТ «ТРАССИТ» В ИНЖЕНЕРНОМ ТЕРМИНАЛЕ (${printCmd('terminal')}) ДЛЯ ПОЛУЧЕНИЯ КЛЮЧА.`);
-            } else if (topic === 'os') {
-                print(`<span class="topic-header">[ОС]</span>`);
-                print(`ДЛЯ РЕМОНТА КУБИТОВ ИСПОЛЬЗУЙТЕ ${printCmd('os --reset qubit rXcY')}`);
-			} else if (topic === 'core') {
-				if (currentPage !== 'core.html') {
-					print(`<span class="err">СПРАВКА ДОСТУПНА ТОЛЬКО В МОДУЛЕ ЭНЕРГОЯДРА.</span>`);
-				} else if (localStorage.getItem('s9_core_fixed') === 'true') {
-					print(`<span class="topic-header">[ЭНЕРГОЯДРО]</span>`);
-					print(`<span class="ok">ЯДРО СТАБИЛЬНО, РЕМОНТ НЕ ТРЕБУЕТСЯ.</span>`);
-				} else if (!window.coreEquations) {
-					print(`<span class="err">ОШИБКА: МОДУЛЬ ЯДРА НЕ АКТИВЕН.</span>`);
-				} else {
-					print(`<span class="topic-header">[ЭНЕРГОЯДРО]</span>`);
-					print(`ДАНО:`);
-					print(`X + Y = ${window.coreEquations.xy}`);
-					print(`Y + Z = ${window.coreEquations.yz}`);
-					print(`X + Z = ${window.coreEquations.xz}`);
-					print(`НАЙДИТЕ X, Y, Z И ВВЕДИТЕ:`);
-					print(`> ${printCmd('core --position rt X, lt -X, up Y, dn -Y, fw Z, bk -Z')}`);
-					print(`ЗАТЕМ:`);
-					print(`> ${printCmd('core --position sync')}`);
-				}				
-            } else if (topic === 'telemetry') {
-                if (currentPage === 'telemetry.html') {
-                    print(`<span class="topic-header">[СИСТЕМА ТЕЛЕМЕТРИИ]</span>`);
-                    print(`ВАША ЗАДАЧА: СИНХРОНИЗИРОВАТЬ 3 ВОЛНЫ (RED, GREEN, BLUE) С ЭТАЛОНОМ (БЕЛАЯ ВОЛНА).`);
-                    print(``);
-                    print(`<span class="topic-header">[ДОСТУПНЫЕ КОМАНДЫ]</span>`);
-                    
-                    print(`> ${printCmd('telemetry --set <red|green|blue> <freq|phase|amp|offset> <+/-число>')}`);
-                    print(`  Изменяет параметр выбранной волны.`);
-                    print(`  Пример: ${printCmd('telemetry --set red freq +5')}`);
-                    print(`  Пример: ${printCmd('telemetry --set blue phase -10')}`);
-                    print(``);
-                    
-                    print(`> ${printCmd('telemetry --toggle <red|green|blue>')}`);
-                    print(`  Скрывает или показывает выбранную волну на экране.`);
-                    print(`  Пример: ${printCmd('telemetry --toggle green')}`);
-                    print(``);
-                    
-                    print(`> ${printCmd('telemetry --read target')}`);
-                    print(`  Выводит точные параметры эталонной (белой) волны в консоль.`);
+            
+            // Хелпер для вывода паспорта
+            const printPassport = (title, cmdName, desc, hw, sw) => {
+                print(`<span class="topic-header">[${title}]</span>`);
+                print(`Команда перехода: > ${cmdName}`);
+                print(`Назначение: ${desc}`);
+                print(`Версия: ${hw} : ${sw}`);
+            };
+
+            if (topic === 'hub') {
+                if (!isModuleOnline('hub')) { print(`[МОДУЛЬ НЕДОСТУПЕН]`, 'err'); return; }
+                printPassport('ХАБ', 'hub', 'Приём, первичная обработка и трансляция глифов из эфира.', 'hhw469v1', 'hsw332v4');
+            } 
+            else if (topic === 'terminal') {
+                if (!isModuleOnline('terminal')) { print(`[МОДУЛЬ НЕДОСТУПЕН]`, 'err'); return; }
+                if (localStorage.getItem('s9_archive_calibrated') !== 'true') {
+                    print(`<span class="topic-header">[ТЕРМИНАЛ]</span>`);
+                    print(`[ВНИМАНИЕ] ТРЕБУЕТСЯ ОБУЧЕНИЕ АРХИВА.`);
+                    print(`> ${printCmd('archive --traning')} - Запуск обучения.`);
+                    print(`> ${printCmd('archive --traning word')} - Вывод эталонов.`);
                 } else {
-                    print(`<span class="err">СПРАВКА ДОСТУПНА ТОЛЬКО В МОДУЛЕ ТЕЛЕМЕТРИИ.</span>`);
+                    printPassport('ИНЖЕНЕРНЫЙ ТЕРМИНАЛ', 'terminal', 'Ручной ввод, визуализация и калибровка эталонных трасситов.', 'thw102v2', 'tsw881v1');
                 }
-            } else if (topic === 'cheats') {
+            } 
+            else if (topic === 'archive') {
+                if (!isModuleOnline('archive')) { print(`[МОДУЛЬ НЕДОСТУПЕН]`, 'err'); return; }
+                if (localStorage.getItem('s9_archive_fixed') !== 'true') {
+                    print(`<span class="topic-header">[АРХИВ]</span>`);
+                    print(`[ВНИМАНИЕ] БУФЕР ПЕРЕПОЛНЕН. ТРЕБУЕТСЯ ОБУЧЕНИЕ.`);
+                    print(`> ${printCmd('archive --traning')} - (В терминале)`);
+                } else {
+                    printPassport('АРХИВ', 'archive', 'Накопительный буфер для сырых данных. Сектор верификации.', 'ahw555v3', 'asw910v5');
+                }
+            } 
+            else if (topic === 'os') {
+                if (!isModuleOnline('os')) { print(`[МОДУЛЬ НЕДОСТУПЕН]`, 'err'); return; }
+                if (localStorage.getItem('s9_os_fixed') !== 'true') {
+                    print(`<span class="topic-header">[ОС]</span>`);
+                    print(`[ВНИМАНИЕ] ДЕКОГЕРЕНЦИЯ КУБИТОВ. ДЛЯ РЕМОНТА: ${printCmd('os --reset qubit rXcY')}`);
+                } else {
+                    printPassport('ОПЕРАЦИОННАЯ СИСТЕМА', 'os', 'Управление квантовыми кубитами, поддержание стабильности ядра системы.', 'ohw777v1', 'osw404v2');
+                }
+            } 
+            else if (topic === 'edr') {
+                if (!isModuleOnline('edr')) { print(`[МОДУЛЬ НЕДОСТУПЕН]`, 'err'); return; }
+                const isEdrTrigger = localStorage.getItem('s9_edr_os_trigger') === 'true' || localStorage.getItem('s9_edr_gateway_trigger') === 'true';
+                if (isEdrTrigger) {
+                    print(`<span class="topic-header">[EDR]</span>`);
+                    print(`[ВНИМАНИЕ] СЕКТОР ИЗОЛИРОВАН. ДЛЯ ВЫХОДА ВВЕДИТЕ ${printCmd('edr --answer <ЧИСЛО>')}`);
+                } else {
+                    printPassport('EDR СЕКТОР', 'edr', 'Изолированная среда для проверки логических алгоритмов.', 'ehw990v2', 'esw150v3');
+                }
+            } 
+            else if (topic === 'core') {
+                if (!isModuleOnline('core')) { print(`[МОДУЛЬ НЕДОСТУПЕН]`, 'err'); return; }
+                if (localStorage.getItem('s9_core_fixed') !== 'true') {
+                    print(`<span class="topic-header">[ЭНЕРГОЯДРО]</span>`);
+                    if (!window.coreEquations) {
+                        print(`[ОШИБКА] ДАННЫЕ ДАТЧИКОВ НЕДОСТУПНЫ. ВВЕДИТЕ ${printCmd('core --position sync')} ДЛЯ ПОПЫТКИ СИНХРОНИЗАЦИИ.`);
+                    } else {
+                        print(`[ВНИМАНИЕ] МАГНИТНАЯ СТАБИЛИЗАЦИЯ НАРУШЕНА.`);
+                        print(`X + Y = ${window.coreEquations.xy}`);
+                        print(`Y + Z = ${window.coreEquations.yz}`);
+                        print(`X + Z = ${window.coreEquations.xz}`);
+                        print(`> ${printCmd('core --position rt X, lt -X, up Y, dn -Y, fw Z, bk -Z')}`);
+                    }
+                } else {
+                    printPassport('ЭНЕРГОЯДРО', 'core', 'Выработка и стабилизация энергии. Удержание магнитного поля.', 'chw404v4', 'csw999v1');
+                }
+            } 
+            else if (topic === 'telemetry') {
+                if (!isModuleOnline('telemetry')) { print(`[МОДУЛЬ НЕДОСТУПЕН]`, 'err'); return; }
+                if (localStorage.getItem('s9_telemetry_calibrated') !== 'true') {
+                    print(`<span class="topic-header">[ТЕЛЕМЕТРИЯ]</span>`);
+                    print(`[ВНИМАНИЕ] РАССИНХРОНИЗАЦИЯ ВОЛН.`);
+                    print(`> ${printCmd('telemetry --read target')} - Узнать эталон.`);
+                    print(`> ${printCmd('telemetry --set <red|green|blue> <param> <val>')} - Калибровка.`);
+                } else {
+                    printPassport('ТЕЛЕМЕТРИЯ', 'telemetry', 'Синхронизация фазовых волн, частотный анализ.', 'thw303v5', 'tsw202v2');
+                }
+            } 
+            else if (topic === 'gateway' || topic === 'sector00' || topic === 'sectorff') {
+                print(`<span class="topic-header">[${topic.toUpperCase()}]</span>`);
+                print(`[В РАЗРАБОТКЕ]`);
+            } 
+            else if (topic === 'cheats') {
                 print(`<span class="topic-header">[ЧИТЫ И УТИЛИТЫ]</span>`);
                 print(`> ${printCmd('save')} - Сохранить прогресс (Base64)`);
                 print(`> ${printCmd('load <код>')} - Загрузить прогресс`);
                 print(`> ${printCmd('fix_lang')} - Восстановить язык`);
                 print(`> ${printCmd('fix_archive')} - Починить Архив`);
-                print(`> ${printCmd('calibrate_archive')} - Калибровка Архива (2 фразы)`);
+                print(`> ${printCmd('calibrate_archive')} - Калибровка Архива (1 фраза)`);
                 print(`> ${printCmd('reset_archive')} - Сбросить Архив`);
                 print(`> ${printCmd('fix_os')} - Починить ОС (и вызвать EDR)`);
                 print(`> ${printCmd('reset_os')} - Сбросить ОС и EDR`);
@@ -493,7 +523,8 @@
                 print(`> ${printCmd('fix_telemetry')} - Синхронизировать волны телеметрии`);
                 print(`> ${printCmd('reset_telemetry')} - Сбросить телеметрию (новые волны)`);
                 print(`> ${printCmd('clear_memory')} - Полная очистка памяти`);
-            } else {
+            } 
+            else {
                 print(`НЕТ ИНФОРМАЦИИ ПО ТЕМЕ '${topic}'.`, 'err');
             }
             return;
