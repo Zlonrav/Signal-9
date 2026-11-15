@@ -408,9 +408,6 @@ const CHAT_DATABASE = {
                 // ----------------------------------
 
                 if (page === 'index.html' && window.currentChatStep === data.length) {
-
-                let page = window.location.pathname.split('/').pop() || 'index.html';
-                if (page === 'index.html' && window.currentChatStep === data.length) {
                     if (localStorage.getItem('s9_lang_human') !== 'true') {
                         window.dispatchEvent(new CustomEvent('autoOpenConsole'));
                     }
