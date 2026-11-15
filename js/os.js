@@ -45,37 +45,22 @@
 
         // --- 1. ВЕРИФИКАЦИЯ ---
         const isCaptchaPassed = localStorage.getItem('s9_os_captcha') === 'true';
+        const wrapper = document.querySelector('.terminal-wrapper');
+        const shield = document.getElementById('os-shield-overlay');
+
+        if (wrapper) wrapper.style.display = 'flex';
 
         if (isCaptchaPassed) {
-            document.querySelector('.terminal-wrapper').style.display = 'flex'; // <--- ДОБАВЛЕНА ЭТА СТРОКА
+            if (shield) shield.style.display = 'none';
             desktop.style.display = 'flex';
             initQubits();
             if (typeof window.startOsModemSound === 'function' && window.audioCtx) {
                 window.startOsModemSound();
             }
         } else {
-            // Консоль уже загружена через loader.js, принудительно открываем и блокируем
-            setTimeout(() => {
-                if (window.printToConsole) {
-                    window.printToConsole(`<span class="warn">[СИСТЕМА] НЕОБХОДИМА ВЕРИФИКАЦИЯ ЦЕЛОСТНОСТИ.</span>`);
-                    window.printToConsole(`ОБНАРУЖЕН ВНЕШНИЙ ЗАПРОС. ДЛЯ ДОСТУПА К ЯДРУ ВВЕДИТЕ ВАШ УНИКАЛЬНЫЙ ИДЕНТИФИКАТОР.`);
-                    window.printToConsole(`ПОЛУЧИТЕ ЕГО В КОНСОЛИ КОМАНДОЙ <span class="cmd-text">self --id</span>.`);
-                    window.printToConsole(`ВВЕДИТЕ: <span class="cmd-text">login --id <ВАШ_ID></span>`);
-                    window.dispatchEvent(new Event('lockConsole'));
-                }
-            }, 500);
-
-            // Слушаем событие успешной верификации из terminal.js
-            window.addEventListener('os_id_verified', () => {
-                desktop.style.display = 'flex';
-                initQubits();
-                addLog("> SYS: ID VERIFIED. ACCESS GRANTED.", "ok");
-                if (typeof window.startOsModemSound === 'function') window.startOsModemSound();
-                if (typeof window.updateQuestion === 'function') {
-                    window.currentChatStep = 0;
-                    window.updateQuestion();
-                }
-            });
+            if (shield) shield.style.display = 'flex';
+            desktop.style.display = 'none';
+            // Никакого автоматического открытия консоли
         }
 
         // --- 2. ИНИЦИАЛИЗАЦИЯ КУБИТОВ ---

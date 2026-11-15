@@ -150,9 +150,10 @@
     document.addEventListener('DOMContentLoaded', () => {
         const page = window.location.pathname.split('/').pop() || 'index.html';
         const isLoginPage = page === 'login.html';
+        const isToolsPage = page === 'tools.html';
         
-        // На логине всегда человеческий язык
-        const isHuman = isLoginPage || localStorage.getItem('s9_lang_human') === 'true';
+        // На логине и в терминале всегда человеческий язык (это автономные модули)
+        const isHuman = isLoginPage || isToolsPage || localStorage.getItem('s9_lang_human') === 'true';
         
         // --- ПЕРЕВОД ИНТЕРФЕЙСА В СЫРОЙ РЕЖИМ ---
         if (!isHuman) {

@@ -128,20 +128,25 @@
                 return true;
             }
 
-            // --- ЧИТ ДЛЯ АРХИВА (ПОЧИНКА) ---
+            // --- ЧИТ ДЛЯ АРХИВА (ЧАСТИЧНАЯ ПОЧИНКА: ОСТАЕТСЯ КОНСОЛЬ) ---
             if (cmd.toLowerCase() === 'fix_archive') {
-                localStorage.removeItem('s9_archive_training');
+                localStorage.removeItem('s9_archive_calibrated');
+                localStorage.removeItem('s9_archive_fixed');
                 localStorage.removeItem('s9_read_success_archive');
                 localStorage.removeItem('s9_read_success_tools');
-                const words = ["ХАБ", "ГЛИФ", "ПУЛЬТ", "СЕРВЕР", "КОНСОЛЬ"];
-                const now = Date.now();
-                const phrasesData = [{ text: words.join(' '), words: words, timestamp: now }];
-                localStorage.setItem('s9_phrases_data', JSON.stringify(phrasesData));
-                localStorage.setItem('s9_archive_calibrated', 'true');
-                localStorage.setItem('s9_archive_fixed', 'true');
-                localStorage.setItem('s9_archive_baseline_count', '1');
-                print('<span class="ok">[ЧИТ] 5 ЭТАЛОННЫХ ТРАССИТОВ ВВЕДЕНО. АРХИВ ПОЧИНЕН.</span>');
-                setTimeout(() => { window.location.href = 'archive.html'; }, 1500);
+                
+                // Включаем желтый режим обучения
+                localStorage.setItem('s9_archive_training', 'true');
+                
+                // Автоматически засчитываем первые 4 слова
+                const learnedWords = ["ХАБ", "ГЛИФ", "ПУЛЬТ", "СЕРВЕР"];
+                learnedWords.forEach(w => localStorage.setItem('s9_glyph_' + w, 'true'));
+                
+                // На всякий случай убираем флаг последнего слова
+                localStorage.removeItem('s9_glyph_КОНСОЛЬ');
+                
+                print('<span class="ok">[ЧИТ] 4 ЭТАЛОННЫХ ТРАССИТА ИЗУЧЕНЫ. ОСТАЛОСЬ ВВЕСТИ И НАРИСОВАТЬ "КОНСОЛЬ".</span>');
+                setTimeout(() => { window.location.href = 'tools.html'; }, 1500);
                 return true; 
             }
 
@@ -154,10 +159,9 @@
                 localStorage.removeItem('s9_archive_training');
                 localStorage.removeItem('s9_read_success_archive');
                 localStorage.removeItem('s9_read_success_tools');
+				localStorage.removeItem('s9_map_visited');
                 const trainWords = ["ХАБ", "ГЛИФ", "ПУЛЬТ", "СЕРВЕР", "КОНСОЛЬ"];
                 trainWords.forEach(w => localStorage.removeItem('s9_glyph_' + w));
-                const oldWords = ["СИСТЕМА", "ПАМЯТЬ", "КОД", "СИГНАЛ", "ВЕКТОР", "АРХИВ", "ЗВЕЗДА", "ОРБИТА", "МОДУЛЬ", "ДАННЫЕ"];
-                oldWords.forEach(w => localStorage.removeItem('s9_glyph_' + w));
                 print('<span class="ok">[ЧИТ] ЗАДАНИЕ С АРХИВОМ СБРОШЕНО.</span>');
                 setTimeout(() => { location.reload(); }, 1500);
                 return true;

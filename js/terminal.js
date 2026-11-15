@@ -283,7 +283,9 @@
 
         const currentPage = window.location.pathname.split('/').pop() || 'index.html';
         const isLoginPage = currentPage === 'login.html';
-        const isHuman = isLoginPage || localStorage.getItem('s9_lang_human') === 'true';
+        const isToolsPage = currentPage === 'tools.html';
+        // Разрешаем работу консоли в терминале до авторизации
+        const isHuman = isLoginPage || isToolsPage || localStorage.getItem('s9_lang_human') === 'true';
         
         // --- БЛОКИРОВКА НАВИГАЦИИ В EDR ---
         const isEdrLocked = localStorage.getItem('s9_edr_os_trigger') === 'true' || localStorage.getItem('s9_edr_gateway_trigger') === 'true';
@@ -337,7 +339,6 @@
                 print(`<span class="ok">[УСПЕХ] ИДЕНТИФИКАТОР ПРИНЯТ. ДОСТУП К ЯДРУ РАЗРЕШЕН.</span>`);
                 window.dispatchEvent(new Event('unlockConsole'));
                 setTimeout(() => { location.reload(); }, 2000);
-                setTimeout(() => { window.dispatchEvent(new Event('os_id_verified')); }, 500);
             } else {
                 print(`<span class="err">[ОШИБКА] НЕВЕРНЫЙ ИДЕНТИФИКАТОР. ПОПРОБУЙТЕ СНОВА.</span>`);
             }
@@ -393,6 +394,7 @@
             }
             if (localStorage.getItem('s9_archive_training') === 'true') {
                 print(`<span class="warn">РЕЖИМ ОБУЧЕНИЯ УЖЕ АКТИВЕН.</span>`);
+                print(`ДЛЯ ПОЛУЧЕНИЯ СПИСКА ЭТАЛОННЫХ ГЛИФОВ ВВЕДИТЕ ${printCmd('archive --traning word')}.`);
                 return;
             }
             
@@ -400,10 +402,25 @@
             window.dispatchEvent(new CustomEvent('start_archive_training'));
             
             print(`<span class="warn">[ОБУЧЕНИЕ] ИНЖЕНЕРНЫЙ ТЕРМИНАЛ ПЕРЕВЕДЁН В РЕЖИМ ОБУЧЕНИЯ.</span>`);
-            print(`ДЛЯ КАЛИБРОВКИ АРХИВА ВВЕДИТЕ ЭТАЛОННЫЕ ГЛИФЫ: ХАБ, ГЛИФ, ПУЛЬТ, СЕРВЕР, КОНСОЛЬ.`);
+            print(`ДЛЯ ПОЛУЧЕНИЯ СПИСКА ЭТАЛОННЫХ ГЛИФОВ ВВЕДИТЕ ${printCmd('archive --traning word')}.`);
             return;
         }
         // ------------------------------
+
+        // --- КОМАНДА ВЫВОДА ЭТАЛОННЫХ СЛОВ ---
+        if (cmd === 'archive --traning word') {
+            if (currentPage !== 'tools.html') {
+                print(`<span class="err">ОШИБКА: КОМАНДА ДОСТУПНА ТОЛЬКО В ИНЖЕНЕРНОМ ТЕРМИНАЛЕ.</span>`);
+                return;
+            }
+            if (localStorage.getItem('s9_archive_training') !== 'true') {
+                print(`<span class="err">ОШИБКА: РЕЖИМ ОБУЧЕНИЯ НЕ АКТИВЕН.</span>`);
+                return;
+            }
+            print(`<span class="topic-header">[СПИСОК ЭТАЛОННЫХ СЛОВ]</span>`);
+            print(`ХАБ, ГЛИФ, ПУЛЬТ, СЕРВЕР, КОНСОЛЬ.`);
+            return;
+        }
 
         // --- КОМАНДА ДЛЯ ОС ---
         if (cmd.startsWith('os --reset qubit ')) {
@@ -428,35 +445,30 @@
             // Хелпер для вывода паспорта
             const printPassport = (title, cmdName, desc, hw, sw) => {
                 print(`<span class="topic-header">[${title}]</span>`);
-                print(`Команда перехода: > ${cmdName}`);
+                print(`Команда перехода: > ${printCmd(cmdName)}`); 
                 print(`Назначение: ${desc}`);
                 print(`Версия: ${hw} : ${sw}`);
             };
             if (topic === 'login') {
-                print(`<span class="topic-header">[ЛОГИН]</span>`);
-                print(`ВВЕДИТЕ ТЕКСТ «ТРАССИТ» В ИНЖЕНЕРНОМ ТЕРМИНАЛЕ (${printCmd('terminal')}) ДЛЯ ПОЛУЧЕНИЯ КЛЮЧА.`);
-            } 
+                print(`<span class="topic-header">[АВТОРИЗАЦИЯ]</span>`);
+                print(`Команда перехода: > ${printCmd('login')}`);
+                print(`Назначение: Переход на экран ввода графического ключа доступа.`);
+                print(`Генератор ключа: Модуль ${printCmd('terminal')} (слово ТРАССИТ).`);
+            }
             else if (topic === 'hub') {
                 if (!isModuleOnline('hub')) { print(`[МОДУЛЬ НЕДОСТУПЕН]`, 'err'); return; }
                 printPassport('ХАБ', 'hub', 'Приём, первичная обработка и трансляция глифов из эфира.', 'hhw469v1', 'hsw332v4');
             } 
             else if (topic === 'terminal') {
                 if (!isModuleOnline('terminal')) { print(`[МОДУЛЬ НЕДОСТУПЕН]`, 'err'); return; }
-                if (localStorage.getItem('s9_archive_calibrated') !== 'true') {
-                    print(`<span class="topic-header">[ТЕРМИНАЛ]</span>`);
-                    print(`[ВНИМАНИЕ] ТРЕБУЕТСЯ ОБУЧЕНИЕ АРХИВА.`);
-                    print(`> ${printCmd('archive --traning')} - Запуск обучения.`);
-                    print(`> ${printCmd('archive --traning word')} - Вывод эталонов.`);
-                } else {
-                    printPassport('ИНЖЕНЕРНЫЙ ТЕРМИНАЛ', 'terminal', 'Ручной ввод, визуализация и калибровка эталонных трасситов.', 'thw102v2', 'tsw881v1');
-                }
-            } 
+                printPassport('ИНЖЕНЕРНЫЙ ТЕРМИНАЛ', 'terminal', 'Ручной ввод, визуализация и калибровка эталонных трасситов.', 'thw102v2', 'tsw881v1');
+            }
             else if (topic === 'archive') {
                 if (!isModuleOnline('archive')) { print(`[МОДУЛЬ НЕДОСТУПЕН]`, 'err'); return; }
                 if (localStorage.getItem('s9_archive_fixed') !== 'true') {
                     print(`<span class="topic-header">[АРХИВ]</span>`);
                     print(`[ВНИМАНИЕ] БУФЕР ПЕРЕПОЛНЕН. ТРЕБУЕТСЯ ОБУЧЕНИЕ.`);
-                    print(`> ${printCmd('archive --traning')} - (В терминале)`);
+                    print(`> ${printCmd('archive --traning')}`);
                 } else {
                     printPassport('АРХИВ', 'archive', 'Накопительный буфер для сырых данных. Сектор верификации.', 'ahw555v3', 'asw910v5');
                 }
@@ -537,6 +549,7 @@
             case 'self --id':
                 print(`<span class="topic-header">[ИДЕНТИФИКАТОР ЯДРА]</span>`);
                 print(`0x7f930cb4ddb0`);
+                print(`ДЛЯ АВТОРИЗАЦИИ ВВЕДИТЕ: ${printCmd('login --id 0x7f930cb4ddb0')}`);
                 break;
             case 'help':
                 print(`<span class="topic-header">[ПРОТОКОЛЫ ПЕРЕМЕЩЕНИЯ]</span>`);

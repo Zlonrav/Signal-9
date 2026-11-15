@@ -298,29 +298,34 @@
                             });
 
                             if (learnedCount >= 5) {
-                                localStorage.setItem('s9_archive_calibrated', 'true');
-                                localStorage.removeItem('s9_archive_training');
-                                document.body.classList.remove('training-mode');
+                                // Сначала показываем, что глиф принят
                                 statusLabel.innerText = "ОБУЧЕНИЕ ЗАВЕРШЕНО. ВСЕ 5 ГЛИФОВ ИЗУЧЕНЫ.";
                                 statusLabel.style.color = "#00ff44";
-                                document.getElementById('textInput').value = "ОБУЧЕНИЕ ЗАВЕРШЕНО";
                                 
-                                const phrase1 = ["ХАБ", "ГЛИФ", "ПУЛЬТ", "СЕРВЕР", "КОНСОЛЬ"];
-                                const now = Date.now();
-                                const phrasesData = [{ text: phrase1.join(' '), words: phrase1, timestamp: now }];
-                                localStorage.setItem('s9_phrases_data', JSON.stringify(phrasesData));
-                                localStorage.setItem('s9_archive_baseline_count', '1');
+                                // Даем паузу 1.5 секунды, чтобы игрок увидел результат
+                                setTimeout(() => {
+                                    localStorage.setItem('s9_archive_calibrated', 'true');
+                                    localStorage.removeItem('s9_archive_training');
+                                    document.body.classList.remove('training-mode');
+                                    document.getElementById('textInput').value = "ОБУЧЕНИЕ ЗАВЕРШЕНО";
+                                    
+                                    const phrase1 = ["ХАБ", "ГЛИФ", "ПУЛЬТ", "СЕРВЕР", "КОНСОЛЬ"];
+                                    const now = Date.now();
+                                    const phrasesData = [{ text: phrase1.join(' '), words: phrase1, timestamp: now }];
+                                    localStorage.setItem('s9_phrases_data', JSON.stringify(phrasesData));
+                                    localStorage.setItem('s9_archive_baseline_count', '1');
 
-                                document.getElementById('mode-switch').checked = false;
-                                document.getElementById('gen-view').classList.remove('hidden');
-                                document.getElementById('gen-ui').classList.remove('hidden');
-                                document.getElementById('read-view').classList.add('hidden');
-                                document.getElementById('read-ui').classList.add('hidden');
-                                
-                                window.isTrainingSuccessAnimating = false;
-                                if (window.printToConsole) {
-                                    window.printToConsole(`<span class="ok">[УСПЕХ] АРХИВ ОБУЧЕН. ПЕРЕЙДИТЕ В АРХИВ И ЗАФИКСИРУЙТЕ ЗАГРУЗКУ 2 НОВЫХ ПАРТИЙ ГЛИФОВ.</span>`);
-                                }
+                                    document.getElementById('mode-switch').checked = false;
+                                    document.getElementById('gen-view').classList.remove('hidden');
+                                    document.getElementById('gen-ui').classList.remove('hidden');
+                                    document.getElementById('read-view').classList.add('hidden');
+                                    document.getElementById('read-ui').classList.add('hidden');
+                                    
+                                    window.isTrainingSuccessAnimating = false;
+                                    if (window.printToConsole) {
+                                        window.printToConsole(`<span class="ok">[OK] АРХИВ ОБУЧЕН.</span>`);
+                                    }
+                                }, 1500); 
                             } else {
                                 statusLabel.innerText = `ПРИНЯТО (${learnedCount}/5). ГЛИФ ИЗУЧЕН.`;
                                 statusLabel.style.color = "#00ff44";
