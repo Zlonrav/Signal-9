@@ -432,8 +432,11 @@
                 print(`Назначение: ${desc}`);
                 print(`Версия: ${hw} : ${sw}`);
             };
-
-            if (topic === 'hub') {
+            if (topic === 'login') {
+                print(`<span class="topic-header">[ЛОГИН]</span>`);
+                print(`ВВЕДИТЕ ТЕКСТ «ТРАССИТ» В ИНЖЕНЕРНОМ ТЕРМИНАЛЕ (${printCmd('terminal')}) ДЛЯ ПОЛУЧЕНИЯ КЛЮЧА.`);
+            } 
+            else if (topic === 'hub') {
                 if (!isModuleOnline('hub')) { print(`[МОДУЛЬ НЕДОСТУПЕН]`, 'err'); return; }
                 printPassport('ХАБ', 'hub', 'Приём, первичная обработка и трансляция глифов из эфира.', 'hhw469v1', 'hsw332v4');
             } 
