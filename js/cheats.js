@@ -131,6 +131,8 @@
             // --- ЧИТ ДЛЯ АРХИВА (ПОЧИНКА) ---
             if (cmd.toLowerCase() === 'fix_archive') {
                 localStorage.removeItem('s9_archive_training');
+                localStorage.removeItem('s9_read_success_archive');
+                localStorage.removeItem('s9_read_success_tools');
                 const words = ["ХАБ", "ГЛИФ", "ПУЛЬТ", "СЕРВЕР", "КОНСОЛЬ"];
                 const now = Date.now();
                 const phrasesData = [{ text: words.join(' '), words: words, timestamp: now }];
@@ -144,13 +146,14 @@
             }
 
             // --- ЧИТ ДЛЯ СБРОСА АРХИВА ---
-            // --- ЧИТ ДЛЯ СБРОСА АРХИВА ---
             if (cmd.toLowerCase() === 'reset_archive') {
                 localStorage.removeItem('s9_archive_calibrated');
                 localStorage.removeItem('s9_archive_fixed');
                 localStorage.removeItem('s9_archive_baseline_count');
                 localStorage.removeItem('s9_phrases_data');
                 localStorage.removeItem('s9_archive_training');
+                localStorage.removeItem('s9_read_success_archive');
+                localStorage.removeItem('s9_read_success_tools');
                 const trainWords = ["ХАБ", "ГЛИФ", "ПУЛЬТ", "СЕРВЕР", "КОНСОЛЬ"];
                 trainWords.forEach(w => localStorage.removeItem('s9_glyph_' + w));
                 const oldWords = ["СИСТЕМА", "ПАМЯТЬ", "КОД", "СИГНАЛ", "ВЕКТОР", "АРХИВ", "ЗВЕЗДА", "ОРБИТА", "МОДУЛЬ", "ДАННЫЕ"];
@@ -165,6 +168,8 @@
                 localStorage.removeItem('s9_phrases_data');
                 localStorage.removeItem('s9_archive_fixed');
                 localStorage.removeItem('s9_archive_training');
+                localStorage.removeItem('s9_read_success_archive');
+                localStorage.removeItem('s9_read_success_tools');
                 const words = ["ХАБ", "ГЛИФ", "ПУЛЬТ", "СЕРВЕР", "КОНСОЛЬ"];
                 const now = Date.now();
                 const phrasesData = [{ text: words.join(' '), words: words, timestamp: now }];
@@ -183,6 +188,7 @@
                 localStorage.removeItem('s9_os_broken_qubits');
                 localStorage.removeItem('s9_edr_os_passed');
                 localStorage.removeItem('s9_edr_os_trigger');
+                localStorage.removeItem('s9_read_success_os');
                 print('<span class="ok">[ЧИТ] ПРОХОЖДЕНИЕ ОС И EDR СБРОШЕНО.</span>');
                 setTimeout(() => { location.reload(); }, 1500);
                 return true;
@@ -195,6 +201,7 @@
                 localStorage.removeItem('s9_core_overheated');
                 localStorage.removeItem('s9_core_fixed');
                 localStorage.removeItem('s9_core_timer_start');
+                localStorage.removeItem('s9_read_success_core');
                 
                 print('<span class="ok">[ЧИТ] СТАТУС ЯДРА СБРОШЕН ДО WARNING (ЖЕЛТЫЙ). ПЕРЕХОД НА КАРТУ...</span>');
                 setTimeout(() => { window.location.href = 'map.html'; }, 1500);
@@ -205,6 +212,7 @@
             if (cmd.toLowerCase() === 'reset_telemetry') {
                 if (typeof window.cheatResetTelemetry === 'function') {
                     window.cheatResetTelemetry();
+                    localStorage.removeItem('s9_read_success_telemetry');
                     print('<span class="ok">[ЧИТ] ТЕЛЕМЕТРИЯ СБРОШЕНА. ГЕНЕРАЦИЯ НОВЫХ ВОЛН...</span>');
                     setTimeout(() => { location.reload(); }, 1500);
                 } else {
@@ -234,6 +242,7 @@
                 
                 if (edrPassed) {
                     localStorage.removeItem('s9_edr_os_trigger');
+                    localStorage.removeItem('s9_read_success_os');
                     localStorage.setItem('s9_os_fixed', 'true');
                     print('<span class="ok">[ЧИТ] КУБИТЫ ПЕРЕКАЛИБРОВАНЫ. ОС ПОЧИНЕНА.</span>');
                     setTimeout(() => { window.location.href = 'os.html'; }, 1500);
