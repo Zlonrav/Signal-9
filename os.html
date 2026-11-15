@@ -128,8 +128,8 @@
             align-items: center;
             justify-content: center;
             z-index: 50;
-            background: rgba(2, 5, 8, 0.85);
-            cursor: pointer;
+            background: transparent; /* Убрали темный фон */
+            cursor: default; /* Курсор обычный */
         }
 
         /* Контейнер для тряски (отдельно от пульсации) */
@@ -158,6 +158,7 @@
             flex-direction: column;
             align-items: center;
             animation: shieldPulse 3s infinite alternate;
+            cursor: pointer; /* Курсор-рука ТОЛЬКО на щите */
         }
 
         @keyframes shieldPulse { 
@@ -309,11 +310,11 @@
                 }
             }
 
-            // 2. Клик по щиту (тряска + открытие консоли)
-            const shield = document.getElementById('os-shield-overlay');
-            if (shield) {
-                shield.addEventListener('click', function() {
-                    const shaker = this.querySelector('.shield-shaker');
+            // 2. Клик по щиту
+            const shieldBtn = document.querySelector('.shield-container');
+            if (shieldBtn) {
+                shieldBtn.addEventListener('click', function() {
+                    const shaker = document.querySelector('.shield-shaker');
                     
                     // Проверка от спама кликами
                     if (shaker && !shaker.classList.contains('shake-animation')) {
@@ -329,7 +330,7 @@
                     }
                 });
             }
-        });
+        }); 
     </script>
 </body>
 </html>
