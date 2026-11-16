@@ -105,34 +105,15 @@
         #os-shield-overlay {
             position: absolute;
             inset: 0;
-            display: none; /* Скрыт по умолчанию, включается через JS */
-            align-items: center;
-            justify-content: center;
-            z-index: 50;
-            background: rgba(2, 5, 8, 0.85);
-            cursor: pointer;
-        }
-
-        @keyframes shakeShield {
-            10%, 90% { transform: translate3d(-1px, 0, 0); }
-            20%, 80% { transform: translate3d(2px, 0, 0); }
-            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-            40%, 60% { transform: translate3d(4px, 0, 0); }
-        }
-
-        /* --- ЩИТ БЛОКИРОВКИ --- */
-        #os-shield-overlay {
-            position: absolute;
-            inset: 0;
             display: none; 
             align-items: center;
             justify-content: center;
             z-index: 50;
-            background: transparent; /* Убрали темный фон */
-            cursor: default; /* Курсор обычный */
+            background: transparent; 
+            cursor: default; 
         }
 
-        /* Контейнер для тряски (отдельно от пульсации) */
+        /* Контейнер для тряски */
         .shield-shaker {
             width: 100%;
             height: 100%;
@@ -141,7 +122,7 @@
             justify-content: center;
         }
 
-        /* Агрессивная и заметная тряска */
+        /* Агрессивная тряска */
         @keyframes shakeShield {
             0%, 100% { transform: translate(0, 0); }
             10%, 30%, 50%, 70%, 90% { transform: translate(-12px, 0); }
@@ -158,7 +139,7 @@
             flex-direction: column;
             align-items: center;
             animation: shieldPulse 3s infinite alternate;
-            cursor: pointer; /* Курсор-рука ТОЛЬКО на щите */
+            cursor: pointer; 
         }
 
         @keyframes shieldPulse { 
@@ -166,63 +147,76 @@
             100% { filter: drop-shadow(0 0 1px #ff3333) drop-shadow(0 0 30px rgba(255, 51, 51, 0.6)); } 
         }
 
-        .shield-wrapper { 
+        /* =========================================
+           НОВЫЙ ЩИТ: RED QUANTUM LOCK
+           ========================================= */
+        .shield-base {
             position: relative; 
             width: 320px; 
-            height: 450px; 
+            height: 320px;
+            border-radius: 50%; 
+            border: 1px solid rgba(255, 51, 51, 0.4);
+            box-shadow: 
+                0 0 40px rgba(255, 51, 51, 0.2), 
+                inset 0 0 30px rgba(255, 51, 51, 0.15);
             display: flex; 
             align-items: center; 
-            justify-content: center; 
-            margin-bottom: 20px;
-        }
-
-        .shield-shape { 
-            width: 100%; 
-            height: 100%; 
-            background: rgba(15, 2, 2, 0.8); 
-            clip-path: polygon(50% 0%, 100% 10%, 100% 75%, 50% 100%, 0% 75%, 0% 10%); 
-            display: grid; 
-            grid-template-columns: repeat(14, 1fr); 
-            grid-template-rows: repeat(16, 1fr); 
-            gap: 1px; 
-        }
-
-        .shield-cell { 
-            background: rgba(255, 51, 51, 0.03); 
-            border: 1px solid rgba(255, 51, 51, 0.1); 
-        }
-
-        .shield-text-inner {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
-            width: 100%;
-            text-align: center;
-            z-index: 10;
-            pointer-events: none;
+            overflow: hidden;
         }
 
-        .shield-text-title {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 22px;
-            font-weight: bold;
-            letter-spacing: 1px;
-            color: #ff3333;
-            text-shadow: 0 0 4px rgba(255, 51, 51, 0.8);
-            margin-bottom: 5px;
+        .grid-bg {
+            position: absolute; inset: -50%;
+            background-image: 
+                linear-gradient(rgba(255, 51, 51, 0.2) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 51, 51, 0.2) 1px, transparent 1px);
+            background-size: 30px 30px;
+            transform: perspective(300px) rotateX(45deg) rotateZ(45deg);
+            animation: grid-move 5s linear infinite;
+            z-index: 1;
         }
 
-        .shield-text-sub {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 10px;
-            color: #ff6666;
-            letter-spacing: 1px;
-            text-shadow: none;
+        @keyframes grid-move {
+            0% { transform: perspective(300px) rotateX(45deg) rotateZ(45deg) translateY(0); }
+            100% { transform: perspective(300px) rotateX(45deg) rotateZ(45deg) translateY(30px); }
+        }
+
+        /* Вращающиеся дуги */
+        .rotator {
+            position: absolute; 
+            width: 280px; 
+            height: 280px; 
+            z-index: 3;
+            animation: spin 10s linear infinite; 
+        }
+
+        .bracket {
+            position: absolute; width: 100%; height: 100%;
+            border: 2px solid #ff3333; border-radius: 50%;
+            clip-path: polygon(0 0, 14% 0, 14% 100%, 0 100%);
+            filter: drop-shadow(0 0 8px #ff3333);
+            box-shadow: inset 0 0 10px rgba(255, 51, 51, 0.5);
+        }
+
+        .b2 { transform: rotate(90deg); }
+        .b4 { transform: rotate(270deg); }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* Текст */
+        .shield-text {
+            position: absolute; z-index: 30; text-align: center; pointer-events: none;
+            background: rgba(20, 0, 0, 0.85); padding: 15px 30px; border-radius: 4px;
+            border: 1px solid rgba(255, 51, 51, 0.4);
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
+            backdrop-filter: blur(2px);
+        }
+        .shield-text h2 {
+            margin: 0; font-family: 'Michroma', sans-serif; font-size: 20px; letter-spacing: 3px; color: #ff3333;
+            text-shadow: 0 0 15px #ff3333;
+        }
+        .shield-text p {
+            margin: 8px 0 0 0; font-size: 11px; color: #ff8888; letter-spacing: 2px;
         }
     </style>
 </head>
@@ -249,11 +243,15 @@
         <div id="os-shield-overlay">
             <div class="shield-shaker">
                 <div class="shield-container">
-                    <div class="shield-wrapper">
-                        <div class="shield-shape" id="osShieldGrid"></div>
-                        <div class="shield-text-inner">
-                            <div class="shield-text-title">ДОСТУП ЗАБЛОКИРОВАН</div>
-                            <div class="shield-text-sub">ТРЕБУЕТСЯ ВЕРИФИКАЦИЯ ЯДРА</div>
+                    <div class="shield-base">
+                        <div class="grid-bg"></div>
+                        <div class="rotator">
+                            <div class="bracket b2"></div>
+                            <div class="bracket b4"></div>
+                        </div>
+                        <div class="shield-text">
+                            <h2>ДОСТУП ЗАБЛОКИРОВАН</h2>
+                            <p>ОЖИДАНИЕ ВЕРИФИКАЦИИ ЯДРА</p>
                         </div>
                     </div>
                 </div>
@@ -300,16 +298,6 @@
     <script src="js/os.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // 1. Генерация сетки (кирпичиков)
-            const grid = document.getElementById('osShieldGrid');
-            if (grid) {
-                for (let i = 0; i < 14 * 16; i++) {
-                    const cell = document.createElement('div');
-                    cell.className = 'shield-cell';
-                    grid.appendChild(cell);
-                }
-            }
-
             // 2. Клик по щиту
             const shieldBtn = document.querySelector('.shield-container');
             if (shieldBtn) {
