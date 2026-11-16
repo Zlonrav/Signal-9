@@ -148,59 +148,51 @@
         }
 
         /* =========================================
-           НОВЫЙ ЩИТ: RED QUANTUM LOCK
+           ЩИТ: RED QUANTUM LOCK
            ========================================= */
         .shield-base {
-            position: relative;
-            width: 320px;
-            height: 320px;
-            border-radius: 50%;
+            position: relative; width: 320px; height: 320px;
+            border-radius: 50%; 
             border: 1px solid rgba(255, 51, 51, 0.4);
-            box-shadow: 0 0 40px rgba(255, 51, 51, 0.2), inset 0 0 30px rgba(255, 51, 51, 0.15);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            box-shadow: 
+                0 0 40px rgba(255, 51, 51, 0.2), 
+                inset 0 0 30px rgba(255, 51, 51, 0.15);
+            display: flex; align-items: center; justify-content: center;
             overflow: hidden;
         }
-                .grid-bg {
-                    position: absolute; inset: -50%;
-                    background-image: 
-                        linear-gradient(rgba(255, 51, 51, 0.2) 1px, transparent 1px),
-                        linear-gradient(90deg, rgba(255, 51, 51, 0.2) 1px, transparent 1px);
-                    background-size: 30px 30px;
-                    transform: perspective(300px) rotateX(45deg) rotateZ(45deg);
-                    animation: grid-move 5s linear infinite;
-                    z-index: 1;
-                }
 
-        @keyframes grid-move {
-            0% { transform: perspective(300px) rotateX(45deg) rotateZ(45deg) translateY(0); }
-            100% { transform: perspective(300px) rotateX(45deg) rotateZ(45deg) translateY(30px); }
+        .grid-bg {
+            position: absolute; inset: -50%;
+            background-image: 
+                linear-gradient(rgba(255, 51, 51, 0.2) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 51, 51, 0.2) 1px, transparent 1px);
+            background-size: 30px 30px;
+            transform: perspective(300px) rotateX(45deg) rotateZ(45deg);
+            animation: grid-move 5s linear infinite;
+            z-index: 1;
         }
 
-        /* Вращающиеся дуги */
+        /* Контейнер, который вращается целиком */
         .rotator {
-            position: absolute; 
-            width: 280px; 
-            height: 280px; 
-            z-index: 3;
+            position: absolute; width: 280px; height: 280px; z-index: 3;
             animation: spin 10s linear infinite; 
         }
 
+        /* Твои скобки */
         .bracket {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border: 2px solid var(--err);
-            border-radius: 50%;
+            position: absolute; width: 100%; height: 100%;
+            border: 2px solid var(--err); border-radius: 50%;
+            /* 14% ширины дает дугу ровно в 45 градусов */
             clip-path: polygon(0 0, 14% 0, 14% 100%, 0 100%);
             filter: drop-shadow(0 0 8px var(--err));
             box-shadow: inset 0 0 10px rgba(255, 51, 51, 0.5);
+        }
 
+        /* Распределяем их через 90 градусов */
+        .b1 { transform: rotate(0deg); }
         .b2 { transform: rotate(90deg); }
+        .b3 { transform: rotate(180deg); }
         .b4 { transform: rotate(270deg); }
-
-        @keyframes spin { 100% { transform: rotate(360deg); } }
 
         /* Текст */
         .shield-text {
@@ -211,12 +203,18 @@
             backdrop-filter: blur(2px);
         }
         .shield-text h2 {
-            margin: 0; font-family: 'Michroma', sans-serif; font-size: 20px; letter-spacing: 3px; color: #ff3333;
-            text-shadow: 0 0 15px #ff3333;
+            margin: 0; font-family: 'Michroma', sans-serif; font-size: 20px; letter-spacing: 3px; color: var(--err);
+            text-shadow: 0 0 15px var(--err);
         }
         .shield-text p {
             margin: 8px 0 0 0; font-size: 11px; color: #ff8888; letter-spacing: 2px;
         }
+
+        @keyframes grid-move {
+            0% { transform: perspective(300px) rotateX(45deg) rotateZ(45deg) translateY(0); }
+            100% { transform: perspective(300px) rotateX(45deg) rotateZ(45deg) translateY(30px); }
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="tools-page">
