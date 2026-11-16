@@ -38,15 +38,6 @@
             z-index: 2; background-size: 100% 2px, 3px 100%; pointer-events: none;
         }
 
-        .corner { 
-            position: absolute; width: 25px; height: 25px; border: 2px solid #00f2ff;
-            z-index: 20; pointer-events: none; opacity: 1; filter: drop-shadow(0 0 5px #00f2ff);
-        }
-        .corner-tl { top: -1px; left: -1px; border-right: none; border-bottom: none; }
-        .corner-tr { top: -1px; right: -1px; border-left: none; border-bottom: none; }
-        .corner-bl { bottom: -1px; left: -1px; border-right: none; border-top: none; }
-        .corner-br { bottom: -1px; right: -1px; border-left: none; border-top: none; }
-
         .main-layout {
             display: flex; gap: 25px; align-items: center; justify-content: center;
             width: 100%; height: 100%; padding: 20px; box-sizing: border-box; z-index: 5;
@@ -103,11 +94,14 @@
            ЩИТ: RED QUANTUM LOCK
            ========================================= */
         .shield-container {
-            cursor: pointer; /* ДОБАВЛЕНО: Курсор-рука */
+            cursor: pointer; 
+            /* ФИКС БАГА 3: Жесткие размеры, чтобы hover срабатывал только на круг */
+            width: 320px; 
+            height: 320px; 
         }
 
         .shield-base {
-            position: relative; width: 320px; height: 320px;
+            position: relative; width: 100%; height: 100%;
             border-radius: 50%; 
             border: 1px solid rgba(255, 51, 51, 0.4);
             box-shadow: 
@@ -115,12 +109,15 @@
                 inset 0 0 30px rgba(255, 51, 51, 0.15);
             display: flex; align-items: center; justify-content: center;
             overflow: hidden;
-            transition: transform 0.3s ease, opacity 0.3s ease; /* ДОБАВЛЕНО: Плавность */
+            /* ФИКС БАГА 1: Быстрый и плавный переход */
+            transition: transform 0.2s ease-out, opacity 0.2s ease-out; 
+            /* ФИКС БАГА 2: Создаем отдельный слой для GPU, чтобы не было сдвигов */
+            transform: translateZ(0); 
         }
 
-        /* ДОБАВЛЕНО: Эффект при наведении */
+        /* ФИКС БАГА 1 и 3: Наведение работает только при точном попадании */
         .shield-container:hover .shield-base {
-            transform: scale(1.05);
+            transform: translateZ(0) scale(1.05); /* Сохраняем translateZ для стабильности */
             opacity: 0.9;
         }
 
