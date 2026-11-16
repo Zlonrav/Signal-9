@@ -274,7 +274,7 @@
         }
 
         const cells = [];
-        const cols = 14, rows = 16;
+        const cols = 12, rows = 12;
 
         for (let i = 0; i < cols * rows; i++) {
             const cell = document.createElement('div');
