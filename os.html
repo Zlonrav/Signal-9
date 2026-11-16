@@ -28,8 +28,21 @@
 
         .terminal-wrapper {
             position: relative; width: 600px; height: 500px;
+            display: flex; /* <-- РАСКОММЕНТИРОВАНО */
             align-items: center; justify-content: center; overflow: hidden; z-index: 10;
             margin-top: 50px;
+        }
+
+        /* ДОБАВЛЕНО: стили для оверлея (без них щит не центрируется) */
+        #os-shield-overlay {
+            position: absolute;
+            inset: 0;
+            display: none; 
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            background: transparent;
+            cursor: default;
         }
 
         .terminal-wrapper::before {
