@@ -48,8 +48,6 @@
         const wrapper = document.querySelector('.terminal-wrapper');
         const shield = document.getElementById('os-shield-overlay');
 
-        if (wrapper) wrapper.style.display = 'flex';
-
         if (isCaptchaPassed) {
             if (shield) shield.style.display = 'none';
             desktop.style.display = 'flex';
