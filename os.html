@@ -185,7 +185,7 @@
             /* 14% ширины дает дугу ровно в 45 градусов */
             clip-path: polygon(0 0, 14% 0, 14% 100%, 0 100%);
             filter: drop-shadow(0 0 8px var(--err));
-            box-shadow: inset 0 0 10px rgba(255, 51, 51, 0.5);
+            /* Убрали box-shadow, который давал грязную внутреннюю тень */
         }
 
         /* Распределяем их через 90 градусов */
@@ -194,20 +194,23 @@
         .b3 { transform: rotate(180deg); }
         .b4 { transform: rotate(270deg); }
 
-        /* Текст */
+         /* Текст */
         .shield-text {
             position: absolute; z-index: 30; text-align: center; pointer-events: none;
-            background: rgba(20, 0, 0, 0.85); padding: 15px 30px; border-radius: 4px;
-            border: 1px solid rgba(255, 51, 51, 0.4);
-            box-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
-            backdrop-filter: blur(2px);
+            /* Убрали черную плашку, рамки и размытие */
+            background: transparent; 
+            padding: 0;
+            border: none;
+            box-shadow: none;
+            backdrop-filter: none;
         }
         .shield-text h2 {
             margin: 0; font-family: 'Michroma', sans-serif; font-size: 20px; letter-spacing: 3px; color: var(--err);
-            text-shadow: 0 0 15px var(--err);
+            text-shadow: 0 0 15px var(--err), 0 0 5px rgba(255, 51, 51, 0.8); /* Усилили свечение текста */
         }
         .shield-text p {
             margin: 8px 0 0 0; font-size: 11px; color: #ff8888; letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(255, 51, 51, 0.5);
         }
 
         @keyframes grid-move {
