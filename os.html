@@ -191,12 +191,14 @@
         }
 
         .bracket {
-            position: absolute; width: 100%; height: 100%;
-            border: 2px solid #ff3333; border-radius: 50%;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 2px solid var(--err);
+            border-radius: 50%;
             clip-path: polygon(0 0, 14% 0, 14% 100%, 0 100%);
-            filter: drop-shadow(0 0 8px #ff3333);
+            filter: drop-shadow(0 0 8px var(--err));
             box-shadow: inset 0 0 10px rgba(255, 51, 51, 0.5);
-        }
 
         .b2 { transform: rotate(90deg); }
         .b4 { transform: rotate(270deg); }
