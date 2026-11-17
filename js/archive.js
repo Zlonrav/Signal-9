@@ -96,6 +96,20 @@
                     </div>
                 </div>
             `;
+            // Добавляем тряску при клике на замок
+            const shieldBase = errorOverlay.querySelector('.shield-base');
+            if (shieldBase) {
+                shieldBase.addEventListener('click', () => {
+                    if (!shieldBase.classList.contains('shake-animation')) {
+                        shieldBase.classList.add('shake-animation');
+                        setTimeout(() => {
+                            shieldBase.classList.remove('shake-animation');
+                            // Здесь в будущем можно добавить звук ошибки или редирект
+                        }, 400);
+                    }
+                });
+            }
+
             grid.appendChild(errorOverlay);
             return; // Прерываем отрисовку слов
         }
