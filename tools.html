@@ -362,51 +362,9 @@
                     localStorage.setItem('s9_glyph_' + foundWord, 'true'); 
                     
                     // --- ЛОГИКА КАЛИБРОВКИ АРХИВА (10 СЛОВ) ---
-                    const TARGET_WORDS = ["СИСТЕМА", "ПАМЯТЬ", "КОД", "СИГНАЛ", "ВЕКТОР", "АРХИВ", "ЗВЕЗДА", "ОРБИТА", "МОДУЛЬ", "ДАННЫЕ"];
-                    
-                    if (TARGET_WORDS.includes(foundWord)) {
-                        let count = 0;
-                        TARGET_WORDS.forEach(w => {
-                            if (localStorage.getItem('s9_glyph_' + w) === 'true') count++;
-                        });
-
-                        if (count < 10) {
-                            statusLabel.innerText = `${foundWord} [ЭТАЛОНОВ: ${count}/10]`;
-                            statusLabel.style.color = ""; 
-                        } else if (localStorage.getItem('s9_archive_calibrated') === 'true') {
-                            // Если калибровка уже была пройдена ранее, просто показываем текст и ничего не трогаем
-                            statusLabel.innerText = "КАЛИБРОВКА УЖЕ ЗАВЕРШЕНА";
-                            statusLabel.style.color = "#00ff44"; 
-                        } else {
-                            // Если калибровка происходит впервые, создаём фразы
-                            statusLabel.innerText = "КАЛИБРОВКА ЗАВЕРШЕНА";
-                            statusLabel.style.color = "#00ff44"; 
-                            localStorage.setItem('s9_archive_calibrated', 'true');
-                            
-                            localStorage.removeItem('s9_phrases_data');
-                            const phrase1 = TARGET_WORDS.slice(0, 5); 
-                            const phrase2 = TARGET_WORDS.slice(5, 10); 
-                            const now = Date.now();
-                            
-                            const phrasesData = [
-                                { text: phrase1.join(' '), words: phrase1, timestamp: now - 1000 },
-                                { text: phrase2.join(' '), words: phrase2, timestamp: now }
-                            ];
-                            
-                            localStorage.setItem('s9_phrases_data', JSON.stringify(phrasesData));
-                            localStorage.setItem('s9_archive_baseline_count', '2');
-                            localStorage.setItem('s9_archive_calibration_time', (now + 2000).toString());
-
-                            setTimeout(() => {
-                                window.location.href = 'archive.html';
-                            }, 2000);
-                        }
-                    } else {
-                        // Если это просто случайное слово (не из эталонных 5)
-                        // Терминал знает его, но выводит зашифрованную версию
-                        statusLabel.innerText = getWrongLabel(foundWord);
-                        statusLabel.style.color = "";
-                    }
+                    // Выводим зашифрованную версию слова, так как старой калибровки больше нет
+                    statusLabel.innerText = getWrongLabel(foundWord);
+                    statusLabel.style.color = "";
                     // ---------------------------------
 
                 } else if (readIndices.length >= 5) {
