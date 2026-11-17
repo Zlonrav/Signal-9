@@ -84,11 +84,15 @@
             errorOverlay.style.zIndex = '10';
             
             errorOverlay.innerHTML = `
-                <div style="text-align: center; border: 1px solid #ff3333; padding: 40px; background: rgba(15, 2, 2, 0.95); box-shadow: 0 0 30px rgba(255, 51, 51, 0.5); border-radius: 8px; max-width: 80%;">
-                    <div style="color: #ff3333; font-size: 24px; font-weight: bold; font-family: 'Michroma', sans-serif; margin-bottom: 20px; letter-spacing: 2px; text-shadow: 0 0 10px #ff3333;">ОШИБКА ВЕРИФИКАЦИИ</div>
-                    <div style="color: #ff6666; font-size: 14px; font-family: 'JetBrains Mono', monospace; line-height: 1.6;">
-                        СИГНАЛ ЗАШИФРОВАН.<br>КЛЮЧ-ПАРОЛЬ НЕ НАЙДЕН.<br><br>
-                        <span style="opacity: 0.7; font-size: 12px;">ДЕШИФРОВКА НЕВОЗМОЖНА.</span>
+                <div class="shield-base">
+                    <div class="grid-bg"></div>
+                    <div class="rotator">
+                        <div class="bracket b2"></div>
+                        <div class="bracket b4"></div>
+                    </div>
+                    <div class="shield-text">
+                        <h2>ОШИБКА ВЕРИФИКАЦИИ</h2>
+                        <p>СИГНАЛ ЗАШИФРОВАН. КЛЮЧ-ПАРОЛЬ НЕ НАЙДЕН.</p>
                     </div>
                 </div>
             `;
