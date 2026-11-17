@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>СИГНАЛ-9 // ТЕСТ ДИЗАЙНА ОС (3D KEYFRAMES)</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Michroma&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --warn: #ffaa00; 
+            --ok: #00ff44; 
+            --err: #ff3333; 
+            --ent: #a200ff;
+            --locked: #555555;
+            --neon: #00f2ff;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; padding: 0; height: 100vh;
+            background: #010306;
+            background-image: radial-gradient(circle at center, #03101a 0%, #010306 100%);
+            font-family: 'JetBrains Mono', monospace; color: #fff;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            overflow: hidden;
+        }
+
+        .os-header { 
+            position: absolute; top: 25px; left: 50%; transform: translateX(-50%);
+            font-family: 'Michroma', sans-serif; font-size: 14px; letter-spacing: 8px; 
+            color: var(--neon); text-transform: uppercase; opacity: 0.6; 
+            text-shadow: 0 0 20px var(--neon); z-index: 100; pointer-events: none;
+        }
+
+        .terminal-wrapper {
+            position: relative; width: 700px; height: 520px;
+            display: flex; align-items: center; justify-content: center; 
+            z-index: 10; margin-top: 30px;
+            background: rgba(0, 5, 10, 0.4);
+            border: 1px solid rgba(0, 242, 255, 0.1);
+            overflow: visible;
+        }
+
+        .terminal-wrapper::before {
+            content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2; background-size: 100% 2px, 3px 100%; pointer-events: none;
+        }
+
+        .main-layout {
+            display: flex; gap: 20px; align-items: center; justify-content: center;
+            width: 100%; height: 100%; padding: 20px; box-sizing: border-box; z-index: 5;
+        }
+
+        .left-panel {
+            width: 400px; height: 420px;
+            display: flex; flex-direction: column; gap: 15px;
+            overflow: visible;
+        }
+
+        .tabs-container {
+            display: flex; justify-content: space-between; gap: 5px;
+            z-index: 10;
+        }
+        .layer-tab {
+            flex: 1; padding: 8px 0; text-align: center;
+            background: rgba(0, 20, 30, 0.8); border: 1px solid rgba(0, 242, 255, 0.2);
+            color: rgba(0, 242, 255, 0.6); cursor: pointer; font-size: 11px;
+            text-transform: uppercase; transition: 0.3s; position: relative;
+            user-select: none;
+        }
+        .layer-tab:hover { background: rgba(0, 242, 255, 0.1); color: var(--neon); }
+        .layer-tab.active {
+            background: rgba(0, 242, 255, 0.2); border-color: var(--neon);
+            color: var(--neon); box-shadow: 0 0 10px rgba(0, 242, 255, 0.2);
+        }
+        .layer-tab.locked { color: var(--locked); border-color: rgba(85,85,85,0.3); cursor: not-allowed; }
+        
+        .status-dot {
+            position: absolute; top: 3px; right: 3px;
+            width: 6px; height: 6px; border-radius: 50%;
+        }
+        .dot-clean { background: rgba(255, 255, 255, 0.1); box-shadow: none; }
+        .dot-err { background: var(--err); box-shadow: 0 0 5px var(--err); }
+        .dot-warn { background: var(--warn); box-shadow: 0 0 5px var(--warn); }
+        .dot-ent { background: var(--ent); box-shadow: 0 0 5px var(--ent); }
+        .dot-lock { background: var(--locked); }
+
+        /* --- КОНТЕЙНЕР ДЛЯ СЛОЕВ --- */
+        .grid-container {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            position: relative;
+            /* ДОБАВЛЕНО: обрезаем всё, что вылезает за пределы */
+            overflow: hidden;
+            border-radius: 4px;
+        }
+
+        .grid-wrapper {
+            width: 380px; height: 380px;
+        }
+
+        /* --- АНИМАЦИИ --- */
+        /* 1. Слой улетает на нас (увеличивается) */
+        @keyframes flyOutToPast {
+            0% { transform: scale(1); opacity: 1; filter: blur(0); }
+            100% { transform: scale(1.6); opacity: 0; filter: blur(10px); }
+        }
+        /* 2. Слой прилетает из глубины (маленький -> нормальный) */
+        @keyframes flyInFromFuture {
+            0% { transform: scale(0.2); opacity: 0; filter: blur(10px); }
+            100% { transform: scale(1); opacity: 1; filter: blur(0); }
+        }
+        /* 3. Слой улетает в глубину (уменьшается) */
+        @keyframes flyOutToFuture {
+            0% { transform: scale(1); opacity: 1; filter: blur(0); }
+            100% { transform: scale(0.2); opacity: 0; filter: blur(10px); }
+        }
+        /* 4. Слой прилетает из-за спины (большой -> нормальный) */
+        @keyframes flyInFromPast {
+            0% { transform: scale(1.6); opacity: 0; filter: blur(10px); }
+            100% { transform: scale(1); opacity: 1; filter: blur(0); }
+        }
+
+        .anim-out-past { animation: flyOutToPast 0.6s ease-in forwards; }
+        .anim-in-future { animation: flyInFromFuture 0.6s ease-out forwards; }
+        .anim-out-future { animation: flyOutToFuture 0.6s ease-in forwards; }
+        .anim-in-past { animation: flyInFromPast 0.6s ease-out forwards; }
+
+        .qubit-grid {
+            width: 100%; height: 100%;
+            display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(5, 1fr);
+            gap: 10px; transform: rotateX(5deg);
+        }
+
+        /* Кубиты */
+        .qubit {
+            background: #050505; border: 1px solid rgba(0, 242, 255, 0.3);
+            position: relative; box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+            aspect-ratio: 1; transition: 0.3s;
+        }
+        .qubit::before {
+            content: ''; position: absolute; inset: 6px;
+            border: 1px solid var(--neon); opacity: 0.7; transition: 0.3s;
+        }
+        .qubit::after {
+            content: ''; position: absolute; inset: 16px;
+            background: var(--neon); opacity: 0.6; box-shadow: 0 0 8px var(--neon); transition: 0.3s;
+        }
+
+        .q-broken { border-color: var(--err); }
+        .q-broken::before { border-color: var(--err); opacity: 1; }
+        .q-broken::after { background: var(--err); opacity: 1; box-shadow: 0 0 15px var(--err); animation: blink 1.2s infinite; }
+
+        .q-warn { border-color: var(--warn); }
+        .q-warn::before { border-color: var(--warn); opacity: 1; }
+        .q-warn::after { background: var(--warn); opacity: 1; box-shadow: 0 0 15px var(--warn); animation: blink 1s infinite alternate; }
+
+        .q-ent { border-color: var(--ent); }
+        .q-ent::before { border-color: var(--ent); opacity: 1; }
+        .q-ent::after { background: var(--ent); opacity: 1; box-shadow: 0 0 15px var(--ent); animation: softPulse 1.5s infinite alternate; }
+
+        .pair-dot {
+            position: absolute; top: 3px; right: 3px;
+            width: 8px; height: 8px; border-radius: 50%; z-index: 5;
+        }
+        .pair-A { background: #ffaa00; box-shadow: 0 0 5px #ffaa00; }
+        .pair-B { background: #00ff44; box-shadow: 0 0 5px #00ff44; }
+
+        .monitor-panel { 
+            width: 220px; height: 420px; display: flex; flex-direction: column; gap: 15px; flex-shrink: 0;
+            z-index: 10;
+        }
+        .sys-stats { display: flex; flex-direction: column; gap: 12px; }
+        .stat-row { display: flex; flex-direction: column; gap: 4px; }
+        .stat-label { display: flex; justify-content: space-between; font-size: 10px; color: #aaa; }
+        .stat-label span:last-child { color: var(--neon); font-weight: bold; }
+        
+        .progress-bar { width: 100%; height: 6px; background: rgba(0, 242, 255, 0.1); border: 1px solid rgba(0, 242, 255, 0.2); }
+        .progress-fill { height: 100%; background: #00f2ff; box-shadow: 0 0 10px #00f2ff; width: 0%; transition: width 0.5s ease-out; }
+
+        .log-box { 
+            flex-grow: 1; background: rgba(0, 10, 15, 0.8); border: 1px solid rgba(0, 242, 255, 0.3); 
+            padding: 8px; overflow: hidden; display: flex; flex-direction: column; 
+            justify-content: flex-end; border-left: 2px solid #00f2ff; 
+        }
+        .log-line { 
+            color: #aaa; font-size: 9.5px; line-height: 1.4; margin-bottom: 2px; 
+            flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+        }
+        .log-line.ok { color: var(--ok); }
+        .log-line.err { color: var(--err); }
+
+        .console-wrapper {
+            position: fixed; bottom: 30px; width: 700px;
+            background: rgba(0, 10, 15, 0.8); border: 1px solid rgba(0, 242, 255, 0.3);
+            padding: 10px 15px; display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.1);
+            z-index: 10;
+        }
+        .console-wrapper span { color: var(--neon); font-weight: bold; font-size: 16px; }
+        .console-wrapper input {
+            flex: 1; background: transparent; border: none; border-bottom: 1px solid rgba(0, 242, 255, 0.5);
+            color: var(--neon); font-family: inherit; font-size: 14px; outline: none; padding: 5px 0;
+            text-transform: uppercase;
+        }
+
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        @keyframes softPulse { 0% { opacity: 0.4; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <div class="os-header">ОПЕРАЦИОННАЯ СИСТЕМА // СЕКТОР 01</div>
+    
+    <div class="terminal-wrapper">
+        <div class="main-layout">
+            <div class="left-panel">
+                <div class="tabs-container" id="layerTabs"></div>
+                <div class="grid-container">
+                    <div class="grid-wrapper" id="gridWrapper">
+                        <div class="qubit-grid" id="qubitGrid"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="monitor-panel">
+                <div class="sys-stats">
+                    <div class="stat-row">
+                        <div class="stat-label"><span>ЗАГРУЗКА CPU</span><span id="valCpu">0%</span></div>
+                        <div class="progress-bar"><div class="progress-fill" id="barCpu"></div></div>
+                    </div>
+                    <div class="stat-row">
+                        <div class="stat-label"><span>ОПЕРАТИВНАЯ ПАМЯТЬ</span><span id="valRam">0%</span></div>
+                        <div class="progress-bar"><div class="progress-fill" id="barRam"></div></div>
+                    </div>
+                    <div class="stat-row">
+                        <div class="stat-label"><span>АКТИВНЫЙ СЛОЙ</span><span id="valLayer" style="color: var(--neon);">01 / 05</span></div>
+                    </div>
+                </div>
+                <div class="log-box" id="logBox"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="console-wrapper">
+        <span>></span>
+        <input type="text" id="cmdInput" placeholder="os --reset qubit l1r1c1" onkeydown="if(event.key==='Enter'){handleCmd(this.value);this.value='';}">
+    </div>
+
+    <script>
+        let activeLayer = 1;
+        let qubits = {};
+        let isAnimating = false;
+
+        function initGame() {
+            for (let l = 1; l <= 5; l++) {
+                qubits[l] = {};
+                for (let r = 1; r <= 5; r++) {
+                    qubits[l][r] = {};
+                    for (let c = 1; c <= 5; c++) qubits[l][r][c] = { state: 'active' };
+                }
+            }
+
+            const pool = [];
+            for (let l = 1; l <= 4; l++)
+                for (let r = 1; r <= 5; r++)
+                    for (let c = 1; c <= 5; c++) pool.push({ l, r, c });
+            pool.sort(() => Math.random() - 0.5);
+
+            for (let i = 0; i < 4; i++) {
+                const p = pool.pop();
+                qubits[p.l][p.r][p.c].state = 'broken';
+            }
+            for (let i = 0; i < 2; i++) {
+                const p1 = pool.pop(), p2 = pool.pop();
+                const type = i === 0 ? 'A' : 'B';
+                qubits[p1.l][p1.r][p1.c] = { state: 'entangled', pair: type, linkedTo: `L${p2.l}R${p2.r}C${p2.c}` };
+                qubits[p2.l][p2.r][p2.c] = { state: 'entangled', pair: type, linkedTo: `L${p1.l}R${p1.r}C${p1.c}` };
+            }
+            for (let i = 0; i < 2; i++) {
+                const p = pool.pop();
+                qubits[p.l][p.r][p.c].state = 'warning';
+                const l = p.l, r = p.r, c = p.c;
+                setTimeout(() => {
+                    if (qubits[l][r][c].state === 'warning') {
+                        qubits[l][r][c].state = 'broken';
+                        if (activeLayer === l) renderGrid();
+                        renderTabs();
+                        log(`[ДЕКОГЕРЕНЦИЯ] КУБИТ L${l}R${r}C${c} СЛОМАН`, 'err');
+                    }
+                }, 10000);
+            }
+            for (let r = 1; r <= 5; r++) for (let c = 1; c <= 5; c++) qubits[5][r][c].state = 'locked';
+
+            renderTabs();
+            renderGrid();
+            log('> КВАНТОВОЕ ЯДРО ИНИЦИАЛИЗИРОВАНО.', 'ok');
+            log('> ОБНАРУЖЕНЫ ПОВРЕЖДЕНИЯ.', 'err');
+            log('> ИСПОЛЬЗУЙТЕ os --reset qubit LrXcY', '');
+            startStats();
+        }
+
+        function renderTabs() {
+            const container = document.getElementById('layerTabs');
+            container.innerHTML = '';
+            for (let l = 1; l <= 5; l++) {
+                const tab = document.createElement('div');
+                tab.className = 'layer-tab';
+                if (l === activeLayer) tab.classList.add('active');
+                if (l === 5 && !isLayer5Unlocked()) tab.classList.add('locked');
+
+                let dotClass = 'dot-clean';
+                if (l === 5 && !isLayer5Unlocked()) dotClass = 'dot-lock';
+                else {
+                    let hasBroken = false, hasWarn = false, hasEnt = false;
+                    for (let r = 1; r <= 5; r++) for (let c = 1; c <= 5; c++) {
+                        const s = qubits[l][r][c].state;
+                        if (s === 'broken') hasBroken = true;
+                        else if (s === 'warning') hasWarn = true;
+                        else if (s === 'entangled') hasEnt = true;
+                    }
+                    if (hasBroken) dotClass = 'dot-err';
+                    else if (hasWarn) dotClass = 'dot-warn';
+                    else if (hasEnt) dotClass = 'dot-ent';
+                }
+
+                tab.innerHTML = `СЛОЙ ${l} ${l === 5 && !isLayer5Unlocked() ? '🔒' : ''}<div class="status-dot ${dotClass}"></div>`;
+                tab.onclick = () => switchLayer(l);
+                container.appendChild(tab);
+            }
+        }
+
+        function renderGrid() {
+            const grid = document.getElementById('qubitGrid');
+            grid.innerHTML = '';
+            for (let r = 1; r <= 5; r++) {
+                for (let c = 1; c <= 5; c++) {
+                    const q = qubits[activeLayer][r][c];
+                    const el = document.createElement('div');
+                    el.className = 'qubit';
+
+                    if (q.state === 'broken') el.classList.add('q-broken');
+                    else if (q.state === 'warning') el.classList.add('q-warn');
+                    else if (q.state === 'entangled') el.classList.add('q-ent');
+                    else if (q.state === 'locked') {
+                        el.style.opacity = '0.2'; el.style.borderColor = '#555'; el.style.boxShadow = 'none';
+                    }
+
+                    if (q.state === 'entangled') {
+                        const dot = document.createElement('div');
+                        dot.className = `pair-dot pair-${q.pair}`;
+                        el.appendChild(dot);
+                    }
+                    grid.appendChild(el);
+                }
+            }
+        }
+
+        function switchLayer(target) {
+            if (isAnimating || target === activeLayer) return;
+            if (target === 5 && !isLayer5Unlocked()) return;
+
+            isAnimating = true;
+            const wrapper = document.getElementById('gridWrapper');
+            const isForward = target > activeLayer;
+
+            wrapper.className = `grid-wrapper ${isForward ? 'anim-out-past' : 'anim-out-future'}`;
+
+            setTimeout(() => {
+                activeLayer = target;
+                renderGrid();
+                document.getElementById('valLayer').innerText = `${String(activeLayer).padStart(2,'0')} / 05`;
+                renderTabs();
+
+                wrapper.className = `grid-wrapper ${isForward ? 'anim-in-future' : 'anim-in-past'}`;
+
+                setTimeout(() => {
+                    wrapper.className = 'grid-wrapper';
+                    isAnimating = false;
+                }, 600);
+            }, 600);
+        }
+
+        function isLayer5Unlocked() {
+            for (let l = 1; l <= 4; l++)
+                for (let r = 1; r <= 5; r++)
+                    for (let c = 1; c <= 5; c++) {
+                        const s = qubits[l][r][c].state;
+                        if (s === 'broken' || s === 'warning' || s === 'entangled') return false;
+                    }
+            return true;
+        }
+
+        function handleCmd(raw) {
+            const cmd = raw.trim().toLowerCase();
+            if (!cmd) return;
+            log(`> ${cmd}`, '');
+            if (!cmd.startsWith('os --reset qubit ')) { log('НЕИЗВЕСТНАЯ КОМАНДА.', 'err'); return; }
+
+            const args = cmd.replace('os --reset qubit ', '').trim().split(/\s+/);
+            if (args.length === 1) {
+                const m = args[0].match(/^l(\d)r(\d)c(\d)$/);
+                if (!m) { log('НЕВЕРНЫЙ ФОРМАТ.', 'err'); return; }
+                const [_, l, r, c] = m;
+                const q = qubits[l]?.[r]?.[c];
+                if (!q) { log('ОШИБКА: НЕВЕРНЫЕ КООРДИНАТЫ.', 'err'); return; }
+                if (q.state === 'entangled') { log(`ОШИБКА: КВАНТОВАЯ СВЯЗЬ. СВЯЗАН С ${q.linkedTo}.`, 'err'); return; }
+                if (q.state === 'active') { log('КУБИТ УЖЕ В НОРМЕ.', 'err'); return; }
+                if (q.state === 'locked') { log('КУБИТ ЗАБЛОКИРОВАН.', 'err'); return; }
+                
+                q.state = 'active'; 
+                log(`[УСПЕХ] КУБИТ L${l}R${r}C${c} ВОССТАНОВЛЕН.`, 'ok');
+            } else if (args.length === 2) {
+                const m1 = args[0].match(/^l(\d)r(\d)c(\d)$/);
+                const m2 = args[1].match(/^l(\d)r(\d)c(\d)$/);
+                if (!m1 || !m2) { log('НЕВЕРНЫЙ ФОРМАТ.', 'err'); return; }
+                const [_, l1, r1, c1] = m1;
+                const [__, l2, r2, c2] = m2;
+                const q1 = qubits[l1]?.[r1]?.[c1];
+                const q2 = qubits[l2]?.[r2]?.[c2];
+                if (!q1 || !q2 || q1.state !== 'entangled' || q2.state !== 'entangled' || q1.pair !== q2.pair) {
+                    log('ОШИБКА: НЕ СВЯЗАНЫ.', 'err'); return;
+                }
+                q1.state = 'active'; q2.state = 'active';
+                log(`[УСПЕХ] СВЯЗЬ РАЗОРВАНА.`, 'ok');
+            }
+            renderGrid(); renderTabs();
+        }
+
+        function log(text, type = '') {
+            const box = document.getElementById('logBox');
+            const line = document.createElement('div');
+            line.className = `log-line ${type}`;
+            line.innerText = text;
+            box.appendChild(line);
+            if (box.children.length > 20) box.removeChild(box.firstChild);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function startStats() {
+            setInterval(() => {
+                const cpu = Math.floor(Math.random() * 40) + 30;
+                const ram = Math.floor(Math.random() * 50) + 20;
+                document.getElementById('valCpu').innerText = cpu + '%';
+                document.getElementById('valRam').innerText = ram + '%';
+                document.getElementById('barCpu').style.width = cpu + '%';
+                document.getElementById('barRam').style.width = ram + '%';
+            }, 1500);
+        }
+
+        initGame();
+    </script>
+</body>
+</html>
