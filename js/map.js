@@ -1,29 +1,5 @@
 // js/map.js
 (function() {
-    const MAP_POINTS = [{x:15,y:15},{x:40,y:15},{x:65,y:15},{x:15,y:40},{x:40,y:40},{x:65,y:40},{x:15,y:65},{x:40,y:65},{x:65,y:65}];
-    
-    function getMapPath(word) {
-        let hash = 5381;
-        for (let i = 0; i < word.length; i++) hash = ((hash << 5) + hash) + word.charCodeAt(i);
-        let seed = Math.abs(hash), path = [], used = new Set();
-        const len = (seed % 3) + 5;
-        while(path.length < len && used.size < 9) {
-            seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-            let n = seed % 9; if(!used.has(n)) { path.push(n); used.add(n); }
-        }
-        return path;
-    }
-
-    function createMapSVG(path) {
-        if (!path || !path.length) return '';
-        const start = MAP_POINTS[path[0]];
-        let d = `M ${start.x} ${start.y}`;
-        for(let i=0; i<path.length-1; i++) {
-            const c = MAP_POINTS[path[i]], n = MAP_POINTS[path[i+1]];
-            d += ` C ${c.x+(n.x-c.x)*0.5} ${c.y}, ${c.x+(n.x-c.x)*0.5} ${n.y}, ${n.x} ${n.y}`;
-        }
-        return `<svg viewBox="0 0 80 80"><path d="${d}"></path></svg>`;
-    }
 
     const MAP_DATA = {
         nodes: [
