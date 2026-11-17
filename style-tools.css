@@ -139,7 +139,7 @@
     left: 25px;
     z-index: 1000;
     font-family: monospace;
-    font-size: 10px;
+    font-size: 11px;
     color: var(--neon); /* Убедитесь, что переменная --neon определена (#00f2ff) */
     text-transform: uppercase;
     letter-spacing: 1px;
