@@ -61,12 +61,15 @@
 
         let currentList = (currentPage === 1) ? buffer1 : buffer2;
 
-        grid.innerHTML = '';
-
         // --- ПРОВЕРКА СЕКТОРА ВЕРИФИКАЦИИ ---
         const isSaltFound = localStorage.getItem('s9_salt_found') === 'true';
         
         if (currentPage === 2 && !isSaltFound) {
+            // Если замок уже отрисован — прерываем функцию, чтобы не сбрасывать анимацию
+            if (grid.querySelector('.shield-base')) return;
+
+            grid.innerHTML = '';
+            
             // 1. Сначала рендерим 25 пустых слотов для фона (как в Накопительном буфере)
             for (let i = 0; i < 25; i++) {
                 const cell = document.createElement('div');
