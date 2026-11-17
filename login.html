@@ -89,9 +89,6 @@
         let readIndices = [];
         const PASS_KEY = "ТРАССИТ"; 
 
-        // Инициализация визуального движка (звезды)
-        if (typeof initStarfield === 'function') initStarfield();
-
         // Получаем эталонный ключ пароля из движка глифов
         const targetIndices = typeof getPath === 'function' ? getPath(PASS_KEY).join('-') : '';
 
