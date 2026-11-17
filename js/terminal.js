@@ -258,7 +258,7 @@
             case 'edr': return localStorage.getItem('s9_os_fixed') === 'true'; 
             case 'telemetry': return localStorage.getItem('s9_core_fixed') === 'true';
             case 'core': return localStorage.getItem('s9_core_overheated') === 'true' || localStorage.getItem('s9_core_fixed') === 'true';
-            case 'gateway': return localStorage.getItem('s9_core_unlocked') === 'true';
+            //case 'gateway': return localStorage.getItem('s9_core_unlocked') === 'true';
             default: return false;
         }
     }
