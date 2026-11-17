@@ -65,7 +65,7 @@
         const isSaltFound = localStorage.getItem('s9_salt_found') === 'true';
         
         if (currentPage === 2 && !isSaltFound) {
-            // Если замок уже отрисован — прерываем функцию, чтобы не сбрасывать анимацию
+            // Если замок уже отрисован, просто выходим, чтобы не пересоздавать DOM
             if (grid.querySelector('.shield-base')) return;
 
             grid.innerHTML = '';
