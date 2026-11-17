@@ -320,7 +320,7 @@
             
             // Перегенерируем эталон (белую волну)
             reference.freq = Math.floor(Math.random() * 30) + 20;
-            reference.phase = Math.floor(Math.random() * 36) * 10;
+            reference.phase = (Math.floor(Math.random() * 37) * 10) - 180;
             reference.amp = Math.floor(Math.random() * 40) + 60;
             reference.offset = Math.floor(Math.random() * 5) * 10 - 20;
             
