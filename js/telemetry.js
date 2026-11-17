@@ -12,7 +12,7 @@
 
         const reference = { 
             freq: Math.floor(Math.random() * 30) + 20,
-            phase: Math.floor(Math.random() * 36) * 10,
+            phase: (Math.floor(Math.random() * 37) * 10) - 180,
             amp: Math.floor(Math.random() * 40) + 60,
             offset: Math.floor(Math.random() * 5) * 10 - 20
         };
