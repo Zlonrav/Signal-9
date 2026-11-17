@@ -592,8 +592,7 @@
 
     document.addEventListener('keydown', (e) => {
         // Тильда (Punto Switcher)
-		if (e.key === '~' || e.key === '`') {
-       // if (e.code === 'Backquote') { // СТАРАЯ ПРОВЕРКА НА Ё,
+       	if (e.code === 'Backquote') { // СТАРАЯ ПРОВЕРКА НА Ё, ВЕРНАЯ!
             if (overlay.classList.contains('active') && document.activeElement === input) {
                 e.preventDefault();
                 return;
