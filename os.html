@@ -194,6 +194,15 @@
             100% { transform: perspective(300px) rotateX(45deg) rotateZ(45deg) translateY(30px); }
         }
         @keyframes spin { 100% { transform: rotate(360deg); } }
+        /* Анимация тряски для щита */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-6px); }
+            20%, 40%, 60%, 80% { transform: translateX(6px); }
+        }
+        .shake-animation {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
     </style>
 </head>
 <body class="tools-page">
