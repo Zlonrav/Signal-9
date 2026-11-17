@@ -67,7 +67,7 @@ path {
     white-space: nowrap;
     min-width: 160px;
     text-align: center;
-	font-family: 'Michroma', sans-serif;
+    font-family: 'JetBrains Mono', monospace;
     font-size: 9px !important;
 }
 
