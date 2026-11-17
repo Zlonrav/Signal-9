@@ -93,7 +93,7 @@
             return isTelemetryFixed ? 'ONLINE' : 'ERROR'; // Красный, пока не синхронизировали
         }
         if (node.id === 'edr' && localStorage.getItem('s9_os_fixed') === 'true') return 'ONLINE';
-        if (node.id === 'gateway' && localStorage.getItem('s9_core_unlocked') === 'true') return 'ONLINE';
+        //if (node.id === 'gateway' && localStorage.getItem('s9_core_unlocked') === 'true') return 'ONLINE';
         
         return 'OFFLINE';
     }
