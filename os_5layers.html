@@ -195,12 +195,6 @@
             box-shadow: 0 0 20px rgba(0, 242, 255, 0.1);
             z-index: 10;
         }
-        .console-wrapper span { color: var(--neon); font-weight: bold; font-size: 16px; }
-        .console-wrapper input {
-            flex: 1; background: transparent; border: none; border-bottom: 1px solid rgba(0, 242, 255, 0.5);
-            color: var(--neon); font-family: inherit; font-size: 14px; outline: none; padding: 5px 0;
-            text-transform: uppercase;
-        }
 
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
         @keyframes softPulse { 0% { opacity: 0.4; } 100% { opacity: 1; } }
@@ -238,11 +232,6 @@
                 <div class="log-box" id="logBox"></div>
             </div>
         </div>
-    </div>
-
-    <div class="console-wrapper">
-        <span>></span>
-        <input type="text" id="cmdInput" placeholder="os --reset qubit l1r1c1" onkeydown="if(event.key==='Enter'){handleCmd(this.value);this.value='';}">
     </div>
 
     <script>
