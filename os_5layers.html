@@ -16,7 +16,7 @@
         * { box-sizing: border-box; }
         body {
             margin: 0; padding: 0; height: 100vh;
-            background: #010306;
+            background: #010306;la
             background-image: radial-gradient(circle at center, #03101a 0%, #010306 100%);
             font-family: 'JetBrains Mono', monospace; color: #fff;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -312,7 +312,7 @@
                     else if (hasEnt) dotClass = 'dot-ent';
                 }
 
-                tab.innerHTML = `СЛОЙ ${l} ${l === 5 && !isLayer5Unlocked() ? '🔒' : ''}<div class="status-dot ${dotClass}"></div>`;
+                tab.innerHTML = `${l} ${l === 5 && !isLayer5Unlocked() ? '🔒' : ''}<div class="status-dot ${dotClass}"></div>`;
                 tab.onclick = () => switchLayer(l);
                 container.appendChild(tab);
             }
