@@ -312,7 +312,7 @@
                     else if (hasEnt) dotClass = 'dot-ent';
                 }
 
-                tab.innerHTML = `${l} ${l === 5 && !isLayer5Unlocked() ? '🔒' : ''}<div class="status-dot ${dotClass}"></div>`;
+                tab.innerHTML = `СЛОЙ ${l} ${l === 5 && !isLayer5Unlocked() ? '🔒' : ''}<div class="status-dot ${dotClass}"></div>`;
                 tab.onclick = () => switchLayer(l);
                 container.appendChild(tab);
             }
