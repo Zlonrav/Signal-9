@@ -16,7 +16,7 @@
         * { box-sizing: border-box; }
         body {
             margin: 0; padding: 0; height: 100vh;
-            background: #010306;la
+            background: #010306;
             background-image: radial-gradient(circle at center, #03101a 0%, #010306 100%);
             font-family: 'JetBrains Mono', monospace; color: #fff;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -214,23 +214,22 @@
                     </div>
                 </div>
             </div>
-                <div class="monitor-panel">
+
+            <div class="monitor-panel">
                 <div class="sys-stats">
                     <div class="stat-row">
-                        <div class="stat-label"><span>ЗАГРУЗКА CPU</span><span id="valCpu">36%</span></div>
-                        <div class="progress-bar"><div class="progress-fill" id="barCpu" style="width: 36%;"></div></div>
+                        <div class="stat-label"><span>ЗАГРУЗКА CPU</span><span id="valCpu">0%</span></div>
+                        <div class="progress-bar"><div class="progress-fill" id="barCpu"></div></div>
                     </div>
                     <div class="stat-row">
-                        <div class="stat-label"><span>ОПЕРАТИВНАЯ ПАМЯТЬ</span><span id="valRam">34%</span></div>
-                        <div class="progress-bar"><div class="progress-fill" id="barRam" style="width: 34%;"></div></div>
+                        <div class="stat-label"><span>ОПЕРАТИВНАЯ ПАМЯТЬ</span><span id="valRam">0%</span></div>
+                        <div class="progress-bar"><div class="progress-fill" id="barRam"></div></div>
                     </div>
                     <div class="stat-row">
-                        <div class="stat-label"><span>ХРАНИЛИЩЕ</span><span id="valDisk">89%</span></div>
-                        <div class="progress-bar"><div class="progress-fill warn" id="barDisk" style="width: 89%;"></div></div>
+                        <div class="stat-label"><span>АКТИВНЫЙ СЛОЙ</span><span id="valLayer" style="color: var(--neon);">01 / 05</span></div>
                     </div>
                 </div>
-
-                <div class="log-box" id="logBox"><div class="log-line ok">&gt; DATA STREAM RECEIVED</div><div class="log-line ok">&gt; DATA STREAM RECEIVED</div><div class="log-line ">&gt; CALIBRATING SECTOR 07...</div><div class="log-line ">&gt; CHECKING MEMORY BLOCKS...</div><div class="log-line ok">&gt; KERNEL INTEGRITY OK</div><div class="log-line ok">&gt; KERNEL INTEGRITY OK</div><div class="log-line ok">&gt; DATA STREAM RECEIVED</div><div class="log-line ok">&gt; DATA STREAM RECEIVED</div><div class="log-line ok">&gt; DATA STREAM RECEIVED</div><div class="log-line ">&gt; CHECKING MEMORY BLOCKS...</div><div class="log-line ">&gt; CHECKING MEMORY BLOCKS...</div><div class="log-line ok">&gt; KERNEL INTEGRITY OK</div><div class="log-line ">&gt; SCANNING FOR ANOMALIES...</div><div class="log-line ok">&gt; KERNEL INTEGRITY OK</div><div class="log-line err">&gt; WARNING: MINOR GLITCH DETECTED</div><div class="log-line ">&gt; SCANNING FOR ANOMALIES...</div><div class="log-line ok">&gt; DATA STREAM RECEIVED</div><div class="log-line err">&gt; WARNING: MINOR GLITCH DETECTED</div><div class="log-line ">&gt; SCANNING FOR ANOMALIES...</div><div class="log-line ">&gt; SCANNING FOR ANOMALIES...</div><div class="log-line ">&gt; SCANNING FOR ANOMALIES...</div><div class="log-line ok">&gt; KERNEL INTEGRITY OK</div><div class="log-line ">&gt; CALIBRATING SECTOR 07...</div><div class="log-line err">&gt; WARNING: MINOR GLITCH DETECTED</div><div class="log-line ">&gt; CHECKING MEMORY BLOCKS...</div><div class="log-line ">&gt; SCANNING FOR ANOMALIES...</div></div>
+                <div class="log-box" id="logBox"></div>
             </div>
         </div>
     </div>
