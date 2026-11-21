@@ -150,6 +150,21 @@
                     localStorage.removeItem('s9_edr_os_trigger');
                     localStorage.setItem('s9_os_fixed', 'true');
                     
+                    // Лечим текущую структуру кубитов, сохраняя позиции серых
+                    let currentQubits = JSON.parse(localStorage.getItem('s9_os_qubits_data') || 'null');
+                    if (currentQubits) {
+                        for (let l = 1; l <= 5; l++) {
+                            for (let r = 1; r <= 5; r++) {
+                                for (let c = 1; c <= 5; c++) {
+                                    if (currentQubits[l]?.[r]?.[c] && currentQubits[l][r][c].state !== 'locked') {
+                                        currentQubits[l][r][c].state = 'active';
+                                    }
+                                }
+                            }
+                        }
+                        localStorage.setItem('s9_os_qubits_data', JSON.stringify(currentQubits));
+                    }
+
                     if (window.printToConsole) window.printToConsole(`<span class="ok">> ВСЕ ТЕСТЫ ПРОЙДЕНЫ. ВОЗВРАТ В ОС...</span>`);
                     window.dispatchEvent(new Event('unlockConsole'));
                     setTimeout(() => { window.location.href = 'os.html'; }, 2000);

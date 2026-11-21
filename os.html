@@ -5,6 +5,8 @@
     <script src="js/auth.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>СИГНАЛ-9 // ОПЕРАЦИОННАЯ СИСТЕМА</title>
+    <!-- ДОБАВЛЕНО ПОДКЛЮЧЕНИЕ ШРИФТОВ -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Michroma&display=swap" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="style.css">
     <link rel="stylesheet" type="text/css" href="style-tools.css">
     <link rel="stylesheet" type="text/css" href="style-chat-terminal.css">
@@ -13,11 +15,15 @@
             --warn: #ffaa00; 
             --ok: #00ff44; 
             --err: #ff3333; 
+            --ent: #a200ff;
+            --locked: #555555;
+            --neon: #00f2ff;
         }
         body.tools-page { 
             overflow: hidden; height: 100vh; background-color: #010306; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0;
             background-image: radial-gradient(circle at center, #03101a 0%, #010306 100%);
+            font-family: 'JetBrains Mono', monospace; color: #fff;
         }
 
         .os-header { 
@@ -29,21 +35,9 @@
 
         .terminal-wrapper {
             position: relative; width: 600px; height: 500px;
-            display: flex; /* <-- РАСКОММЕНТИРОВАНО */
-            align-items: center; justify-content: center; overflow: hidden; z-index: 10;
-            margin-top: 50px;
-        }
-
-        /* ДОБАВЛЕНО: стили для оверлея (без них щит не центрируется) */
-        #os-shield-overlay {
-            position: absolute;
-            inset: 0;
-            display: none; 
-            align-items: center;
-            justify-content: center;
-            z-index: 50;
-            background: transparent;
-            cursor: default;
+            display: flex; align-items: center; justify-content: center; 
+            z-index: 10; margin-top: 30px;
+            overflow: visible;
         }
 
         .terminal-wrapper::before {
@@ -52,157 +46,129 @@
             z-index: 2; background-size: 100% 2px, 3px 100%; pointer-events: none;
         }
 
+        /* --- ЩИТ БЛОКИРОВКИ --- */
+        #os-shield-overlay {
+            position: absolute; inset: 0; display: none; 
+            align-items: center; justify-content: center;
+            z-index: 50; background: transparent; cursor: default;
+        }
+        .shield-container { cursor: pointer; width: 320px; height: 320px; }
+        .shield-base {
+            position: relative; width: 100%; height: 100%;
+            border-radius: 50%; border: 1px solid rgba(255, 51, 51, 0.4);
+            box-shadow: 0 0 40px rgba(255, 51, 51, 0.2), inset 0 0 30px rgba(255, 51, 51, 0.15);
+            display: flex; align-items: center; justify-content: center; overflow: hidden;
+            transition: transform 0.2s ease-out, opacity 0.2s ease-out; transform: translateZ(0); 
+        }
+        .shield-container:hover .shield-base { transform: translateZ(0) scale(1.05); opacity: 0.9; }
+        .grid-bg {
+            position: absolute; inset: -50%;
+            background-image: linear-gradient(rgba(255, 51, 51, 0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 51, 51, 0.2) 1px, transparent 1px);
+            background-size: 30px 30px; transform: perspective(300px) rotateX(45deg) rotateZ(45deg);
+            animation: grid-move 5s linear infinite; z-index: 1;
+        }
+        .rotator { position: absolute; width: 280px; height: 280px; z-index: 3; animation: spin 10s linear infinite; }
+        .bracket { position: absolute; width: 100%; height: 100%; border: 2px solid var(--err); border-radius: 50%; clip-path: polygon(0 0, 14% 0, 14% 100%, 0 100%); filter: drop-shadow(0 0 8px var(--err)); box-shadow: inset 0 0 10px rgba(255, 51, 51, 0.5); }
+        .b1 { transform: rotate(0deg); } .b2 { transform: rotate(90deg); } .b3 { transform: rotate(180deg); } .b4 { transform: rotate(270deg); }
+        .shield-text { position: absolute; z-index: 30; text-align: center; pointer-events: none; background: rgba(20, 0, 0, 0.85); padding: 15px 30px; border-radius: 4px; border: 1px solid rgba(255, 51, 51, 0.4); box-shadow: 0 0 20px rgba(255, 0, 0, 0.3); backdrop-filter: blur(2px); }
+        .shield-text h2 { margin: 0; font-family: 'Michroma', sans-serif; font-size: 20px; letter-spacing: 3px; color: var(--err); text-shadow: 0 0 15px var(--err); }
+        .shield-text p { margin: 8px 0 0 0; font-size: 11px; color: #ff8888; letter-spacing: 2px; }
+        
+        /* --- РАБОЧИЙ СТОЛ --- */
         .main-layout {
             display: flex; gap: 25px; align-items: center; justify-content: center;
-            width: 100%; height: 100%; padding: 20px; box-sizing: border-box; z-index: 5;
+            width: 100%; height: 100%; z-index: 5;
         }
 
-        .grid-wrapper {
-            width: 380px;
-            height: 380px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        .qubit-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 68px);
-            grid-template-rows: repeat(5, 68px);
-            gap: 10px;
+        .left-panel { 
+            width: 380px; height: 380px; 
+            display: flex; flex-direction: column; gap: 10px; 
+            overflow: hidden; 
         }
 
-        .qubit { width: 100%; height: 100%; background: #050505; border: 1px solid rgba(0, 242, 255, 0.3); position: relative; box-shadow: inset 0 0 10px rgba(0,0,0,0.8); }
-        .qubit::before { content: ''; position: absolute; inset: 6px; border: 1px solid #00f2ff; opacity: 0.8; transition: 0.3s; }
-        .qubit::after { content: ''; position: absolute; inset: 16px; background: #00f2ff; box-shadow: 0 0 12px #00f2ff; transition: 0.3s; }
-        .qubit.active::after { animation: softPulse 1.5s infinite alternate ease-in-out; animation-delay: var(--delay, 0s); }
+        .tabs-container { display: flex; justify-content: space-between; gap: 5px; flex-shrink: 0; }
+        .layer-tab {
+            flex: 1; padding: 6px 0; text-align: center; background: rgba(0, 20, 30, 0.8);
+            border: 1px solid rgba(0, 242, 255, 0.2); color: rgba(0, 242, 255, 0.6);
+            cursor: pointer; font-size: 10px; text-transform: uppercase; transition: 0.3s;
+            position: relative; user-select: none;
+        }
+        .layer-tab:hover { background: rgba(0, 242, 255, 0.1); color: var(--neon); }
+        .layer-tab.active { background: rgba(0, 242, 255, 0.2); border-color: var(--neon); color: var(--neon); box-shadow: 0 0 10px rgba(0, 242, 255, 0.2); }
+        
+        .status-dot { position: absolute; top: 3px; right: 3px; width: 6px; height: 6px; border-radius: 50%; }
+        .dot-clean { background: rgba(255, 255, 255, 0.1); box-shadow: none; }
+        .dot-err { background: var(--err); box-shadow: 0 0 5px var(--err); }
+        .dot-warn { background: var(--warn); box-shadow: 0 0 5px var(--warn); }
+        .dot-ent { background: var(--ent); box-shadow: 0 0 5px var(--ent); }
 
-        .qubit.broken { border-color: rgba(255, 51, 51, 0.3); }
-        .qubit.broken::before { border-color: #ff3333; opacity: 1; }
-        .qubit.broken::after { content: ''; background: #ff3333; box-shadow: 0 0 15px #ff3333; animation: blink 1.5s infinite; }
+        .grid-container { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; border-radius: 4px; }
+        .grid-wrapper { height: 100%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; }
 
-        @keyframes softPulse { 0% { opacity: 0.6; box-shadow: 0 0 8px #00f2ff; } 100% { opacity: 1; box-shadow: 0 0 15px #00f2ff; } }
-        @keyframes blink { 0%, 100% { opacity: 1; box-shadow: 0 0 15px #ff3333; } 50% { opacity: 0.7; box-shadow: 0 0 5px #ff3333; } }
+        /* --- АНИМАЦИИ СЛОЕВ --- */
+        @keyframes flyOutToPast { 0% { transform: scale(1); opacity: 1; filter: blur(0); } 100% { transform: scale(1.6); opacity: 0; filter: blur(10px); } }
+        @keyframes flyInFromFuture { 0% { transform: scale(0.2); opacity: 0; filter: blur(10px); } 100% { transform: scale(1); opacity: 1; filter: blur(0); } }
+        @keyframes flyOutToFuture { 0% { transform: scale(1); opacity: 1; filter: blur(0); } 100% { transform: scale(0.2); opacity: 0; filter: blur(10px); } }
+        @keyframes flyInFromPast { 0% { transform: scale(1.6); opacity: 0; filter: blur(10px); } 100% { transform: scale(1); opacity: 1; filter: blur(0); } }
 
-        .monitor-panel { width: 195px; height: 380px; display: flex; flex-direction: column; gap: 15px; }
-        .sys-stats { display: flex; flex-direction: column; gap: 12px; }
+        .anim-out-past { animation: flyOutToPast 0.6s ease-in forwards; }
+        .anim-in-future { animation: flyInFromFuture 0.6s ease-out forwards; }
+        .anim-out-future { animation: flyOutToFuture 0.6s ease-in forwards; }
+        .anim-in-past { animation: flyInFromPast 0.6s ease-out forwards; }
+
+        .qubit-grid { width: 100%; height: 100%; display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(5, 1fr); gap: 8px; transform: rotateX(5deg); }
+
+        /* --- КУБИТЫ --- */
+        .qubit {
+            background: #050505; border: 1px solid rgba(0, 242, 255, 0.3);
+            position: relative; box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+            aspect-ratio: 1; transition: 0.3s;
+        }
+        .qubit::before { content: ''; position: absolute; inset: 4px; border: 1px solid var(--neon); opacity: 0.7; transition: 0.3s; }
+        .qubit::after { content: ''; position: absolute; inset: 12px; background: var(--neon); opacity: 0.6; box-shadow: 0 0 8px var(--neon); transition: 0.3s; }
+
+        .q-broken { border-color: var(--err); }
+        .q-broken::before { border-color: var(--err); opacity: 1; }
+        .q-broken::after { background: var(--err); opacity: 1; box-shadow: 0 0 15px var(--err); animation: blink 1.2s infinite; }
+
+        .q-warn { border-color: var(--warn); }
+        .q-warn::before { border-color: var(--warn); opacity: 1; }
+        .q-warn::after { background: var(--warn); opacity: 1; box-shadow: 0 0 15px var(--warn); animation: blink 1s infinite alternate; }
+
+        .q-ent { border-color: var(--ent); }
+        .q-ent::before { border-color: var(--ent); opacity: 1; }
+        .q-ent::after { background: var(--ent); opacity: 1; box-shadow: 0 0 15px var(--ent); animation: softPulse 1.5s infinite alternate; }
+
+        .pair-dot { position: absolute; top: 3px; right: 3px; width: 6px; height: 6px; border-radius: 50%; z-index: 5; }
+        .pair-A { background: #ffaa00; box-shadow: 0 0 5px #ffaa00; }
+        .pair-B { background: #00ff44; box-shadow: 0 0 5px #00ff44; }
+
+        /* Правая панель (мониторинг) */
+        .monitor-panel { 
+            width: 195px; height: 380px; 
+            display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; z-index: 10; 
+        }
+        .sys-stats { display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
         .stat-row { display: flex; flex-direction: column; gap: 4px; }
         .stat-label { display: flex; justify-content: space-between; font-size: 10px; color: #aaa; }
         .stat-label span:last-child { color: var(--neon); font-weight: bold; }
         
         .progress-bar { width: 100%; height: 6px; background: rgba(0, 242, 255, 0.1); border: 1px solid rgba(0, 242, 255, 0.2); }
         .progress-fill { height: 100%; background: #00f2ff; box-shadow: 0 0 10px #00f2ff; width: 0%; transition: width 0.5s ease-out; }
-        .progress-fill.warn { background: #ffaa00 !important; box-shadow: 0 0 10px #ffaa00 !important; }
-        .progress-fill.err { background: #ff3333 !important; box-shadow: 0 0 10px #ff3333 !important; }
 
+        /* Журнал */
         .log-box { 
-            flex-grow: 1; background: rgba(0, 10, 15, 0.8); border: 1px solid rgba(0, 242, 255, 0.3); 
+            flex-grow: 1; min-height: 0; /* КРИТИЧНО для flex */
+            background: rgba(0, 10, 15, 0.8); border: 1px solid rgba(0, 242, 255, 0.3); 
             padding: 8px; overflow: hidden; display: flex; flex-direction: column; 
             justify-content: flex-end; border-left: 2px solid #00f2ff; 
         }
-        
-        .log-line { 
-            color: #aaa; 
-            font-size: 9.5px;
-            line-height: 1.4;
-            margin-bottom: 2px;
-            flex-shrink: 0;
-            animation: fadeIn 0.2s ease-out; 
-            white-space: nowrap; 
-            overflow: hidden; 
-            text-overflow: ellipsis; 
-            font-family: 'JetBrains Mono', monospace;
-        }
+        .log-line { color: #aaa; font-size: 9.5px; line-height: 1.4; margin-bottom: 2px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .log-line.ok { color: var(--ok); }
         .log-line.err { color: var(--err); }
-        
-        /* =========================================
-           ЩИТ: RED QUANTUM LOCK
-           ========================================= */
-        .shield-container {
-            cursor: pointer; 
-            width: 320px; 
-            height: 320px; 
-        }
 
-        .shield-base {
-            position: relative; width: 100%; height: 100%;
-            border-radius: 50%; 
-            border: 1px solid rgba(255, 51, 51, 0.4);
-            box-shadow: 
-                0 0 40px rgba(255, 51, 51, 0.2), 
-                inset 0 0 30px rgba(255, 51, 51, 0.15);
-            display: flex; align-items: center; justify-content: center;
-            overflow: hidden;
-            /* ФИКС БАГА 1: Быстрый и плавный переход */
-            transition: transform 0.2s ease-out, opacity 0.2s ease-out; 
-            /* ФИКС БАГА 2: Создаем отдельный слой для GPU, чтобы не было сдвигов */
-            transform: translateZ(0); 
-        }
-
-        /* ФИКС БАГА 1 и 3: Наведение работает только при точном попадании */
-        .shield-container:hover .shield-base {
-            transform: translateZ(0) scale(1.05); /* Сохраняем translateZ для стабильности */
-            opacity: 0.9;
-        }
-
-        .grid-bg {
-            position: absolute; inset: -50%;
-            background-image: 
-                linear-gradient(rgba(255, 51, 51, 0.2) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 51, 51, 0.2) 1px, transparent 1px);
-            background-size: 30px 30px;
-            transform: perspective(300px) rotateX(45deg) rotateZ(45deg);
-            animation: grid-move 5s linear infinite;
-            z-index: 1;
-        }
-
-        .rotator {
-            position: absolute; width: 280px; height: 280px; z-index: 3;
-            animation: spin 10s linear infinite; 
-        }
-
-        .bracket {
-            position: absolute; width: 100%; height: 100%;
-            border: 2px solid var(--err); border-radius: 50%;
-            clip-path: polygon(0 0, 14% 0, 14% 100%, 0 100%);
-            filter: drop-shadow(0 0 8px var(--err));
-            box-shadow: inset 0 0 10px rgba(255, 51, 51, 0.5);
-        }
-
-        .b1 { transform: rotate(0deg); }
-        .b2 { transform: rotate(90deg); }
-        .b3 { transform: rotate(180deg); }
-        .b4 { transform: rotate(270deg); }
-
-        .shield-text {
-            position: absolute; z-index: 30; text-align: center; pointer-events: none;
-            background: rgba(20, 0, 0, 0.85); padding: 15px 30px; border-radius: 4px;
-            border: 1px solid rgba(255, 51, 51, 0.4);
-            box-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
-            backdrop-filter: blur(2px);
-        }
-        .shield-text h2 {
-            margin: 0; font-family: 'Michroma', sans-serif; font-size: 20px; letter-spacing: 3px; color: var(--err);
-            text-shadow: 0 0 15px var(--err);
-        }
-        .shield-text p {
-            margin: 8px 0 0 0; font-size: 11px; color: #ff8888; letter-spacing: 2px;
-        }
-        @keyframes grid-move {
-            0% { transform: perspective(300px) rotateX(45deg) rotateZ(45deg) translateY(0); }
-            100% { transform: perspective(300px) rotateX(45deg) rotateZ(45deg) translateY(30px); }
-        }
+        @keyframes grid-move { 0% { transform: perspective(300px) rotateX(45deg) rotateZ(45deg) translateY(0); } 100% { transform: perspective(300px) rotateX(45deg) rotateZ(45deg) translateY(30px); } }
         @keyframes spin { 100% { transform: rotate(360deg); } }
-        /* Анимация тряски для щита */
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-6px); }
-            20%, 40%, 60%, 80% { transform: translateX(6px); }
-        }
-        .shake-animation {
-            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
-        }
     </style>
 </head>
 <body class="tools-page">
@@ -219,7 +185,6 @@
     <div class="os-header">ОПЕРАЦИОННАЯ СИСТЕМА // СЕКТОР 01</div>
     
     <div class="terminal-wrapper">
-        <!-- Оверлей-замок -->
         <div id="os-shield-overlay">
             <div class="shield-shaker">
                 <div class="shield-container">
@@ -238,13 +203,19 @@
             </div>
         </div>
 
-        <!-- Рабочий стол -->
         <div class="main-layout" id="os-desktop" style="display: none;">
-            <div class="grid-wrapper">
-                <div class="qubit-grid" id="qubitGrid"></div>
+            <div class="left-panel">
+                <div class="grid-container">
+                    <div class="grid-wrapper" id="gridWrapper">
+                        <div class="qubit-grid" id="qubitGrid"></div>
+                    </div>
+                </div>
             </div>
 
             <div class="monitor-panel">
+                <!-- ПЕРЕНЕСЛИ ВКЛАДКИ СЮДА -->
+                <div class="tabs-container" id="layerTabs"></div>
+                
                 <div class="sys-stats">
                     <div class="stat-row">
                         <div class="stat-label"><span>ЗАГРУЗКА CPU</span><span id="valCpu">0%</span></div>
@@ -254,15 +225,9 @@
                         <div class="stat-label"><span>ОПЕРАТИВНАЯ ПАМЯТЬ</span><span id="valRam">0%</span></div>
                         <div class="progress-bar"><div class="progress-fill" id="barRam"></div></div>
                     </div>
-                    <div class="stat-row">
-                        <div class="stat-label"><span>ХРАНИЛИЩЕ</span><span id="valDisk">0%</span></div>
-                        <div class="progress-bar"><div class="progress-fill" id="barDisk"></div></div>
-                    </div>
+                    <!-- АКТИВНЫЙ СЛОЙ УДАЛЕН -->
                 </div>
-
-                <div class="log-box" id="logBox">
-                    <div class="log-line ok">> SYS_MONITOR: ACTIVE</div>
-                </div>
+                <div class="log-box" id="logBox"></div>
             </div>
         </div>
     </div>
@@ -276,29 +241,5 @@
 
     <script src="js/loader.js"></script>
     <script src="js/os.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // 2. Клик по щиту
-            const shieldBtn = document.querySelector('.shield-container');
-            if (shieldBtn) {
-                shieldBtn.addEventListener('click', function() {
-                    const shaker = document.querySelector('.shield-shaker');
-                    
-                    // Проверка от спама кликами
-                    if (shaker && !shaker.classList.contains('shake-animation')) {
-                        shaker.classList.add('shake-animation');
-                        
-                        // Через 1 секунду убираем тряску и открываем консоль
-                        setTimeout(() => {
-                            shaker.classList.remove('shake-animation');
-                            if (window.printToConsole) {
-                                window.printToConsole(`<span class="warn">[СИСТЕМА] ВВЕДИТЕ self --id ДЛЯ ПОЛУЧЕНИЯ ИДЕНТИФИКАТОРА.</span>`);
-                            }
-                        }, 1000);
-                    }
-                });
-            }
-        }); 
-    </script>
 </body>
 </html>

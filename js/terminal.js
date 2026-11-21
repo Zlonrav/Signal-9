@@ -422,18 +422,17 @@
             return;
         }
 
-        // --- КОМАНДА ДЛЯ ОС ---
-        if (cmd.startsWith('os --reset qubit ')) {
+        // --- КОМАНДЫ ДЛЯ ОС ---
+        if (cmd.startsWith('os --')) {
             if (currentPage !== 'os.html') {
-                print(`ОШИБКА: КОМАНДА ДОСТУПНА ТОЛЬКО В ОПЕРАЦИОННОЙ СИСТЕМЕ.`, 'err');
+                print(`ОШИБКА: КОМАНДЫ ДОСТУПНЫ ТОЛЬКО В ОПЕРАЦИОННОЙ СИСТЕМЕ.`, 'err');
             } else {
-                const coords = cmd.split(' ')[3]; 
-                const match = coords.match(/^r([1-5])c([1-5])$/i);
-                if (match) {
-                    print(`<span class="ok">[ОС] ПОПЫТКА СБРОСА КУБИТА ${coords.toUpperCase()}...</span>`);
-                    window.dispatchEvent(new CustomEvent('repair_qubit', { detail: coords.toLowerCase() }));
+                // Разбиваем строку на аргументы. Например: ['--reset', 'qubit', 'l1r1c1']
+                const args = rawCmd.split(' ').slice(1); 
+                if (typeof window.processOsCommand === 'function') {
+                    window.processOsCommand(args);
                 } else {
-                    print(`ОШИБКА: НЕВЕРНЫЙ ФОРМАТ КООРДИНАТ (ПРИМЕР: r1c2)`, 'err');
+                    print(`ОШИБКА: МОДУЛЬ ОС НЕ АКТИВЕН.`, 'err');
                 }
             }
             return;
@@ -474,25 +473,41 @@
                 }
             } 
             else if (topic === 'os') {
-                if (!isModuleOnline('os')) { print(`[МОДУЛЬ НЕДОСТУПЕН]`, 'err'); return; }
-                if (localStorage.getItem('s9_os_fixed') !== 'true') {
-                    print(`<span class="topic-header">[ОС]</span>`);
-                    print(`[ВНИМАНИЕ] ДЕКОГЕРЕНЦИЯ КУБИТОВ. ДЛЯ РЕМОНТА: ${printCmd('os --reset qubit rXcY')}`);
+                const isCaptchaPassed = localStorage.getItem('s9_os_captcha') === 'true';
+                const isOsFixed = localStorage.getItem('s9_os_fixed') === 'true';
+
+                if (!isCaptchaPassed) {
+                    print(`<span class="topic-header">[ОПЕРАЦИОННАЯ СИСТЕМА]</span>`);
+                    print(`[ВНИМАНИЕ] ДОСТУП ЗАБЛОКИРОВАН.`);
+                    print(`ВВЕДИТЕ ${printCmd('self --id')} ДЛЯ ПОЛУЧЕНИЯ ИДЕНТИФИКАТОРА, ЗАТЕМ ${printCmd('login --id <ВАШ_ID>')}`);
+                } else if (isCaptchaPassed && !isOsFixed) {
+                    print(`<span class="topic-header">[ОПЕРАЦИОННАЯ СИСТЕМА]</span>`);
+                    print(`ВАША ЗАДАЧА: УСТРАНИТЬ ВСЕ ПРОБЛЕМЫ НА СЛОЯХ 1-5.`);
+                    print(``);
+                    print(`<span class="topic-header">[ДОСТУПНЫЕ КОМАНДЫ]</span>`);
+                    print(`> ${printCmd('os --reset qubit LxRxCx')}`);
+                    print(`  Починка сломанного (красного) кубита.`);
+                    print(`  Пример: os --reset qubit L1R1C1`);
+                    print(``);
+                    print(`> ${printCmd('os --warn qubit LxRxCx')}`);
+                    print(`  Стабилизация желтого кубита до истечения таймера.`);
+                    print(`  Пример: os --warn qubit L2R3C4`);
+                    print(``);
+                    print(`> ${printCmd('os --entangle LxRxCx LxRxCx')}`);
+                    print(`  Разрыв квантовой связи фиолетовой пары. Требует указания двух координат.`);
+                    print(`  Пример: os --entangle L1R1C1 L4R4C4`);
+                    print(``);
+                    
+                    // ВАЖНО: Флаг s9_os_move_unlocked пока неактивен (задел на будущий квест). НЕ УДАЛЯТЬ.
+                    if (localStorage.getItem('s9_os_move_unlocked') === 'true') {
+                        print(`> ${printCmd('os --move LxRxCx LxRxCx')}`);
+                        print(`  Перемещение кубитов (доступно только для серых и голубых).`);
+                        print(`  Пример: os --move L1R1C1 L5R5C5`);
+                    }
                 } else {
                     printPassport('ОПЕРАЦИОННАЯ СИСТЕМА', 'os', 'Управление квантовыми кубитами, поддержание стабильности ядра системы.', 'ohw777v1', 'osw404v2');
                 }
-            } 
-            else if (topic === 'edr') {
-                if (!isModuleOnline('edr')) { print(`[МОДУЛЬ НЕДОСТУПЕН]`, 'err'); return; }
-                const isEdrTrigger = localStorage.getItem('s9_edr_os_trigger') === 'true' || localStorage.getItem('s9_edr_gateway_trigger') === 'true';
-                if (isEdrTrigger) {
-                    print(`<span class="topic-header">[EDR]</span>`);
-                    print(`[ВНИМАНИЕ] СЕКТОР ИЗОЛИРОВАН. ДЛЯ ВЫХОДА ВВЕДИТЕ ${printCmd('edr --answer <ЧИСЛО>')}`);
-                } else {
-                    printPassport('EDR СЕКТОР', 'edr', 'Изолированная среда для проверки логических алгоритмов.', 'ehw990v2', 'esw150v3');
-                }
-            } 
-            else if (topic === 'core') {
+			} else if (topic === 'core') {
                 if (!isModuleOnline('core')) { print(`[МОДУЛЬ НЕДОСТУПЕН]`, 'err'); return; }
                 if (localStorage.getItem('s9_core_fixed') !== 'true') {
                     print(`<span class="topic-header">[ЭНЕРГОЯДРО]</span>`);

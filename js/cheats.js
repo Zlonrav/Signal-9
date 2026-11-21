@@ -3,6 +3,51 @@
     if (window.CHEATS_INITIALIZED) return;
     window.CHEATS_INITIALIZED = true;
 
+    // Вспомогательная функция для "лечения" кубитов без потери позиций серых
+    function healQubitsIfExist() {
+        let currentQubits = JSON.parse(localStorage.getItem('s9_os_qubits_data') || 'null');
+        
+        if (currentQubits) {
+            // Если сетка уже есть, просто лечим поврежденные кубиты
+            for (let l = 1; l <= 5; l++) {
+                for (let r = 1; r <= 5; r++) {
+                    for (let c = 1; c <= 5; c++) {
+                        if (currentQubits[l]?.[r]?.[c] && currentQubits[l][r][c].state !== 'locked') {
+                            currentQubits[l][r][c].state = 'active';
+                        }
+                    }
+                }
+            }
+            localStorage.setItem('s9_os_qubits_data', JSON.stringify(currentQubits));
+        } else {
+            // Если сетки нет (игрок еще не заходил в ОС), генерируем новую с перемешиванием
+            const cleanQubits = {};
+            for (let l = 1; l <= 5; l++) {
+                cleanQubits[l] = {};
+                for (let r = 1; r <= 5; r++) {
+                    cleanQubits[l][r] = {};
+                    for (let c = 1; c <= 5; c++) {
+                        cleanQubits[l][r][c] = { state: 'active' };
+                    }
+                }
+            }
+            
+            // Расставляем 25 серых кубитов в случайные места (Фишер-Йетс)
+            const pool = [];
+            for (let l = 1; l <= 5; l++) for (let r = 1; r <= 5; r++) for (let c = 1; c <= 5; c++) pool.push({l, r, c});
+            for (let i = pool.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [pool[i], pool[j]] = [pool[j], pool[i]];
+            }
+            for (let i = 0; i < 25; i++) {
+                const p = pool.pop();
+                cleanQubits[p.l][p.r][p.c].state = 'locked';
+            }
+            
+            localStorage.setItem('s9_os_qubits_data', JSON.stringify(cleanQubits));
+        }
+    }
+
     window.copyLastSave = function() {
         if (!window._lastSaveCode) return;
         navigator.clipboard.writeText(window._lastSaveCode).then(() => {
@@ -36,14 +81,10 @@
                 const jsonStr = JSON.stringify(saveData);
                 const base64Str = btoa(unescape(encodeURIComponent(jsonStr))); 
                 
-                // Генерация даты
                 const now = new Date();
                 const dateStr = now.toLocaleDateString('ru-RU') + ' ' + now.toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'});
                 
-                // Сохраняем оригинальный код (с настоящими комментариями) для буфера обмена
                 window._lastSaveCode = `<!-- ${dateStr} -->\n${base64Str}\n<!-- /${dateStr} -->`;
-
-                // А на экран выводим с экранированием (чтобы браузер не скрыл комментарии)
                 const displayCode = `&lt;!-- ${dateStr} --&gt;<br>${base64Str}<br>&lt;!-- /${dateStr} --&gt;`;
 
                 print('<span class="ok">[СИСТЕМА] ПРОГРЕСС СОХРАНЕН.</span>');
@@ -64,8 +105,6 @@
             // --- ЗАГРУЗКА ПРОГРЕССА (ИЗ BASE64 С ОЧИСТКОЙ ОТ КОММЕНТАРИЕВ) ---
             if (cmd.toLowerCase().startsWith('load ')) {
                 let rawInput = cmd.substring(5).trim(); 
-                
-                // УМНАЯ ОЧИСТКА: Удаляем HTML-комментарии, пробелы и переносы строк
                 rawInput = rawInput.replace(/<!--[\s\S]*?-->/g, '').replace(/\s+/g, '');
 
                 try {
@@ -73,7 +112,6 @@
                     const saveData = JSON.parse(jsonStr);
                     
                     if (typeof saveData === 'object' && saveData !== null) {
-                        // 1. Очищаем старые s9_ ключи
                         const keysToRemove = [];
                         for (let i = 0; i < localStorage.length; i++) {
                             const key = localStorage.key(i);
@@ -81,7 +119,6 @@
                         }
                         keysToRemove.forEach(k => localStorage.removeItem(k));
 
-                        // 2. Записываем новые
                         let count = 0;
                         for (const [key, value] of Object.entries(saveData)) {
                             if (key.startsWith('s9_')) {
@@ -128,21 +165,17 @@
                 return true;
             }
 
-            // --- ЧИТ ДЛЯ АРХИВА (ЧАСТИЧНАЯ ПОЧИНКА: ОСТАЕТСЯ КОНСОЛЬ) ---
+            // --- ЧИТ ДЛЯ АРХИВА (ЧАСТИЧНАЯ ПОЧИНКА) ---
             if (cmd.toLowerCase() === 'fix_archive') {
                 localStorage.removeItem('s9_archive_calibrated');
                 localStorage.removeItem('s9_archive_fixed');
                 localStorage.removeItem('s9_read_success_archive');
                 localStorage.removeItem('s9_read_success_tools');
                 
-                // Включаем желтый режим обучения
                 localStorage.setItem('s9_archive_training', 'true');
                 
-                // Автоматически засчитываем первые 4 слова
                 const learnedWords = ["ХАБ", "ГЛИФ", "ПУЛЬТ", "СЕРВЕР"];
                 learnedWords.forEach(w => localStorage.setItem('s9_glyph_' + w, 'true'));
-                
-                // На всякий случай убираем флаг последнего слова
                 localStorage.removeItem('s9_glyph_КОНСОЛЬ');
                 
                 print('<span class="ok">[ЧИТ] 4 ЭТАЛОННЫХ ТРАССИТА ИЗУЧЕНЫ. ОСТАЛОСЬ ВВЕСТИ И НАРИСОВАТЬ "КОНСОЛЬ".</span>');
@@ -190,6 +223,7 @@
                 localStorage.removeItem('s9_os_captcha');
                 localStorage.removeItem('s9_os_fixed');
                 localStorage.removeItem('s9_os_broken_qubits');
+                localStorage.removeItem('s9_os_qubits_data');
                 localStorage.removeItem('s9_edr_os_passed');
                 localStorage.removeItem('s9_edr_os_trigger');
                 localStorage.removeItem('s9_read_success_os');
@@ -197,6 +231,7 @@
                 setTimeout(() => { location.reload(); }, 1500);
                 return true;
             }
+            
             // --- ЧИТ: СБРОС ДО ЖЕЛТОГО ЯДРА (ПЕРИОД ОХЛАЖДЕНИЯ) ---
             if (cmd.toLowerCase() === 'reset_core') {
                 localStorage.setItem('s9_os_fixed', 'true');
@@ -239,14 +274,14 @@
             // --- ЧИТ ДЛЯ ОС (С УЧЕТОМ EDR) ---
             if (cmd.toLowerCase() === 'fix_os') {
                 localStorage.setItem('s9_os_captcha', 'true');
-                localStorage.setItem('s9_os_broken_qubits', '[]'); 
                 localStorage.removeItem('s9_os_fixed');
                 
+                healQubitsIfExist(); // Лечим кубиты, сохраняя позиции серых
+
                 const edrPassed = localStorage.getItem('s9_edr_os_passed') === 'true';
                 
                 if (edrPassed) {
                     localStorage.removeItem('s9_edr_os_trigger');
-                    localStorage.removeItem('s9_read_success_os');
                     localStorage.setItem('s9_os_fixed', 'true');
                     print('<span class="ok">[ЧИТ] КУБИТЫ ПЕРЕКАЛИБРОВАНЫ. ОС ПОЧИНЕНА.</span>');
                     setTimeout(() => { window.location.href = 'os.html'; }, 1500);
@@ -256,6 +291,20 @@
                     setTimeout(() => { window.location.href = 'edr.html'; }, 1500);
                 }
                 return true; 
+            }
+
+            // --- НОВЫЙ ЧИТ ДЛЯ EDR (ЭМУЛЯЦИЯ ПРОХОЖДЕНИЯ) ---
+            if (cmd.toLowerCase() === 'fix_edr') {
+                localStorage.setItem('s9_os_captcha', 'true');
+                localStorage.setItem('s9_edr_os_passed', 'true');
+                localStorage.setItem('s9_os_fixed', 'true');
+                localStorage.removeItem('s9_edr_os_trigger');
+                
+                healQubitsIfExist(); // Лечим кубиты, сохраняя позиции серых
+
+                print('<span class="ok">[ЧИТ] EDR ПРОЙДЕН. ОС ПОЧИНЕНА.</span>');
+                setTimeout(() => { window.location.href = 'os.html'; }, 1500);
+                return true;
             }
 
             // Очистка памяти

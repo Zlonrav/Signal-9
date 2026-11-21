@@ -174,8 +174,6 @@ const CHAT_DATABASE = {
 
         if (page === 'os.html') {
             const isCaptchaPassed = localStorage.getItem('s9_os_captcha') === 'true';
-            const isOsFixed = localStorage.getItem('s9_os_fixed') === 'true';
-            const isSuccessRead = localStorage.getItem('s9_read_success_os') === 'true';
 
             if (!isCaptchaPassed) {
                 return [
@@ -184,24 +182,42 @@ const CHAT_DATABASE = {
                 ];
             }
 
-            if (isCaptchaPassed && !isOsFixed) {
-                return [
-                    { q: "> ЯДРО РАЗБЛОКИРОВАНО", a: "ОБНАРУЖЕНА ДЕКОГЕРЕНЦИЯ КУБИТОВ." },
-                    { q: "> ИНСТРУКЦИЯ", a: "ИСПОЛЬЗУЙТЕ КОНСОЛЬ ДЛЯ ПОЧИНКИ КУБИТОВ." }
-                ];
+            const qubitsData = JSON.parse(localStorage.getItem('s9_os_qubits_data') || '{}');
+            let broken = 0, warning = 0, ent = 0;
+
+            if (qubitsData && qubitsData[1]) {
+                for (let l = 1; l <= 5; l++) {
+                    for (let r = 1; r <= 5; r++) {
+                        for (let c = 1; c <= 5; c++) {
+                            const state = qubitsData[l]?.[r]?.[c]?.state;
+                            if (state === 'broken') broken++;
+                            if (state === 'warning') warning++;
+                            if (state === 'entangled') ent++;
+                        }
+                    }
+                }
             }
 
-            if (isOsFixed) {
-                if (!isSuccessRead) {
-                    return [
-                        { q: "> ОС СТАБИЛЬНА", a: "ВСЕ КУБИТЫ В РАБОЧЕМ СОСТОЯНИИ. ОПЕРАЦИОННАЯ СИСТЕМА ВОССТАНОВЛЕНА." },
-                        { q: "> СЛЕДУЮЩИЙ ШАГ", a: "ПЕРЕЙДИТЕ НА КАРТУ ДЛЯ ПРОВЕРКИ СОСТОЯНИЯ ЭНЕРГОЯДРА." }
-                    ];
-                }
+            if (broken === 0 && warning === 0 && ent === 0) {
                 return [
                     { q: "> ОС СТАБИЛЬНА", a: "ВСЕ КУБИТЫ В РАБОЧЕМ СОСТОЯНИИ." }
                 ];
             }
+
+            const msgs = [];
+            msgs.push({ q: "> ЯДРО РАЗБЛОКИРОВАНО", a: `ОБНАРУЖЕНА ДЕКОГЕРЕНЦИЯ: ${broken} СЛОМАННЫХ, ${warning} В ПРЕДУПРЕЖДЕНИИ, ${ent} ЗАПУТАННЫХ.` });
+            
+            if (broken > 0) {
+                msgs.push({ q: "> СЛОМАННЫЕ", a: "ИСПОЛЬЗУЙТЕ <cmd>os --reset qubit LxRxCx</cmd>." });
+            }
+            if (warning > 0) {
+                msgs.push({ q: "> ВАРНИНГ", a: "ИСПОЛЬЗУЙТЕ <cmd>os --warn qubit LxRxCx</cmd> ДЛЯ СТАБИЛИЗАЦИИ." });
+            }
+            if (ent > 0) {
+                msgs.push({ q: "> ЗАПУТАННЫЕ", a: "ИСПОЛЬЗУЙТЕ <cmd>os --entangle LxRxCx LxRxCx</cmd>." });
+            }
+            
+            return msgs;
         }
 
         if (page === 'telemetry.html') {
