@@ -87,31 +87,20 @@
             errorOverlay.style.zIndex = '10';
             
             errorOverlay.innerHTML = `
-                <div class="shield-base">
-                    <div class="grid-bg"></div>
-                    <div class="rotator">
-                        <div class="bracket b2"></div>
-                        <div class="bracket b4"></div>
-                    </div>
-                    <div class="shield-text">
-                        <h2>ОШИБКА ВЕРИФИКАЦИИ</h2>
-                        <p>СИГНАЛ ЗАШИФРОВАН. <br>КЛЮЧ-ПАРОЛЬ НЕ НАЙДЕН.</p>
+                <div class="shield-container">
+                    <div class="shield-base">
+                        <div class="grid-bg"></div>
+                        <div class="rotator">
+                            <div class="bracket b2"></div>
+                            <div class="bracket b4"></div>
+                        </div>
+                        <div class="shield-text">
+                            <h2>ОШИБКА ВЕРИФИКАЦИИ</h2>
+                            <p>СИГНАЛ ЗАШИФРОВАН. <br>КЛЮЧ-ПАРОЛЬ НЕ НАЙДЕН.</p>
+                        </div>
                     </div>
                 </div>
             `;
-            // Добавляем тряску при клике на замок
-            const shieldBase = errorOverlay.querySelector('.shield-base');
-            if (shieldBase) {
-                shieldBase.addEventListener('click', () => {
-                    if (!shieldBase.classList.contains('shake-animation')) {
-                        shieldBase.classList.add('shake-animation');
-                        setTimeout(() => {
-                            shieldBase.classList.remove('shake-animation');
-                            // Здесь в будущем можно добавить звук ошибки или редирект
-                        }, 400);
-                    }
-                });
-            }
 
             grid.appendChild(errorOverlay);
             return; // Прерываем отрисовку слов
