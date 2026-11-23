@@ -501,7 +501,7 @@
                     print(`  Пример: os --reset qubit L1R1C1`);
                     print(``);
                     print(`> ${printCmd('os --warn qubit LxRxCx')}`);
-                    print(`  Стабилизация желтого кубита до истечения таймера.`);
+                    print(`  Стабилизация желтого кубита.`);
                     print(`  Пример: os --warn qubit L2R3C4`);
                     print(``);
                     print(`> ${printCmd('os --entangle LxRxCx LxRxCx')}`);

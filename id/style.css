@@ -147,5 +147,20 @@ body.tools-page {
 .log-line.ok { color: var(--ok); }
 .log-line.err { color: var(--err); }
 
+.console-toggle-btn {
+	position: fixed;
+    bottom: 25px;
+    right: 25px;
+    z-index: 100000;
+    background: rgba(0, 20, 30, 0.5);
+    border: 1px solid rgba(0, 242, 255, 0.3);
+    color: var(--neon);
+    padding: 8px 12px;
+    font-family: monospace;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
 @keyframes grid-move { 0% { transform: perspective(300px) rotateX(45deg) rotateZ(45deg) translateY(0); } 100% { transform: perspective(300px) rotateX(45deg) rotateZ(45deg) translateY(30px); } }
 @keyframes spin { 100% { transform: rotate(360deg); } }

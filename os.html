@@ -160,6 +160,54 @@
 
         @keyframes grid-move { 0% { transform: perspective(300px) rotateX(45deg) rotateZ(45deg) translateY(0); } 100% { transform: perspective(300px) rotateX(45deg) rotateZ(45deg) translateY(30px); } }
         @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* --- МОДАЛЬНОЕ ОКНО ИСХОДНОГО КОДА --- */
+        #source-modal {
+            position: fixed; inset: 0; background: rgba(0, 5, 10, 0.95); backdrop-filter: blur(5px);
+            z-index: 9999999; display: none; flex-direction: column;
+            opacity: 0; transition: opacity 0.3s ease;
+        }
+        #source-modal.active { display: flex; opacity: 1; }
+
+        .modal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 25px; border-bottom: 1px solid rgba(0, 242, 255, 0.3);
+            background: #010306;
+        }
+        .modal-header span {
+            font-family: 'Play', 'JetBrains Mono', monospace; letter-spacing: 2px; font-size: 16px;
+            color: var(--neon); text-shadow: 0 0 5px var(--neon); font-weight: bold;
+        }
+        .modal-header .close-btn {
+            background: transparent; border: none; color: var(--neon); font-size: 20px;
+            cursor: pointer; transition: 0.2s; padding: 0 10px;
+        }
+        .modal-header .close-btn:hover { color: #ff3333; text-shadow: 0 0 10px #ff3333; }
+
+        .modal-body {
+            flex-grow: 1; display: flex; overflow: auto; padding: 20px;
+            background: #020508; font-size: 14px; line-height: 1.5; text-align: left;
+        }
+        .modal-body::-webkit-scrollbar { width: 6px; height: 6px; }
+        .modal-body::-webkit-scrollbar-track { background: #000; }
+        .modal-body::-webkit-scrollbar-thumb { background: var(--neon); box-shadow: 0 0 10px var(--neon); border-radius: 3px; }
+
+        .line-numbers {
+            display: flex; flex-direction: column; align-items: flex-end;
+            padding-right: 15px; margin-right: 15px; border-right: 1px solid rgba(0, 242, 255, 0.2);
+            color: #555; user-select: none; font-size: 13px; font-family: 'JetBrains Mono', monospace;
+        }
+        .line-numbers span { height: 21px; }
+
+        .code-content {
+            margin: 0; white-space: pre; font-family: 'JetBrains Mono', monospace; color: #ccc;
+        }
+
+        .token-tag { color: #00f2ff; }
+        .token-attr { color: #ffaa00; }
+        .token-string { color: #00ff44; }
+        .token-comment { color: #555; font-style: italic; }
+        .token-keyword { color: #ff00ff; }
     </style>
 </head>
 <body class="tools-page">
@@ -204,7 +252,6 @@
             </div>
 
             <div class="monitor-panel">
-                <!-- ПЕРЕНЕСЛИ ВКЛАДКИ СЮДА -->
                 <div class="tabs-container" id="layerTabs"></div>
                 
                 <div class="sys-stats">
@@ -216,7 +263,6 @@
                         <div class="stat-label"><span>ОПЕРАТИВНАЯ ПАМЯТЬ</span><span id="valRam">0%</span></div>
                         <div class="progress-bar"><div class="progress-fill" id="barRam"></div></div>
                     </div>
-                    <!-- АКТИВНЫЙ СЛОЙ УДАЛЕН -->
                 </div>
                 <div class="log-box" id="logBox"></div>
             </div>
@@ -230,7 +276,161 @@
 
     <button id="console-toggle-btn" style="position: fixed; bottom: 25px; right: 25px; z-index: 100000; background: rgba(0, 20, 30, 0.5); border: 1px solid rgba(0, 242, 255, 0.3); color: var(--neon); padding: 8px 12px; font-family: monospace; font-size: 14px; cursor: pointer; transition: 0.3s;" onmouseover="this.style.background='rgba(0, 242, 255, 0.1)'" onmouseout="this.style.background='rgba(0, 20, 30, 0.5)'">&gt;_</button>
 
+    <!-- МОДАЛКА ПРОСМОТРА КОДА -->
+    <div id="source-modal">
+        <div class="modal-header">
+            <span>[ СИСТЕМНЫЙ РЕДАКТОР // OS_CORE.HTML ]</span>
+            <button class="close-btn" onclick="window.closeSourceViewer()">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="line-numbers" id="source-line-numbers"></div>
+            <pre class="code-content" id="source-code-content"></pre>
+        </div>
+    </div>
+
     <script src="js/loader.js"></script>
     <script src="js/os.js"></script>
+    
+    <!-- СКРИПТ ГЕНЕРАЦИИ КОДА -->
+    <script>
+        window.closeSourceViewer = function() {
+            document.getElementById('source-modal').classList.remove('active');
+        };
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && document.getElementById('source-modal').classList.contains('active')) {
+                window.closeSourceViewer();
+            }
+        });
+
+        window.openSourceViewer = function() {
+            const modal = document.getElementById('source-modal');
+            const lineNumbers = document.getElementById('source-line-numbers');
+            const codeContent = document.getElementById('source-code-content');
+            
+            modal.classList.add('active');
+            lineNumbers.innerHTML = '';
+            codeContent.innerHTML = '';
+
+            let codeLines = [
+                `<span class="token-tag">&lt;!DOCTYPE html&gt;</span>`,
+                `<span class="token-tag">&lt;html</span> <span class="token-attr">lang=</span><span class="token-string">"ru"</span><span class="token-tag">&gt;</span>`,
+                `<span class="token-tag">&lt;head&gt;</span>`,
+                `    <span class="token-tag">&lt;meta</span> <span class="token-attr">charset=</span><span class="token-string">"UTF-8"</span><span class="token-tag">&gt;</span>`,
+                `    <span class="token-tag">&lt;meta</span> <span class="token-attr">name=</span><span class="token-string">"viewport"</span> <span class="token-attr">content=</span><span class="token-string">"width=device-width, initial-scale=1.0"</span><span class="token-tag">&gt;</span>`,
+                `    <span class="token-tag">&lt;title&gt;</span>СИГНАЛ-9 // ОПЕРАЦИОННАЯ СИСТЕМА<span class="token-tag">&lt;/title&gt;</span>`,
+                `    <span class="token-tag">&lt;link</span> <span class="token-attr">rel=</span><span class="token-string">"stylesheet"</span> <span class="token-attr">type=</span><span class="token-string">"text/css"</span> <span class="token-attr">href=</span><span class="token-string">"https://signal-9.ru/style.css"</span><span class="token-tag">&gt;</span>`,
+                `    <span class="token-tag">&lt;link</span> <span class="token-attr">rel=</span><span class="token-string">"stylesheet"</span> <span class="token-attr">type=</span><span class="token-string">"text/css"</span> <span class="token-attr">href=</span><span class="token-string">"https://signal-9.ru/style-tools.css"</span><span class="token-tag">&gt;</span>`,
+                `    <span class="token-tag">&lt;link</span> <span class="token-attr">rel=</span><span class="token-string">"stylesheet"</span> <span class="token-attr">type=</span><span class="token-string">"text/css"</span> <span class="token-attr">href=</span><span class="token-string">"https://signal-9.ru/style-chat-terminal.css"</span><span class="token-tag">&gt;</span>`,
+                `    <span class="token-tag">&lt;link</span> <span class="token-attr">rel=</span><span class="token-string">"stylesheet"</span> <span class="token-attr">type=</span><span class="token-string">"text/css"</span> <span class="token-attr">href=</span><span class="token-string">"https://signal-9.ru/id/style.css"</span><span class="token-tag">&gt;</span>`,
+                `<span class="token-tag">&lt;/head&gt;</span>`,
+                `<span class="token-tag">&lt;body</span> <span class="token-attr">class=</span><span class="token-string">"tools-page"</span><span class="token-tag">&gt;</span>`,
+                `    <span class="token-tag">&lt;div</span> <span class="token-attr">class=</span><span class="token-string">"chat-system"</span><span class="token-tag">&gt;</span>`,
+                `        <span class="token-tag">&lt;div</span> <span class="token-attr">id=</span><span class="token-string">"quest-field"</span> <span class="token-attr">class=</span><span class="token-string">"question"</span> <span class="token-attr">onclick=</span><span class="token-string">"handleChatClick()"</span><span class="token-tag">&gt;&lt;/div&gt;</span>`,
+                `        <span class="token-tag">&lt;div</span> <span class="token-attr">id=</span><span class="token-string">"answer-field"</span> <span class="token-attr">class=</span><span class="token-string">"answer-field"</span><span class="token-tag">&gt;&lt;/div&gt;</span>`,
+                `    <span class="token-tag">&lt;/div&gt;</span>`,
+                `    <span class="token-tag">&lt;canvas</span> <span class="token-attr">id=</span><span class="token-string">"starfield"</span><span class="token-tag">&gt;&lt;/canvas&gt;</span>`,
+                `    <span class="token-tag">&lt;div</span> <span class="token-attr">id=</span><span class="token-string">"scanner-line"</span><span class="token-tag">&gt;&lt;/div&gt;</span>`,
+                `    <span class="token-tag">&lt;div</span> <span class="token-attr">id=</span><span class="token-string">"overlay-noise"</span><span class="token-tag">&gt;&lt;/div&gt;</span>`,
+                `    <span class="token-tag">&lt;div</span> <span class="token-attr">id=</span><span class="token-string">"sector-title"</span><span class="token-tag">&gt;</span>ОПЕРАЦИОННАЯ СИСТЕМА // СЕКТОР 01<span class="token-tag">&lt;/div&gt;</span>`,
+                `    <span class="token-tag">&lt;div</span> <span class="token-attr">class=</span><span class="token-string">"terminal-wrapper"</span><span class="token-tag">&gt;</span>`,
+                `        <span class="token-tag">&lt;div</span> <span class="token-attr">id=</span><span class="token-string">"os-shield-overlay"</span><span class="token-tag">&gt;</span>`,
+                `            <span class="token-tag">&lt;div</span> <span class="token-attr">class=</span><span class="token-string">"shield-shaker"</span><span class="token-tag">&gt;</span>`,
+                `                <span class="token-tag">&lt;div</span> <span class="token-attr">class=</span><span class="token-string">"shield-container"</span><span class="token-tag">&gt;</span>`,
+                `                    <span class="token-tag">&lt;div</span> <span class="token-attr">class=</span><span class="token-string">"shield-base"</span><span class="token-tag">&gt;</span>`,
+                `                        <span class="token-tag">&lt;div</span> <span class="token-attr">class=</span><span class="token-string">"grid-bg"</span><span class="token-tag">&gt;&lt;/div&gt;</span>`,
+                `                        <span class="token-tag">&lt;div</span> <span class="token-attr">class=</span><span class="token-string">"rotator"</span><span class="token-tag">&gt;</span>`,
+                `                            <span class="token-tag">&lt;div</span> <span class="token-attr">class=</span><span class="token-string">"bracket b2"</span><span class="token-tag">&gt;&lt;/div&gt;</span>`,
+                `                            <span class="token-tag">&lt;div</span> <span class="token-attr">class=</span><span class="token-string">"bracket b4"</span><span class="token-tag">&gt;&lt;/div&gt;</span>`,
+                `                        <span class="token-tag">&lt;/div&gt;</span>`,
+                `                        <span class="token-tag">&lt;div</span> <span class="token-attr">class=</span><span class="token-string">"shield-text"</span><span class="token-tag">&gt;</span>`,
+                `                            <span class="token-tag">&lt;h2&gt;</span>ДОСТУП ЗАБЛОКИРОВАН<span class="token-tag">&lt;/h2&gt;</span>`,
+                `                            <span class="token-tag">&lt;p&gt;</span>ОЖИДАНИЕ ВЕРИФИКАЦИИ ЯДРА<span class="token-tag">&lt;/p&gt;</span>`,
+                `                        <span class="token-tag">&lt;/div&gt;</span>`,
+                `                    <span class="token-tag">&lt;/div&gt;</span>`,
+                `                <span class="token-tag">&lt;/div&gt;</span>`,
+                `            <span class="token-tag">&lt;/div&gt;</span>`,
+                `        <span class="token-tag">&lt;/div&gt;</span>`,
+                `        <span class="token-tag">&lt;div</span> <span class="token-attr">class=</span><span class="token-string">"main-layout"</span> <span class="token-attr">id=</span><span class="token-string">"os-desktop"</span> <span class="token-attr">style=</span><span class="token-string">"display: none;"</span><span class="token-tag">&gt;</span>`,
+                `            <span class="token-tag">&lt;div</span> <span class="token-attr">class=</span><span class="token-string">"left-panel"</span><span class="token-tag">&gt;</span>`,
+                `                <span class="token-tag">&lt;div</span> <span class="token-attr">class=</span><span class="token-string">"grid-container"</span><span class="token-tag">&gt;</span>`,
+                `                    <span class="token-tag">&lt;div</span> <span class="token-attr">class=</span><span class="token-string">"grid-wrapper"</span> <span class="token-attr">id=</span><span class="token-string">"gridWrapper"</span><span class="token-tag">&gt;</span>`,
+                `                        <span class="token-tag">&lt;div</span> <span class="token-attr">class=</span><span class="token-string">"qubit-grid"</span> <span class="token-attr">id=</span><span class="token-string">"qubitGrid"</span><span class="token-tag">&gt;&lt;/div&gt;</span>`,
+                `                    <span class="token-tag">&lt;/div&gt;</span>`,
+                `                <span class="token-tag">&lt;/div&gt;</span>`,
+                `            <span class="token-tag">&lt;/div&gt;</span>`,
+                `            <span class="token-tag">&lt;div</span> <span class="token-attr">class=</span><span class="token-string">"monitor-panel"</span><span class="token-tag">&gt;</span>`,
+                `                <span class="token-tag">&lt;div</span> <span class="token-attr">class=</span><span class="token-string">"tabs-container"</span> <span class="token-attr">id=</span><span class="token-string">"layerTabs"</span><span class="token-tag">&gt;&lt;/div&gt;</span>`,
+                `                <span class="token-tag">&lt;div</span> <span class="token-attr">class=</span><span class="token-string">"sys-stats"</span><span class="token-tag">&gt;</span>`,
+                `                    <span class="token-tag">&lt;div</span> <span class="token-attr">class=</span><span class="token-string">"stat-row"</span><span class="token-tag">&gt;</span>`,
+                `                        <span class="token-tag">&lt;div</span> <span class="token-attr">class=</span><span class="token-string">"stat-label"</span><span class="token-tag">&gt;</span>`,
+                `                            <span class="token-tag">&lt;span&gt;</span>ЗАГРУЗКА CPU<span class="token-tag">&lt;/span&gt;</span>`,
+                `                            <span class="token-tag">&lt;span</span> <span class="token-attr">id=</span><span class="token-string">"valCpu"</span><span class="token-tag">&gt;</span>0%<span class="token-tag">&lt;/span&gt;</span>`,
+                `                        <span class="token-tag">&lt;/div&gt;</span>`,
+                `                        <span class="token-tag">&lt;div</span> <span class="token-attr">class=</span><span class="token-string">"progress-bar"</span><span class="token-tag">&gt;</span>`,
+                `                            <span class="token-tag">&lt;div</span> <span class="token-attr">class=</span><span class="token-string">"progress-fill"</span> <span class="token-attr">id=</span><span class="token-string">"barCpu"</span><span class="token-tag">&gt;&lt;/div&gt;</span>`,
+                `                        <span class="token-tag">&lt;/div&gt;</span>`,
+                `                    <span class="token-tag">&lt;/div&gt;</span>`,
+                `                    <span class="token-tag">&lt;div</span> <span class="token-attr">class=</span><span class="token-string">"stat-row"</span><span class="token-tag">&gt;</span>`,
+                `                        <span class="token-tag">&lt;div</span> <span class="token-attr">class=</span><span class="token-string">"stat-label"</span><span class="token-tag">&gt;</span>`,
+                `                            <span class="token-tag">&lt;span&gt;</span>ОПЕРАТИВНАЯ ПАМЯТЬ<span class="token-tag">&lt;/span&gt;</span>`,
+                `                            <span class="token-tag">&lt;span</span> <span class="token-attr">id=</span><span class="token-string">"valRam"</span><span class="token-tag">&gt;</span>0%<span class="token-tag">&lt;/span&gt;</span>`,
+                `                        <span class="token-tag">&lt;/div&gt;</span>`,
+                `                        <span class="token-tag">&lt;div</span> <span class="token-attr">class=</span><span class="token-string">"progress-bar"</span><span class="token-tag">&gt;</span>`,
+                `                            <span class="token-tag">&lt;div</span> <span class="token-attr">class=</span><span class="token-string">"progress-fill"</span> <span class="token-attr">id=</span><span class="token-string">"barRam"</span><span class="token-tag">&gt;&lt;/div&gt;</span>`,
+                `                        <span class="token-tag">&lt;/div&gt;</span>`,
+                `                    <span class="token-tag">&lt;/div&gt;</span>`,
+                `                <span class="token-tag">&lt;/div&gt;</span>`,
+                `                <span class="token-tag">&lt;div</span> <span class="token-attr">class=</span><span class="token-string">"log-box"</span> <span class="token-attr">id=</span><span class="token-string">"logBox"</span><span class="token-tag">&gt;&lt;/div&gt;</span>`,
+                `            <span class="token-tag">&lt;/div&gt;</span>`,
+                `        <span class="token-tag">&lt;/div&gt;</span>`,
+                `    <span class="token-tag">&lt;/div&gt;</span>`,
+                `    <span class="token-tag">&lt;div</span> <span class="token-attr">class=</span><span class="token-string">"audio-control-fixed"</span> <span class="token-attr">id=</span><span class="token-string">"audio-toggle"</span><span class="token-tag">&gt;</span>`,
+                `        <span class="token-tag">&lt;span</span> <span class="token-attr">id=</span><span class="token-string">"audio-status-icon"</span><span class="token-tag">&gt;</span>○<span class="token-tag">&lt;/span&gt;</span>`,
+                `        <span class="token-tag">&lt;span</span> <span class="token-attr">id=</span><span class="token-string">"audio-status"</span><span class="token-tag">&gt;</span>АУДИОДАТЧИКИ: ВЫКЛ<span class="token-tag">&lt;/span&gt;</span>`,
+                `    <span class="token-tag">&lt;/div&gt;</span>`,
+                `    <span class="token-tag">&lt;button</span> <span class="token-attr">id=</span><span class="token-string">"console-toggle-btn"</span> <span class="token-attr">style=</span><span class="token-string">"position: fixed; bottom: 25px; right: 25px; z-index: 100000; background: rgba(0, 20, 30, 0.5);"</span> <span class="token-attr">onmouseover=</span><span class="token-string">"this.style.background='rgba(0, 242, 255, 0.1)'"</span> <span class="token-attr">onmouseout=</span><span class="token-string">"this.style.background='rgba(0, 20, 30, 0.5)'"</span><span class="token-tag">&gt;</span>&amp;gt;_<span class="token-tag">&lt;/button&gt;</span>`,
+                `    <span class="token-tag">&lt;div</span> <span class="token-attr">class=</span><span class="token-string">"kernel-telemetry"</span> <span class="token-attr">data-sector=</span><span class="token-string">"01"</span> <span class="token-attr">data-node=</span><span class="token-string">"SIGNAL-9"</span><span class="token-tag">&gt;</span>`,
+                `        <span class="token-tag">&lt;span</span> <span class="token-attr">class=</span><span class="token-string">"sync-flag"</span> <span class="token-attr">data-status=</span><span class="token-string">"READY"</span><span class="token-tag">&gt;&lt;/span&gt;</span>`,
+                `        <span class="token-tag">&lt;span</span> <span class="token-attr">class=</span><span class="token-string">"buffer-mode"</span> <span class="token-attr">data-stream=</span><span class="token-string">"ACTIVE"</span><span class="token-tag">&gt;&lt;/span&gt;</span>`,
+                `        <span class="token-tag">&lt;span</span> <span class="token-attr">class=</span><span class="token-string">"cipher-layer"</span> <span class="token-attr">data-protocol=</span><span class="token-string">"Q-NET"</span><span class="token-tag">&gt;&lt;/span&gt;</span>`,
+                `        <span class="token-tag">&lt;span</span> <span class="token-attr">class=</span><span class="token-string">"core-hash"</span> <span class="token-attr">data-verify=</span><span class="token-string">"TRUE"</span><span class="token-tag">&gt;&lt;/span&gt;</span>`,
+                `        <span class="token-tag">&lt;span</span> <span class="token-attr">class=</span><span class="token-string">"link-state"</span> <span class="token-attr">data-channel=</span><span class="token-string">"SECURE"</span><span class="token-tag">&gt;&lt;/span&gt;</span>`,
+                `        <span class="token-tag">&lt;span</span> <span class="token-attr">class=</span><span class="token-string">"mem-alloc"</span> <span class="token-attr">data-block=</span><span class="token-string">"0x00F2FF"</span><span class="token-tag">&gt;&lt;/span&gt;</span>`,
+                `        <span class="token-tag">&lt;span</span> <span class="token-attr">class=</span><span class="token-string">"bus-clock"</span> <span class="token-attr">data-freq=</span><span class="token-string">"149.6MHz"</span><span class="token-tag">&gt;&lt;/span&gt;</span>`,
+                `        <span class="token-tag">&lt;span</span> <span class="token-attr">class=</span><span class="token-string">"gate-lock"</span> <span class="token-attr">data-level=</span><span class="token-string">"ALPHA"</span><span class="token-tag">&gt;&lt;/span&gt;</span>`,
+                `        <span class="token-tag">&lt;span</span> <span class="token-attr">class=</span><span class="token-string">"node-ping"</span> <span class="token-attr">data-latency=</span><span class="token-string">"0ms"</span><span class="token-tag">&gt;&lt;/span&gt;</span>`,
+                `        <span class="token-tag">&lt;span</span> <span class="token-attr">class=</span><span class="token-string">"trace-id"</span> <span class="token-attr">data-session=</span><span class="token-string">"INIT"</span><span class="token-tag">&gt;&lt;/span&gt;</span>`,
+                `        <span class="token-tag">&lt;span</span> <span class="token-attr">class=</span><span class="token-string">"sys-guard"</span> <span class="token-attr">data-shield=</span><span class="token-string">"ON"</span><span class="token-tag">&gt;&lt;/span&gt;</span>`,
+                `    <span class="token-tag">&lt;/div&gt;</span>`,
+                `    <span class="token-tag">&lt;script</span> <span class="token-attr">src=</span><span class="token-string">"https://signal-9.ru/id/loader.js"</span><span class="token-tag">&gt;&lt;/script&gt;</span>`,
+                `    <span class="token-tag">&lt;script</span> <span class="token-attr">src=</span><span class="token-string">"https://signal-9.ru/js/os.js"</span><span class="token-tag">&gt;&lt;/script&gt;</span>`,
+                `    <span class="token-tag">&lt;div</span> <span class="token-attr">id=</span><span class="token-string">"source-modal"</span><span class="token-tag">&gt;&lt;/div&gt;</span>`,
+                `<span class="token-tag">&lt;/body&gt;</span>`,
+                `<span class="token-tag">&lt;/html&gt;</span>`
+            ];
+
+            // 1. Удаляем старый ID, если он каким-то чудом остался
+            codeLines = codeLines.filter(line => !line.includes('SYSTEM_AUTH'));
+
+            // 2. Теперь в массиве ровно 100 строк. 
+            // Выбираем случайную строку от 40 до 89 и заменяем её на секрет.
+            const secretLine = `    <span class="token-comment">&lt;!-- SYSTEM_AUTH: login --id 0x7f930cb4ddb0 --&gt;</span>`;
+            const randomIndex = Math.floor(Math.random() * 50) + 40;
+            codeLines[randomIndex] = secretLine;
+
+            // 3. Выводим код
+            codeContent.innerHTML = codeLines.join('\n');
+
+            // 4. Генерируем ровно 100 номеров строк
+            for (let i = 1; i <= 100; i++) {
+                const span = document.createElement('span');
+                span.innerText = i;
+                lineNumbers.appendChild(span);
+            }
+        };
+    </script>
+
+
 </body>
 </html>
