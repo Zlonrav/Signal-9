@@ -367,7 +367,7 @@ path {
     text-align: center;
     box-shadow: 0 0 50px #000;
 }
-.sector-title { 
+#sector-title { 
     position: absolute; top: 25px; left: 50%; transform: translateX(-50%);
     font-family: 'Play', sans-serif; font-size: 14px; letter-spacing: 8px; 
     color: var(--neon); text-transform: uppercase; opacity: 0.6; 
