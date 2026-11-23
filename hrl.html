@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>СИГНАЛ-9 // ХРОНОМЕТР</title>
+    <link rel="stylesheet" type="text/css" href="https://signal-9.ru/style.css">
+    <link rel="stylesheet" type="text/css" href="https://signal-9.ru//style-tools.css">
+    <link rel="stylesheet" type="text/css" href="https://signal-9.ru//style-chat-terminal.css">
+    <link rel="stylesheet" type="text/css" href="https://signal-9.ru//id/chronometer.css">
+<style>
+:root {
+    --neon: #00f2ff;
+    --neon-dim: rgba(0, 242, 255, 0.25);
+    --neon-bg: rgba(0, 18, 28, 0.78);
+    --ok: #00ff44;
+    --warn: #ffaa00;
+    --ent: #a200ff;
+}
+
+body.tools-page {
+    overflow: hidden;
+    height: 100vh;
+    margin: 0;
+    background-color: #010306;
+    background-image: radial-gradient(circle at center, #03101a 0%, #010306 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    color: #fff;
+}
+
+.chrono-wrapper {
+    position: relative;
+    z-index: 10;
+    width: 640px;
+    max-width: 94vw;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 24px;
+}
+
+.chrono-panel {
+    background: var(--neon-bg);
+    border: 1px solid rgba(0, 242, 255, 0.35);
+    box-shadow: 0 0 25px rgba(0, 242, 255, 0.1), inset 0 0 20px rgba(0, 10, 18, 0.85);
+    padding: 18px 22px;
+    position: relative;
+    backdrop-filter: blur(4px);
+}
+
+.chrono-panel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.22) 50%);
+    background-size: 100% 2px;
+    pointer-events: none;
+}
+
+/* --- ЧАСЫ --- */
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    border-bottom: 1px solid rgba(0, 242, 255, 0.2);
+    padding-bottom: 10px;
+    margin-bottom: 14px;
+}
+
+.badge-quadrant {
+    color: var(--neon);
+    font-weight: bold;
+    text-shadow: 0 0 8px rgba(0, 242, 255, 0.5);
+}
+
+.sys-cycle-tag {
+    color: var(--ok);
+    font-size: 10px;
+}
+
+.main-time-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    margin: 8px 0 16px 0;
+}
+
+.time-segment {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.seg-value {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: #e6fbff;
+    text-shadow: 0 0 12px rgba(0, 242, 255, 0.45);
+}
+
+.seg-value.highlight {
+    color: var(--neon);
+    text-shadow: 0 0 16px var(--neon);
+}
+
+.seg-label {
+    font-size: 9px;
+    color: rgba(0, 242, 255, 0.65);
+    letter-spacing: 1.5px;
+    margin-top: 4px;
+}
+
+.time-divider {
+    font-size: 26px;
+    color: rgba(0, 242, 255, 0.4);
+    margin-bottom: 14px;
+}
+
+.sct-progress-wrap {
+    margin-bottom: 14px;
+}
+
+.sct-progress-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: #9ad8e0;
+    margin-bottom: 5px;
+}
+
+.sct-progress-bar {
+    width: 100%;
+    height: 5px;
+    background: rgba(0, 242, 255, 0.1);
+    border: 1px solid rgba(0, 242, 255, 0.25);
+}
+
+.sct-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--neon);
+    box-shadow: 0 0 10px var(--neon);
+    transition: width 0.4s ease;
+}
+
+/* --- 7 ТАКТОВ НЕДЕЛИ --- */
+.tacts-bar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+}
+
+.tact-item {
+    border: 1px solid rgba(0, 242, 255, 0.2);
+    background: rgba(0, 12, 20, 0.7);
+    padding: 6px 4px;
+    text-align: center;
+    transition: 0.25s;
+}
+
+.tact-code {
+    display: block;
+    font-size: 10px;
+    font-weight: bold;
+    color: rgba(0, 242, 255, 0.6);
+}
+
+.tact-name {
+    display: block;
+    font-size: 8px;
+    color: #7799a1;
+    margin-top: 2px;
+}
+
+.tact-item.active {
+    border-color: var(--neon);
+    background: rgba(0, 242, 255, 0.18);
+    box-shadow: 0 0 12px rgba(0, 242, 255, 0.25);
+}
+
+.tact-item.active .tact-code {
+    color: var(--neon);
+    text-shadow: 0 0 8px var(--neon);
+}
+
+.tact-item.active .tact-name {
+    color: #fff;
+}
+
+/* --- КАЛЕНДАРЬ --- */
+.cal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 12px;
+}
+
+.month-code {
+    color: var(--neon);
+    font-size: 14px;
+    font-weight: bold;
+    margin-right: 8px;
+}
+
+.month-name {
+    font-size: 12px;
+    font-weight: normal;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(168, 207, 214, 0.65);
+}
+
+.cal-year-code {
+    font-size: 11px;
+    color: rgba(0, 242, 255, 0.7);
+    letter-spacing: 1px;
+}
+
+.cal-weekdays, .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+}
+
+.cal-weekdays {
+    margin-bottom: 6px;
+}
+
+.cal-wday {
+    text-align: center;
+    font-size: 9px;
+    color: rgba(0, 242, 255, 0.65);
+    padding: 3px 0;
+    border-bottom: 1px solid rgba(0, 242, 255, 0.15);
+}
+
+.cal-day {
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    border: 1px solid rgba(0, 242, 255, 0.14);
+    background: rgba(0, 10, 16, 0.6);
+    color: #a8cfd6;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.cal-day:hover:not(.empty) {
+    border-color: var(--neon);
+    background: rgba(0, 242, 255, 0.12);
+    color: #fff;
+}
+
+.cal-day.empty {
+    border-color: transparent;
+    background: transparent;
+    cursor: default;
+}
+
+.cal-day.today {
+    border-color: var(--ok);
+    background: rgba(0, 255, 68, 0.16);
+    color: var(--ok);
+    font-weight: bold;
+    box-shadow: 0 0 12px rgba(0, 255, 68, 0.3);
+}
+
+.cal-footer {
+    margin-top: 12px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(0, 242, 255, 0.18);
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: #7eaab3;
+}
+
+#console-toggle-btn {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    z-index: 100000;
+    background: rgba(0, 20, 30, 0.5);
+    border: 1px solid rgba(0, 242, 255, 0.3);
+    color: var(--neon);
+    padding: 8px 12px;
+    font-family: monospace;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+#console-toggle-btn:hover {
+    background: rgba(0, 242, 255, 0.1);
+}
+</style>
+</head>
+<body class="tools-page">
+
+    <canvas id="starfield"></canvas>
+    <div id="scanner-line"></div>
+    <div id="overlay-noise"></div>
+
+    <div id="sector-title">ХРОНОМЕТР СИСТЕМЫ // SECTOR SCT</div>
+
+    <div class="chrono-wrapper">
+        <!-- Верхняя панель: Часы (Сектанта / Квант / Инстант) -->
+        <div class="chrono-panel clock-panel">
+            <div class="panel-header">
+                <span class="badge-quadrant" id="s9-quadrant">КВАДРАНТ // ---</span>
+                <span class="sys-cycle-tag" id="s9-cycle-status">[ СИНХРОНИЗАЦИЯ... ]</span>
+            </div>
+
+            <div class="main-time-display">
+                <div class="time-segment">
+                    <span class="seg-value" id="s9-sct">SCT-0</span>
+                    <span class="seg-label">СЕКТАНТА (SCT)</span>
+                </div>
+                <span class="time-divider">//</span>
+                <div class="time-segment">
+                    <span class="seg-value highlight" id="s9-qnt">000</span>
+                    <span class="seg-label">КВАНТ (QNT)</span>
+                </div>
+                <span class="time-divider">:</span>
+                <div class="time-segment">
+                    <span class="seg-value" id="s9-ins">00</span>
+                    <span class="seg-label">ИНСТАНТ (INS)</span>
+                </div>
+            </div>
+
+            <div class="sct-progress-wrap">
+                <div class="sct-progress-info">
+                    <span id="s9-sct-name">СЕКТАНТА 00</span>
+                    <span id="s9-sct-percent">0% ВАХТЫ</span>
+                </div>
+                <div class="sct-progress-bar">
+                    <div class="sct-progress-fill" id="s9-sct-bar"></div>
+                </div>
+            </div>
+
+            <!-- Полоса 7 тактов недели -->
+            <div class="tacts-bar" id="s9-tacts-bar"></div>
+        </div>
+
+        <!-- Нижняя панель: Календарь месяца -->
+        <div class="chrono-panel calendar-panel">
+            <div class="cal-header">
+                <div class="cal-month-title">
+                    <span class="month-code" id="s9-month-code">00 // ---</span>
+                    <span class="month-name" id="s9-month-name">ЗАГРУЗКА</span>
+                </div>
+                <div class="cal-year-code" id="s9-year-code">ЦИКЛ 2026</div>
+            </div>
+
+            <div class="cal-weekdays" id="s9-cal-weekdays"></div>
+            <div class="cal-grid" id="s9-cal-grid"></div>
+
+            <div class="cal-footer">
+                <span id="s9-full-stamp">STAMP: --.--.-- // --:--</span>
+                <span class="cal-hint" id="s9-day-info">ТЕКУЩИЙ УЗЕЛ ВРЕМЕНИ</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="audio-control-fixed" id="audio-toggle">
+        <span id="audio-status-icon">○</span>
+        <span id="audio-status">АУДИОДАТЧИКИ: ВЫКЛ</span>
+    </div>
+
+    <button id="console-toggle-btn">&gt;_</button>
+
+    <script src="https://signal-9.ru//js/loader.js"></script>
+    <script src="https://signal-9.ru//id/chronometer.js"></script>
+	<script>
+		(function () {
+			const OMEGA_TARGET_YEAR = 5000;
+
+			const MONTHS_S9 = [
+				{ num: '01', code: 'UNI', name: 'Унис',        quadrant: 'АЛЬФА // ОСЬ' },
+				{ num: '02', code: 'DUO', name: 'Дуолис',      quadrant: 'АЛЬФА // ОСЬ' },
+				{ num: '03', code: 'TRI', name: 'Триарис',     quadrant: 'АЛЬФА // ОСЬ' },
+				{ num: '04', code: 'QUA', name: 'Квартор',     quadrant: 'БЕТА // ВЕКТОР' },
+				{ num: '05', code: 'QUI', name: 'Квинтор',     quadrant: 'БЕТА // ВЕКТОР' },
+				{ num: '06', code: 'SXT', name: 'Секстор',     quadrant: 'БЕТА // ВЕКТОР' },
+				{ num: '07', code: 'SEP', name: 'Септон',      quadrant: 'ГАММА // ЭНЕРГИЯ' },
+				{ num: '08', code: 'OCT', name: 'Октон',       quadrant: 'ГАММА // ЭНЕРГИЯ' },
+				{ num: '09', code: 'NON', name: 'Нонон',       quadrant: 'ГАММА // ЭНЕРГИЯ' },
+				{ num: '10', code: 'DEC', name: 'Децимар',     quadrant: 'ДЕЛЬТА // ДАЛЬНИЙ КОСМОС' },
+				{ num: '11', code: 'UND', name: 'Ундецимар',   quadrant: 'ДЕЛЬТА // ДАЛЬНИЙ КОСМОС' },
+				{ num: '12', code: 'DUD', name: 'Дуодецимар',  quadrant: 'ДЕЛЬТА // ДАЛЬНИЙ КОСМОС' }
+			];
+
+			const TACTS_S9 = [
+				{ num: '01', code: 'PRM', name: 'Примум' },
+				{ num: '02', code: 'BIN', name: 'Бинум' },
+				{ num: '03', code: 'TRC', name: 'Терциум' },
+				{ num: '04', code: 'QRT', name: 'Квартум' },
+				{ num: '05', code: 'QNT', name: 'Квинтум' },
+				{ num: '06', code: 'SXT', name: 'Секстум' },
+				{ num: '07', code: 'SPT', name: 'Септимум' }
+			];
+
+			const SECTANTS_S9 = [
+				{ id: 1, code: 'SCT-1', title: 'СЕКТАНТА 01 (00:00 — 03:59)', meaning: 'ХОЛОДНЫЙ ДРЕЙФ // СОН ЯДРА' },
+				{ id: 2, code: 'SCT-2', title: 'СЕКТАНТА 02 (04:00 — 07:59)', meaning: 'ИНИЦИАЛИЗАЦИЯ // КАЛИБРОВКА ШИН' },
+				{ id: 3, code: 'SCT-3', title: 'СЕКТАНТА 03 (08:00 — 11:59)', meaning: 'ВЕКТОР АЛЬФА // ПЕРВИЧНЫЙ ПОТОК' },
+				{ id: 4, code: 'SCT-4', title: 'СЕКТАНТА 04 (12:00 — 15:59)', meaning: 'ПИК РЕЗОНАНСА // АПОГЕЙ СИГНАЛА' },
+				{ id: 5, code: 'SCT-5', title: 'СЕКТАНТА 05 (16:00 — 19:59)', meaning: 'ВЕКТОР БЕТА // ВТОРИЧНЫЙ КОНТУР' },
+				{ id: 6, code: 'SCT-6', title: 'СЕКТАНТА 06 (20:00 — 23:59)', meaning: 'ДАМП ПАМЯТИ // ЗАТУХАНИЕ КАНАЛА' }
+			];
+
+			function pad(num, size) {
+				return String(num).padStart(size, '0');
+			}
+
+			function getS9DateTime(date = new Date()) {
+				const hours = date.getHours();
+				const minutes = date.getMinutes();
+				const seconds = date.getSeconds();
+
+				const sctIndex = Math.floor(hours / 4); // 0..5
+				const sectant = SECTANTS_S9[sctIndex];
+				const qnt = (hours % 4) * 60 + minutes; // 0..239
+				const ins = seconds; // 0..59
+				const sctProgress = (((qnt * 60 + ins) / (240 * 60)) * 100).toFixed(1);
+
+				const realYear = date.getFullYear();
+				const omegaYearsLeft = Math.max(0, OMEGA_TARGET_YEAR - realYear);
+				const omegaCode = `Ω-${omegaYearsLeft}`;
+
+				const month = MONTHS_S9[date.getMonth()];
+				const jsDay = date.getDay(); // 0 (Вс) .. 6 (Сб)
+				const tactIndex = jsDay === 0 ? 6 : jsDay - 1; // 0 (Примум) .. 6 (Септимум)
+				const tact = TACTS_S9[tactIndex];
+
+				return {
+					realYear,
+					omegaYearsLeft,
+					omegaCode,
+					day: date.getDate(),
+					month,
+					tact,
+					tactIndex,
+					sectant,
+					qnt: pad(qnt, 3),
+					ins: pad(ins, 2),
+					sctProgress
+				};
+			}
+
+			let renderedMonthKey = '';
+
+			function renderTacts(activeIndex) {
+				const container = document.getElementById('s9-tacts-bar');
+				if (!container) return;
+				container.innerHTML = TACTS_S9.map((t, idx) => `
+					<div class="tact-item ${idx === activeIndex ? 'active' : ''}">
+						<span class="tact-code">${t.num} // ${t.code}</span>
+						<span class="tact-name">${t.name}</span>
+					</div>
+				`).join('');
+			}
+
+			function renderCalendar(now, s9) {
+				const key = `${s9.omegaCode}-${s9.month.code}-${s9.day}`;
+				if (renderedMonthKey === key) return;
+				renderedMonthKey = key;
+
+				const weekdaysEl = document.getElementById('s9-cal-weekdays');
+				const gridEl = document.getElementById('s9-cal-grid');
+				const infoEl = document.getElementById('s9-day-info');
+
+				weekdaysEl.innerHTML = TACTS_S9.map(t => `<div class="cal-wday">${t.code}</div>`).join('');
+
+				const firstDayJs = new Date(s9.realYear, now.getMonth(), 1).getDay();
+				const startOffset = firstDayJs === 0 ? 6 : firstDayJs - 1;
+				const daysInMonth = new Date(s9.realYear, now.getMonth() + 1, 0).getDate();
+
+				let cellsHtml = '';
+				for (let i = 0; i < startOffset; i++) {
+					cellsHtml += `<div class="cal-day empty"></div>`;
+				}
+
+				for (let d = 1; d <= daysInMonth; d++) {
+					const cellDate = new Date(s9.realYear, now.getMonth(), d);
+					const cellJsDay = cellDate.getDay();
+					const cellTact = TACTS_S9[cellJsDay === 0 ? 6 : cellJsDay - 1];
+					const isToday = d === s9.day;
+
+					cellsHtml += `
+						<div class="cal-day ${isToday ? 'today' : ''}" 
+							 data-day="${pad(d, 2)}" 
+							 data-tact="${cellTact.code} (${cellTact.name})">
+							${pad(d, 2)}
+						</div>
+					`;
+				}
+
+				gridEl.innerHTML = cellsHtml;
+
+				const defaultInfo = `ТЕКУЩИЙ УЗЕЛ: ${pad(s9.day, 2)}.${s9.month.code} // ${s9.tact.name.toUpperCase()}`;
+
+				gridEl.querySelectorAll('.cal-day:not(.empty)').forEach(cell => {
+					cell.addEventListener('mouseenter', () => {
+						infoEl.textContent = `УЗЕЛ ${cell.dataset.day}.${s9.month.code} // ${cell.dataset.tact.toUpperCase()}`;
+					});
+					cell.addEventListener('mouseleave', () => {
+						infoEl.textContent = defaultInfo;
+					});
+				});
+
+				infoEl.textContent = defaultInfo;
+			}
+
+			function updateChronometer() {
+				const now = new Date();
+				const s9 = getS9DateTime(now);
+
+				document.getElementById('s9-quadrant').textContent = `КВАДРАНТ ${s9.month.quadrant}`;
+				document.getElementById('s9-cycle-status').textContent = `[ ${s9.sectant.meaning} ]`;
+
+				document.getElementById('s9-sct').textContent = s9.sectant.code;
+				document.getElementById('s9-qnt').textContent = s9.qnt;
+				document.getElementById('s9-ins').textContent = s9.ins;
+
+				document.getElementById('s9-sct-name').textContent = s9.sectant.title;
+				document.getElementById('s9-sct-percent').textContent = `${s9.sctProgress}% ВАХТЫ`;
+				document.getElementById('s9-sct-bar').style.width = `${s9.sctProgress}%`;
+
+				document.getElementById('s9-month-code').textContent = s9.month.code;
+				document.getElementById('s9-month-name').textContent = s9.month.name;
+				document.getElementById('s9-year-code').textContent = `${s9.omegaCode} // ANN`;
+
+				document.getElementById('s9-full-stamp').textContent =
+					`STAMP: ${pad(s9.day, 2)}.${s9.month.code}.${s9.omegaCode} // ${s9.sectant.code} ${s9.qnt}:${s9.ins}`;
+
+				renderTacts(s9.tactIndex);
+				renderCalendar(now, s9);
+			}
+
+			window.Signal9Time = { getNow: getS9DateTime };
+
+			updateChronometer();
+			setInterval(updateChronometer, 1000);
+		})();
+	</script>
+</body>
+</html>
