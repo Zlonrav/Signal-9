@@ -1,6 +1,5 @@
 // id/console.js
 (function() {
-    console.clear();
 
     // Стиль: Черный фон, зеленый текст, зеленое свечение
     const matrixStyle = [
