@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>СИГНАЛ-9 // ОПЕРАЦИОННАЯ СИСТЕМА</title>
+    <link rel="icon" href="https://signal-9.ru/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" type="text/css" href="https://signal-9.ru/style.css">
+    <link rel="stylesheet" type="text/css" href="https://signal-9.ru/style-tools.css">
+    <link rel="stylesheet" type="text/css" href="https://signal-9.ru/style-chat-terminal.css">
+    <link rel="stylesheet" type="text/css" href="https://signal-9.ru/id/style.css">
+</head>
+<body class="tools-page">
+    <div class="chat-system">
+        <div id="quest-field" class="question" onclick="handleChatClick()"></div>
+        <div id="answer-field" class="answer-field"></div>
+    </div>
+    <canvas id="starfield"></canvas>
+    <div id="scanner-line"></div>
+    <div id="overlay-noise"></div>
+    <div id="sector-title">ОПЕРАЦИОННАЯ СИСТЕМА // СЕКТОР 01</div>
+    <div class="terminal-wrapper">
+        <div id="os-shield-overlay">
+            <div class="shield-shaker">
+                <div class="shield-container">
+                    <div class="shield-base">
+                        <div class="grid-bg"></div>
+                        <div class="rotator">
+                            <div class="bracket b2"></div>
+                            <div class="bracket b4"></div>
+                        </div>
+                        <div class="shield-text">
+                            <h2>ДОСТУП ЗАБЛОКИРОВАН</h2>
+                            <p>ОЖИДАНИЕ ВЕРИФИКАЦИИ ЯДРА</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="main-layout" id="os-desktop" style="display: none;">
+            <div class="left-panel">
+                <div class="grid-container">
+                    <div class="grid-wrapper" id="gridWrapper">
+                        <div class="qubit-grid" id="qubitGrid"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="monitor-panel">
+                <div class="tabs-container" id="layerTabs"></div>
+                <div class="sys-stats">
+                    <div class="stat-row">
+                        <div class="stat-label">
+                            <span>ЗАГРУЗКА CPU</span>
+                            <span id="valCpu">0%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="barCpu"></div>
+                        </div>
+                    </div>
+                    <div class="stat-row">
+                        <div class="stat-label">
+                            <span>ОПЕРАТИВНАЯ ПАМЯТЬ</span>
+                            <span id="valRam">0%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="barRam"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="log-box" id="logBox"></div>
+            </div>
+        </div>
+    </div>
+    <div class="audio-control-fixed" id="audio-toggle">
+        <span id="audio-status-icon">○</span>
+        <span id="audio-status">АУДИОДАТЧИКИ: ВЫКЛ</span>
+    </div>
+    <button id="console-toggle-btn">&gt;_</button>
+    <div class="kernel-telemetry" data-sector="01" data-node="SIGNAL-9">
+        <span class="sync-flag" data-status="READY"></span>
+        <span class="buffer-mode" data-stream="ACTIVE"></span>
+        <span class="cipher-layer" data-protocol="Q-NET"></span>
+        <span class="core-hash" data-verify="TRUE"></span>
+        <span class="link-state" data-channel="SECURE"></span>
+        <span class="mem-alloc" data-block="0x00F2FF"></span>
+        <span class="bus-clock" data-freq="149.6MHz"></span>
+    <!-- SYSTEM_AUTH: login --id 0x7f930cb4ddb0 -->
+        <span class="gate-lock" data-level="ALPHA"></span>
+        <span class="node-ping" data-latency="0ms"></span>
+        <span class="trace-id" data-session="INIT"></span>
+        <span class="sys-guard" data-shield="ON"></span>
+    </div>
+    <script src="https://signal-9.ru/id/loader.js"></script>
+    <script src="id/console.js"></script>
+    <script src="https://signal-9.ru/js/os.js"></script>
+    <div id="source-modal"></div>
+</body>
+</html>
