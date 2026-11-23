@@ -280,7 +280,10 @@
     <div id="source-modal">
         <div class="modal-header">
             <span>[ СИСТЕМНЫЙ РЕДАКТОР // OS_CORE.HTML ]</span>
-            <button class="close-btn" onclick="window.closeSourceViewer()">✕</button>
+		<div style="display: flex; gap: 10px;">
+			<button id="copy-code-btn" style="background: transparent; border: 1px solid rgba(0, 242, 255, 0.4); color: var(--neon); font-size: 11px; padding: 5px 10px; cursor: pointer; font-family: monospace; text-transform: uppercase;">📋 КОПИРОВАТЬ</button>
+			<button class="close-btn" onclick="window.closeSourceViewer()">✕</button>
+		</div>
         </div>
         <div class="modal-body">
             <div class="line-numbers" id="source-line-numbers"></div>
@@ -296,12 +299,6 @@
         window.closeSourceViewer = function() {
             document.getElementById('source-modal').classList.remove('active');
         };
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && document.getElementById('source-modal').classList.contains('active')) {
-                window.closeSourceViewer();
-            }
-        });
 
         window.openSourceViewer = function() {
             const modal = document.getElementById('source-modal');
@@ -404,7 +401,8 @@
                 `        <span class="token-tag">&lt;span</span> <span class="token-attr">class=</span><span class="token-string">"sys-guard"</span> <span class="token-attr">data-shield=</span><span class="token-string">"ON"</span><span class="token-tag">&gt;&lt;/span&gt;</span>`,
                 `    <span class="token-tag">&lt;/div&gt;</span>`,
                 `    <span class="token-tag">&lt;script</span> <span class="token-attr">src=</span><span class="token-string">"https://signal-9.ru/id/loader.js"</span><span class="token-tag">&gt;&lt;/script&gt;</span>`,
-                `    <span class="token-tag">&lt;script</span> <span class="token-attr">src=</span><span class="token-string">"https://signal-9.ru/js/os.js"</span><span class="token-tag">&gt;&lt;/script&gt;</span>`,
+                `    <span class="token-tag">&lt;script</span> <span class="token-attr">src=</span><span class="token-string">"https://signal-9.ru/id/console.js"</span><span class="token-tag">&gt;&lt;/script&gt;</span>`,
+				`    <span class="token-tag">&lt;script</span> <span class="token-attr">src=</span><span class="token-string">"https://signal-9.ru/js/os.js"</span><span class="token-tag">&gt;&lt;/script&gt;</span>`,
                 `    <span class="token-tag">&lt;div</span> <span class="token-attr">id=</span><span class="token-string">"source-modal"</span><span class="token-tag">&gt;&lt;/div&gt;</span>`,
                 `<span class="token-tag">&lt;/body&gt;</span>`,
                 `<span class="token-tag">&lt;/html&gt;</span>`
@@ -428,6 +426,25 @@
                 span.innerText = i;
                 lineNumbers.appendChild(span);
             }
+
+            // 5. Обработчик кнопки копирования
+            document.getElementById('copy-code-btn').onclick = () => {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = codeContent.innerHTML;
+                const rawText = tempDiv.innerText;
+                
+                navigator.clipboard.writeText(rawText).then(() => {
+                    const btn = document.getElementById('copy-code-btn');
+                    btn.innerText = '✅ СКОПИРОВАНО';
+                    btn.style.color = '#00ff44';
+                    btn.style.borderColor = '#00ff44';
+                    setTimeout(() => {
+                        btn.innerText = '📋 КОПИРОВАТЬ';
+                        btn.style.color = 'var(--neon)';
+                        btn.style.borderColor = 'rgba(0, 242, 255, 0.4)';
+                    }, 2000);
+                });
+            };
         };
     </script>
 
