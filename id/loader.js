@@ -15,5 +15,4 @@
     scripts.forEach(src => {
         document.write(`<script src="${src}"></script>`);
     });
-    console.log("SYSTEM: Все модули ядра загружены.");
 })();
