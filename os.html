@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Play:wght@400;700&display=swap" rel="stylesheet">
     <meta charset="UTF-8">
     <script src="js/auth.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -23,13 +22,6 @@
             display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0;
             background-image: radial-gradient(circle at center, #03101a 0%, #010306 100%);
             font-family: 'JetBrains Mono', monospace; color: #fff;
-        }
-
-        .os-header { 
-            position: absolute; top: 25px; left: 50%; transform: translateX(-50%);
-            font-family: 'Michroma', sans-serif; font-size: 14px; letter-spacing: 8px; 
-            color: var(--neon); text-transform: uppercase; opacity: 0.6; 
-            text-shadow: 0 0 20px var(--neon); z-index: 100; pointer-events: none;
         }
 
         .terminal-wrapper {
@@ -181,7 +173,7 @@
     <div id="scanner-line"></div>
     <div id="overlay-noise"></div>
 
-    <div class="os-header">ОПЕРАЦИОННАЯ СИСТЕМА // СЕКТОР 01</div>
+    <div class="sector-title">ОПЕРАЦИОННАЯ СИСТЕМА // СЕКТОР 01</div>
     
     <div class="terminal-wrapper">
         <div id="os-shield-overlay">
