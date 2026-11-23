@@ -344,6 +344,17 @@
             }
             return;
         }
+        // --- КОМАНДА ПРОСМОТРА ИСХОДНОГО КОДА ---
+        if (cmd === 'view --source') {
+            if (currentPage !== 'os.html') {
+                print(`<span class="err">ОШИБКА: КОМАНДА ДОСТУПНА ТОЛЬКО В ОПЕРАЦИОННОЙ СИСТЕМЕ.</span>`);
+            } else if (typeof window.openSourceViewer === 'function') {
+                window.openSourceViewer();
+            } else {
+                print(`<span class="err">ОШИБКА: МОДУЛЬ ПРОСМОТРА НЕ ЗАГРУЖЕН.</span>`);
+            }
+            return;
+        }
         // --- КОМАНДЫ ДЛЯ ЯДРА ---
         if (cmd.startsWith('core --position ')) {
             if (currentPage !== 'core.html') {
@@ -478,8 +489,8 @@
 
                 if (!isCaptchaPassed) {
                     print(`<span class="topic-header">[ОПЕРАЦИОННАЯ СИСТЕМА]</span>`);
-                    print(`[ВНИМАНИЕ] ДОСТУП ЗАБЛОКИРОВАН.`);
-                    print(`ВВЕДИТЕ ${printCmd('self --id')} ДЛЯ ПОЛУЧЕНИЯ ИДЕНТИФИКАТОРА, ЗАТЕМ ${printCmd('login --id <ВАШ_ID>')}`);
+                    print(`[ВНИМАНИЕ] КОД ПОВРЕЖДЁН, ДОСТУП ЗАБЛОКИРОВАН.`);
+                    print(`ВВЕДИТЕ ${printCmd('view --source')} ДЛЯ ПОЛУЧЕНИЯ ИДЕНТИФИКАТОРА В КОДЕ СТРАНИЦЫ, ЗАТЕМ ${printCmd('login --id <ВАШ_ID>')}`);
                 } else if (isCaptchaPassed && !isOsFixed) {
                     print(`<span class="topic-header">[ОПЕРАЦИОННАЯ СИСТЕМА]</span>`);
                     print(`ВАША ЗАДАЧА: УСТРАНИТЬ ВСЕ ПРОБЛЕМЫ НА СЛОЯХ 1-5.`);
@@ -562,9 +573,8 @@
         
         switch(cmd) {
             case 'self --id':
-                print(`<span class="topic-header">[ИДЕНТИФИКАТОР ЯДРА]</span>`);
-                print(`0x7f930cb4ddb0`);
-                print(`ДЛЯ АВТОРИЗАЦИИ ВВЕДИТЕ: ${printCmd('login --id 0x7f930cb4ddb0')}`);
+                print(`<span class="err">[ОШИБКА] ПРЯМОЙ ЗАПРОС ID ЗАБЛОКИРОВАН СИСТЕМОЙ БЕЗОПАСНОСТИ.</span>`);
+                print(`ПОПРОБУЙТЕ НАЙТИ ИДЕНТИФИКАТОР В ИСХОДНОМ КОДЕ СТРАНИЦЫ (КОМАНДА ${printCmd('view --source')}).`);
                 break;
             case 'help':
                 print(`<span class="topic-header">[ПРОТОКОЛЫ ПЕРЕМЕЩЕНИЯ]</span>`);
