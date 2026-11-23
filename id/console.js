@@ -2,7 +2,6 @@
 (function() {
     console.clear();
 
-    // Генерируем SVG-фон с настоящим матричным кодом (цифры и катакана)
     const matrixSvg = `
         <svg xmlns="http://w3.org" width="460" height="90">
             <rect width="100%" height="100%" fill="#020b04"/>
@@ -41,5 +40,15 @@
         'display: inline-block'
     ].join(';');
 
+    const passStyle = [
+        'color: #888888',
+        'font-family: "JetBrains Mono", "Consolas", monospace',
+        'font-size: 13px',
+        'letter-spacing: 2px',
+        'padding: 6px 4px',
+        'user-select: all'
+    ].join(';');
+
     console.log('%cYOU BROKE FREE FROM THE MATRIX', bannerStyle);
+    console.log('%cS9#vK8mQ2$xL7pW4nR9', passStyle);
 })();
