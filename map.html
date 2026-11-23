@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-	<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Play:wght@400;700&display=swap" rel="stylesheet">
     <meta charset="UTF-8">
     <script src="js/auth.js"></script> 
     <link rel="icon" href="favicon.ico" type="image/x-icon">
@@ -13,13 +12,6 @@
         /* --- СПЕЦИФИЧНЫЕ СТИЛИ ДЛЯ КАРТЫ --- */
         body.tools-page { overflow: hidden; height: 100vh; background-color: #010306; }
         #display { display: flex !important; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
-
-        .map-header {
-            position: absolute; top: 25px; left: 50%; transform: translateX(-50%);
-            font-family: 'Michroma', sans-serif; font-size: 14px; letter-spacing: 8px;
-            color: var(--neon); text-transform: uppercase; opacity: 0.6;
-            text-shadow: 0 0 20px var(--neon); z-index: 100; pointer-events: none;
-        }
 
         .map-container { position: relative; width: 1200px; height: 850px; }
         .map-container::before {
@@ -144,7 +136,7 @@
     <div id="scanner-line"></div>
     <div id="overlay-noise"></div>
 
-    <div class="map-header">СИСТЕМА ТОПОЛОГИИ // СЕКТОР 07</div>
+    <div class="sector-title">СИСТЕМА ТОПОЛОГИИ // СЕКТОР 07</div>
 
     <div id="display">
         <div class="map-container" id="mapContainer">
