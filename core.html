@@ -21,13 +21,6 @@
             font-family: 'JetBrains Mono', monospace;
         }
 
-        .core-header { 
-            position: absolute; top: 25px; left: 50%; transform: translateX(-50%);
-            font-family: 'Michroma', sans-serif; font-size: 14px; letter-spacing: 8px; 
-            color: var(--neon); text-transform: uppercase; opacity: 0.6; 
-            text-shadow: 0 0 20px var(--neon); z-index: 100; pointer-events: none;
-        }
-
         .terminal-wrapper {
             position: relative; width: 600px; height: 500px;
             background: #000; border: 1px solid rgba(0, 242, 255, 0.3);
@@ -174,8 +167,7 @@
     <canvas id="starfield"></canvas>
     <div id="scanner-line"></div>
     <div id="overlay-noise"></div>
-
-    <div class="core-header">ЭНЕРГОЯДРО // СЕКТОР 00</div>
+    <div class="sector-title">ЭНЕРГОЯДРО // СЕКТОР 00</div>
     
     <div class="terminal-wrapper">
         <div class="corner corner-tl"></div>

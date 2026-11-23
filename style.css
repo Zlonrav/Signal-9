@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Michroma&family=Play:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Play:wght@400;700&display=swap');
 :root { 
     --neon: #00f2ff; 
     --bg: #020508; 
@@ -366,4 +366,10 @@ path {
     background: #020508;
     text-align: center;
     box-shadow: 0 0 50px #000;
+}
+#sector-title { 
+    position: absolute; top: 25px; left: 50%; transform: translateX(-50%);
+    font-family: 'Play', sans-serif; font-size: 14px; letter-spacing: 8px; 
+    color: var(--neon); text-transform: uppercase; opacity: 0.6; 
+    text-shadow: 0 0 20px var(--neon); z-index: 100; pointer-events: none;
 }
