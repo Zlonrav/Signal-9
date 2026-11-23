@@ -2,23 +2,15 @@
 (function() {
     console.clear();
 
-    // Огромный текст с градиентом и тенями
-    const styleTitle = [
-        'font-size: 40px',
+    // Стиль в духе Матрицы (зеленый неон)
+    const styleMatrix = [
+        'font-size: 20px',
         'font-weight: bold',
         'font-family: monospace',
-        'color: #00f2ff',
-        'text-shadow: 0 0 10px #00f2ff, 0 0 20px #00f2ff',
-        'padding: 20px',
-        'letter-spacing: 5px'
-    ].join(';');
-
-    const styleSubtitle = [
-        'font-size: 16px',
-        'color: #00ff44',
-        'font-family: monospace',
-        'font-weight: bold',
-        'padding: 10px 0'
+        'color: #00ff41', // Классический матричный зеленый
+        'text-shadow: 0 0 5px #00ff41, 0 0 15px #00ff41',
+        'padding: 15px',
+        'letter-spacing: 2px'
     ].join(';');
 
     const styleDivider = [
@@ -27,9 +19,8 @@
         'font-family: monospace'
     ].join(';');
 
-    console.log('%c YOU BROKE FREE ', styleTitle);
-    console.log('%c[СИСТЕМА] ВЫ ВЗЛОМАЛИ ЭТОТ МИР.', styleSubtitle);
-    console.log('%c[СИСТЕМА] YOU BROKE FREE FROM THE MATRIX.', styleSubtitle);
+    // Вывод
+    console.log('%cYOU BROKE FREE FROM THE MATRIX.', styleMatrix);
     console.log('%c--------------------------------------------------', styleDivider);
     console.log('%c> Инициализация ядра оболочки завершена...', styleDivider);
     console.log('%c> Доступ к исходному коду предоставлен.', styleDivider);
