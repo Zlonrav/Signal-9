@@ -2,37 +2,45 @@
 (function() {
     console.clear();
 
+    const matrixRainBg = [
+        'background-color: #010803',
+        'background-image: ' + [
+            'radial-gradient(ellipse at center, rgba(0, 255, 65, 0.14) 0%, rgba(0, 10, 3, 0.96) 100%)',
+            'repeating-linear-gradient(0deg, rgba(0, 255, 65, 0.05) 0px, rgba(0, 255, 65, 0.05) 1px, transparent 1px, transparent 4px)',
+            'repeating-linear-gradient(90deg, rgba(0, 255, 65, 0.07) 0px, rgba(0, 255, 65, 0.07) 1px, transparent 1px, transparent 16px)',
+            'linear-gradient(180deg, rgba(0, 255, 65, 0.18) 0%, rgba(0, 255, 65, 0.02) 50%, rgba(0, 255, 65, 0.12) 100%)'
+        ].join(', ')
+    ].join(';');
+
     const mainBannerStyle = [
-        'background: linear-gradient(135deg, #000a02 0%, #001f08 50%, #000a02 100%)',
+        matrixRainBg,
         'color: #00ff41',
-        'font-family: "JetBrains Mono", "Consolas", monospace',
+        'font-family: "Courier New", "JetBrains Mono", monospace',
         'font-size: 18px',
-        'font-weight: 900',
-        'letter-spacing: 3px',
-        'padding: 18px 28px',
+        'font-weight: bold',
+        'letter-spacing: 4px',
+        'padding: 20px 32px',
         'border: 1px solid #00ff41',
-        'border-left: 6px solid #00ff41',
-        'border-radius: 3px',
-        'box-shadow: 0 0 15px rgba(0, 255, 65, 0.35), inset 0 0 12px rgba(0, 255, 65, 0.2)',
-        'text-shadow: 0 0 4px #00ff41, 0 0 12px #00ff41, 0 0 24px rgba(0, 255, 65, 0.8)',
+        'box-shadow: 0 0 18px rgba(0, 255, 65, 0.3), inset 0 0 20px rgba(0, 255, 65, 0.15)',
+        'text-shadow: 0 0 5px #00ff41, 0 0 12px #00ff41, 0 0 22px #008f11',
         'display: inline-block'
     ].join(';');
 
     const subStyle = [
-        'background: #020804',
-        'color: #80ff9e',
-        'font-family: "JetBrains Mono", "Consolas", monospace',
+        'background: #010803',
+        'color: #00cc33',
+        'font-family: "Courier New", "JetBrains Mono", monospace',
         'font-size: 11px',
-        'letter-spacing: 1.5px',
-        'padding: 7px 16px',
-        'border-left: 3px solid #00ff41',
-        'text-shadow: 0 0 6px rgba(0, 255, 65, 0.5)',
+        'letter-spacing: 2px',
+        'padding: 6px 18px',
+        'border-left: 2px solid #00ff41',
+        'text-shadow: 0 0 6px rgba(0, 255, 65, 0.6)',
         'display: inline-block',
         'margin-top: 4px'
     ].join(';');
 
     console.log(
-        '%c⚡ YOU BROKE FREE FROM THE MATRIX ⚡\n%c[SIGNAL-9 // ROOT ACCESS GRANTED — OVERRIDE COMPLETE]',
+        '%cYOU BROKE FREE FROM THE MATRIX\n%c[SIGNAL-9 // SYSTEM OVERRIDE COMPLETE]',
         mainBannerStyle,
         subStyle
     );
