@@ -147,7 +147,7 @@ body.tools-page {
 .log-line.ok { color: var(--ok); }
 .log-line.err { color: var(--err); }
 
-.console-toggle-btn {
+#console-toggle-btn {
 	position: fixed;
     bottom: 25px;
     right: 25px;
