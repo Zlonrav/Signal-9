@@ -415,13 +415,13 @@
             // Выбираем случайную строку от 40 до 89 и заменяем её на секрет.
             const secretLine = `    <span class="token-comment">&lt;!-- SYSTEM_AUTH: login --id 0x7f930cb4ddb0 --&gt;</span>`;
             const randomIndex = Math.floor(Math.random() * 50) + 40;
-            codeLines[randomIndex] = secretLine;
+            codeLines.splice(randomIndex, 0, secretLine);
 
             // 3. Выводим код
             codeContent.innerHTML = codeLines.join('\n');
 
             // 4. Генерируем ровно 100 номеров строк
-            for (let i = 1; i <= 102; i++) {
+            for (let i = 1; i <= 104; i++) {
                 const span = document.createElement('span');
                 span.innerText = i;
                 lineNumbers.appendChild(span);
