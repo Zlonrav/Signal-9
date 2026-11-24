@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>СИГНАЛ-9 // ПУЛЬСАРНЫЙ ХРОНОМЕТР</title>
+    <link rel="stylesheet" type="text/css" href="https://signal-9.ru/style.css">
+    <link rel="stylesheet" type="text/css" href="https://signal-9.ru/style-tools.css">
+    <link rel="stylesheet" type="text/css" href="https://signal-9.ru/style-chat-terminal.css">
+<style>
+:root {
+    --neon: #00f2ff;
+    --neon-dim: rgba(0, 242, 255, 0.25);
+    --neon-bg: rgba(0, 18, 28, 0.84);
+    --ok: #00ff44;
+    --warn: #ffaa00;
+    --ent: #a200ff;
+}
+
+body.tools-page {
+    overflow-x: hidden;
+    min-height: 100vh;
+    margin: 0;
+    padding: 16px 0 44px 0;
+    box-sizing: border-box;
+    background-color: #010306;
+    background-image: radial-gradient(circle at center, #03101a 0%, #010306 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    color: #fff;
+}
+
+.chrono-wrapper {
+    position: relative;
+    z-index: 10;
+    width: 640px;
+    max-width: 94vw;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 18px;
+}
+
+.chrono-panel {
+    background: var(--neon-bg);
+    border: 1px solid rgba(0, 242, 255, 0.35);
+    box-shadow: 0 0 25px rgba(0, 242, 255, 0.1), inset 0 0 20px rgba(0, 10, 18, 0.85);
+    padding: 16px 20px;
+    position: relative;
+    backdrop-filter: blur(4px);
+}
+
+.chrono-panel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.22) 50%);
+    background-size: 100% 2px;
+    pointer-events: none;
+}
+
+/* --- ВЕРХНЯЯ ПАНЕЛЬ: СЕКСТАНС / КВАНТ / ИНСТАНТ --- */
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    letter-spacing: 1.4px;
+    border-bottom: 1px solid rgba(0, 242, 255, 0.2);
+    padding-bottom: 9px;
+    margin-bottom: 12px;
+    gap: 8px;
+}
+
+.badge-quadrant {
+    color: var(--neon);
+    font-weight: bold;
+    text-shadow: 0 0 8px rgba(0, 242, 255, 0.5);
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sys-cycle-tag {
+    color: var(--ok);
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.pulsar-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--ok);
+    box-shadow: 0 0 8px var(--ok);
+    opacity: 0.25;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.pulsar-dot.pulse {
+    opacity: 1;
+    transform: scale(1.35);
+}
+
+.guide-trigger-btn {
+    background: rgba(0, 242, 255, 0.12);
+    border: 1px solid rgba(0, 242, 255, 0.45);
+    color: var(--neon);
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.guide-trigger-btn:hover, .guide-trigger-btn.active {
+    background: var(--neon);
+    color: #01050a;
+    box-shadow: 0 0 12px var(--neon);
+}
+
+.main-time-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    margin: 6px 0 14px 0;
+}
+
+.time-segment {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 4px 8px;
+}
+
+.seg-value {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: #e6fbff;
+    text-shadow: 0 0 12px rgba(0, 242, 255, 0.45);
+}
+
+.seg-value.highlight {
+    color: var(--neon);
+    text-shadow: 0 0 16px var(--neon);
+}
+
+.seg-label {
+    font-size: 9px;
+    color: rgba(0, 242, 255, 0.65);
+    letter-spacing: 1.5px;
+    margin-top: 4px;
+}
+
+.time-divider {
+    font-size: 26px;
+    color: rgba(0, 242, 255, 0.4);
+    margin-bottom: 14px;
+}
+
+.sct-progress-wrap {
+    margin-bottom: 12px;
+}
+
+.sct-progress-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: #9ad8e0;
+    margin-bottom: 5px;
+}
+
+.sct-progress-bar {
+    width: 100%;
+    height: 5px;
+    background: rgba(0, 242, 255, 0.1);
+    border: 1px solid rgba(0, 242, 255, 0.25);
+}
+
+.sct-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--neon);
+    box-shadow: 0 0 10px var(--neon);
+    transition: width 0.25s linear;
+}
+/* --- 6 ТАКТОВ СЕКСТИДИУМА (НЕДЕЛИ) --- */
+.tacts-bar {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+}
+
+.tact-item {
+    border: 1px solid rgba(0, 242, 255, 0.2);
+    background: rgba(0, 12, 20, 0.7);
+    padding: 6px 4px;
+    text-align: center;
+    transition: 0.25s;
+}
+
+.tact-code {
+    display: block;
+    font-size: 10px;
+    font-weight: bold;
+    color: rgba(0, 242, 255, 0.65);
+}
+
+.tact-name {
+    display: block;
+    font-size: 8px;
+    color: #7799a1;
+    margin-top: 2px;
+}
+
+.tact-item.active {
+    border-color: var(--neon);
+    background: rgba(0, 242, 255, 0.18);
+    box-shadow: 0 0 12px rgba(0, 242, 255, 0.25);
+}
+
+.tact-item.active .tact-code {
+    color: var(--neon);
+    text-shadow: 0 0 8px var(--neon);
+}
+
+.tact-item.active .tact-name {
+    color: #fff;
+}
+
+/* --- КАЛЕНДАРЬ: МАТРИЦА 6 x 6 (36 ДНЕЙ МЕСЯЦА = 36°) --- */
+.cal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 10px;
+}
+
+.month-code {
+    color: var(--neon);
+    font-size: 14px;
+    font-weight: bold;
+    margin-right: 8px;
+}
+
+.month-name {
+    font-size: 12px;
+    font-weight: normal;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(168, 207, 214, 0.75);
+}
+
+.cal-year-code {
+    font-size: 11px;
+    color: rgba(0, 242, 255, 0.85);
+    letter-spacing: 1px;
+}
+
+.cal-weekdays, .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+}
+
+.cal-weekdays {
+    margin-bottom: 6px;
+}
+
+.cal-wday {
+    text-align: center;
+    font-size: 9px;
+    color: rgba(0, 242, 255, 0.65);
+    padding: 3px 0;
+    border-bottom: 1px solid rgba(0, 242, 255, 0.15);
+}
+
+.cal-day {
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    border: 1px solid rgba(0, 242, 255, 0.14);
+    background: rgba(0, 10, 16, 0.6);
+    color: #a8cfd6;
+    cursor: pointer;
+    transition: 0.15s;
+}
+
+.cal-day:hover {
+    border-color: var(--neon);
+    background: rgba(0, 242, 255, 0.14);
+    color: #fff;
+}
+
+.cal-day.passed {
+    color: rgba(168, 207, 214, 0.35);
+    border-color: rgba(0, 242, 255, 0.08);
+}
+
+.cal-day.today {
+    border-color: var(--ok);
+    background: rgba(0, 255, 68, 0.18);
+    color: var(--ok);
+    font-weight: bold;
+    box-shadow: 0 0 12px rgba(0, 255, 68, 0.35);
+}
+
+.cal-footer {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(0, 242, 255, 0.18);
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: #7eaab3;
+    gap: 10px;
+}
+
+/* --- HUD-ГАЙД (BLUEPRINT OVERLAY С ВЫНОСНЫМИ ЛИНИЯМИ) --- */
+.hud-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 99990;
+    background: rgba(1, 4, 8, 0.72);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+
+.hud-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+#hud-canvas-layer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 99994;
+}
+
+#hud-callouts-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 99993;
+}
+
+.hud-callout {
+    position: absolute;
+    width: 245px;
+    background: rgba(2, 18, 28, 0.96);
+    border: 1px solid var(--neon);
+    box-shadow: 0 0 20px rgba(0, 242, 255, 0.22), inset 0 0 12px rgba(0, 242, 255, 0.08);
+    padding: 10px 12px;
+    font-size: 10px;
+    line-height: 1.45;
+    color: #d6f4fa;
+    pointer-events: auto;
+}
+
+.hud-callout-title {
+    color: var(--neon);
+    font-weight: bold;
+    font-size: 10px;
+    letter-spacing: 1.2px;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+}
+
+.hud-callout-formula {
+    color: var(--ok);
+    font-size: 9px;
+    margin-top: 5px;
+    border-top: 1px dashed rgba(0, 242, 255, 0.28);
+    padding-top: 4px;
+}
+
+.hud-target-highlight {
+    position: relative;
+    z-index: 99991 !important;
+    outline: 1px solid var(--neon);
+    outline-offset: 4px;
+    box-shadow: 0 0 16px rgba(0, 242, 255, 0.45);
+    background: rgba(0, 24, 38, 0.95) !important;
+}
+
+.hud-close-banner {
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 20, 32, 0.95);
+    border: 1px solid var(--neon);
+    color: var(--neon);
+    padding: 6px 16px;
+    font-family: inherit;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    cursor: pointer;
+    z-index: 99995;
+}
+
+#console-toggle-btn {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    z-index: 100000;
+    background: rgba(0, 20, 30, 0.5);
+    border: 1px solid rgba(0, 242, 255, 0.3);
+    color: var(--neon);
+    padding: 8px 12px;
+    font-family: monospace;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+#console-toggle-btn:hover {
+    background: rgba(0, 242, 255, 0.1);
+}
+</style>
+</head>
+<body class="tools-page">
+
+    <canvas id="starfield"></canvas>
+    <div id="scanner-line"></div>
+    <div id="overlay-noise"></div>
+
+    <div id="sector-title">ХРОНОМЕТР СИСТЕМЫ // PSR B1919+21</div>
+
+    <div class="chrono-wrapper">
+        <!-- Верхняя панель: Секстанс / Квант / Инстант -->
+        <div class="chrono-panel clock-panel">
+            <div class="panel-header">
+                <span class="badge-quadrant" id="s9-orbit-coord">ORBIT // 000° 00' 00"</span>
+                <div class="header-right">
+                    <span class="sys-cycle-tag">
+                        <span class="pulsar-dot" id="s9-pulsar-dot"></span>
+                        <span id="s9-cycle-status">1.3373s</span>
+                    </span>
+                    <button class="guide-trigger-btn" id="s9-guide-btn">[ ? ]</button>
+                </div>
+            </div>
+
+            <div class="main-time-display">
+                <div class="time-segment" id="target-sct">
+                    <span class="seg-value" id="s9-sct">SXT-1</span>
+                    <span class="seg-label">СЕКСТАНС (SXT)</span>
+                </div>
+                <span class="time-divider">//</span>
+                <div class="time-segment" id="target-qnt">
+                    <span class="seg-value highlight" id="s9-qnt">00</span>
+                    <span class="seg-label">КВАНТ (QNT)</span>
+                </div>
+                <span class="time-divider">:</span>
+                <div class="time-segment" id="target-ins">
+                    <span class="seg-value" id="s9-ins">00</span>
+                    <span class="seg-label">ИНСТАНТ (INS)</span>
+                </div>
+            </div>
+
+            <div class="sct-progress-wrap" id="target-progress">
+                <div class="sct-progress-info">
+                    <span id="s9-sct-title">СЕКСТАНС 01 // ДУГА 00'–10'</span>
+                    <span id="s9-sct-percent">00.0% ДУГИ</span>
+                </div>
+                <div class="sct-progress-bar">
+                    <div class="sct-progress-fill" id="s9-sct-bar"></div>
+                </div>
+            </div>
+
+            <!-- Полоса 6 тактов Секстидиума -->
+            <div class="tacts-bar" id="s9-tacts-bar"></div>
+        </div>
+
+        <!-- Нижняя панель: Матрица 6x6 (36 дней месяца = 36°) -->
+        <div class="chrono-panel calendar-panel">
+            <div class="cal-header">
+                <div class="cal-month-title" id="target-month">
+                    <span class="month-code" id="s9-month-code">01 // UNI</span>
+                    <span class="month-name" id="s9-month-name">УНИС [000°–036°]</span>
+                </div>
+                <div class="cal-year-code" id="s9-year-code">Ω-2974 // ORB</div>
+            </div>
+
+            <div class="cal-weekdays" id="s9-cal-weekdays"></div>
+            <div class="cal-grid" id="s9-cal-grid"></div>
+
+            <div class="cal-footer">
+                <span id="s9-full-stamp">STAMP: ORB // Ω-----.---.-- :: --- // SXT--.QNT---.INS--</span>
+                <span class="cal-hint" id="s9-day-info">УЗЕЛ ОРБИТЫ</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- HUD-оверлей с выносными SVG-линиями -->
+    <div class="hud-overlay" id="s9-hud-overlay">
+        <button class="hud-close-banner" id="s9-hud-close">[ РЕЖИМ СКАНИРОВАНИЯ СХЕМЫ — КЛИКНИТЕ ПО ЭКРАНУ ДЛЯ ВЫХОДА ]</button>
+        <canvas id="hud-canvas-layer"></canvas>
+        <div id="hud-callouts-layer"></div>
+    </div>
+
+    <div class="audio-control-fixed" id="audio-toggle">
+        <span id="audio-status-icon">○</span>
+        <span id="audio-status">АУДИОДАТЧИКИ: ВЫКЛ</span>
+    </div>
+
+    <button id="console-toggle-btn">&gt;_</button>
+
+	<script src="https://signal-9.ru/id/loader.js"></script>
+    <script>
+        (function () {
+            // Константы навигационно-пульсарной системы (1 День = 1° орбиты)
+            const PULSAR_PERIOD_MS = 1337.3; // 1 Инстант = 1 импульс пульсара PSR B1919+21
+            const INS_PER_QNT = 60;          // 1 Квант = 60 Инстантов (10" орбиты)
+            const QNT_PER_SXT = 60;          // 1 Секстанс = 60 Квантов (10' орбиты)
+            const SXT_PER_DAY = 6;           // 1 Диес (День) = 6 Секстансов (ровно 1° орбиты)
+            const DAYS_PER_WEEK = 6;         // 1 Секстидиум (Неделя) = 6 Дней (6° орбиты)
+            const DAYS_PER_MONTH = 36;       // 1 Менсис (Месяц) = 6x6 = 36 Дней (36° орбиты)
+            const MONTHS_PER_YEAR = 10;      // 1 Орбис (Год) = 10 Месяцев = 360 Дней (360° орбиты)
+
+            const INS_PER_SXT = INS_PER_QNT * QNT_PER_SXT;       // 3 600 INS
+            const INS_PER_DAY = INS_PER_SXT * SXT_PER_DAY;       // 21 600 INS
+            const INS_PER_MONTH = INS_PER_DAY * DAYS_PER_MONTH;  // 777 600 INS
+            const INS_PER_YEAR = INS_PER_MONTH * MONTHS_PER_YEAR;// 7 776 000 INS
+
+            // Точка привязки: Азимут Луча 000°00'00" (начало 1970 года) и отсчет Ω-3030
+			const EPOCH_ZERO_MS = 0;
+			const START_OMEGA_CYCLES = 3030; // 5000 - 1970 (сейчас покажет ~Ω-2860)
+
+			const MONTHS_S9 = [
+				{ num: '01', code: 'UNI', name: 'Унис',      arc: '000°–036°' },
+				{ num: '02', code: 'DUO', name: 'Дуолис',    arc: '036°–072°' },
+				{ num: '03', code: 'TRI', name: 'Триор',	 arc: '072°–108°' },
+				{ num: '04', code: 'QUA', name: 'Квартор',   arc: '108°–144°' },
+				{ num: '05', code: 'QUI', name: 'Квинтон',   arc: '144°–180°' },
+				{ num: '06', code: 'SXT', name: 'Секстон',   arc: '180°–216°' },
+				{ num: '07', code: 'SEP', name: 'Септар',    arc: '216°–252°' },
+				{ num: '08', code: 'OCT', name: 'Октар',     arc: '252°–288°' },
+				{ num: '09', code: 'NON', name: 'Нонал',     arc: '288°–324°' },
+				{ num: '10', code: 'DEC', name: 'Децимал',   arc: '324°–360°' }
+			];
+
+            const TACTS_S9 = [
+                { num: '01', code: 'PRM', name: 'Примум' },
+                { num: '02', code: 'BIN', name: 'Бинум' },
+                { num: '03', code: 'TRC', name: 'Терциум' },
+                { num: '04', code: 'QRT', name: 'Квартум' },
+                { num: '05', code: 'QNT', name: 'Квинтум' },
+                { num: '06', code: 'SXT', name: 'Секстум' }
+            ];
+
+            function pad(num, size) {
+                return String(num).padStart(size, '0');
+            }
+
+            // Синтезатор короткого радиоимпульса пульсара при включении аудиодатчиков
+            let audioCtx = null;
+            let audioEnabled = false;
+            const audioToggleBtn = document.getElementById('audio-toggle');
+            if (audioToggleBtn) {
+                audioToggleBtn.addEventListener('click', () => {
+                    audioEnabled = !audioEnabled;
+                    if (audioEnabled && !audioCtx) {
+                        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    }
+                    const iconEl = document.getElementById('audio-status-icon');
+                    const statusEl = document.getElementById('audio-status');
+                    if (iconEl) iconEl.textContent = audioEnabled ? '●' : '○';
+                    if (statusEl) statusEl.textContent = audioEnabled ? 'АУДИОДАТЧИКИ: ВКЛ' : 'АУДИОДАТЧИКИ: ВЫКЛ';
+                });
+            }
+
+            function playPulsarBeep() {
+                if (!audioEnabled || !audioCtx) return;
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(220, audioCtx.currentTime + 0.045);
+                gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.045);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.05);
+            }
+
+            function getPulsarDateTime(nowMs = Date.now()) {
+                const elapsedMs = Math.max(0, nowMs - EPOCH_ZERO_MS);
+                const totalInstants = Math.floor(elapsedMs / PULSAR_PERIOD_MS);
+
+                const completedYears = Math.floor(totalInstants / INS_PER_YEAR);
+                const omegaLeft = Math.max(0, START_OMEGA_CYCLES - completedYears);
+                const omegaCode = `Ω-${pad(omegaLeft, 4)}`;
+
+                const yearInstants = totalInstants % INS_PER_YEAR;
+
+                // Точная координата орбиты в градусах, минутах и секундах (1 День = 1°)
+                const totalArcSeconds = Math.floor((yearInstants / INS_PER_DAY) * 3600);
+                const arcDeg = Math.floor(totalArcSeconds / 3600);
+                const arcMin = Math.floor((totalArcSeconds % 3600) / 60);
+                const arcSec = totalArcSeconds % 60;
+                const orbitString = `${pad(arcDeg, 3)}° ${pad(arcMin, 2)}' ${pad(arcSec, 2)}"`;
+
+                const monthIndex = Math.floor(yearInstants / INS_PER_MONTH);
+                const month = MONTHS_S9[monthIndex];
+
+                const monthInstants = yearInstants % INS_PER_MONTH;
+                const dayIndex = Math.floor(monthInstants / INS_PER_DAY);
+                const dayNum = dayIndex + 1;
+
+                const tactIndex = dayIndex % DAYS_PER_WEEK;
+                const tact = TACTS_S9[tactIndex];
+
+                const dayInstants = monthInstants % INS_PER_DAY;
+                const sxtIndex = Math.floor(dayInstants / INS_PER_SXT);
+                const sxtNum = sxtIndex + 1;
+
+                const sxtInstants = dayInstants % INS_PER_SXT;
+                const qnt = Math.floor(sxtInstants / INS_PER_QNT);
+                const ins = sxtInstants % INS_PER_QNT;
+
+                const sxtProgress = ((sxtInstants / INS_PER_SXT) * 100).toFixed(1);
+                const arcStartMin = sxtIndex * 10;
+                const arcEndMin = arcStartMin + 10;
+
+                return {
+                    totalInstants,
+                    omegaCode,
+                    orbitString,
+                    month,
+                    dayIndex,
+                    dayNum,
+                    tact,
+                    tactIndex,
+                    sxtNum,
+                    arcRange: `${pad(arcStartMin, 2)}'–${pad(arcEndMin, 2)}'`,
+                    qnt: pad(qnt, 2),
+                    ins: pad(ins, 2),
+                    sxtProgress
+                };
+            }
+            let renderedMonthKey = '';
+            let lastInstant = -1;
+
+            function renderTacts(activeIndex) {
+                const container = document.getElementById('s9-tacts-bar');
+                if (!container) return;
+                container.innerHTML = TACTS_S9.map((t, idx) => `
+                    <div class="tact-item ${idx === activeIndex ? 'active' : ''}">
+                        <span class="tact-code">${t.num} // ${t.code}</span>
+                        <span class="tact-name">${t.name}</span>
+                    </div>
+                `).join('');
+            }
+
+            function renderCalendar(p) {
+                const key = `${p.omegaCode}-${p.month.code}-${p.dayNum}`;
+                if (renderedMonthKey === key) return;
+                renderedMonthKey = key;
+
+                const weekdaysEl = document.getElementById('s9-cal-weekdays');
+                const gridEl = document.getElementById('s9-cal-grid');
+                const infoEl = document.getElementById('s9-day-info');
+
+                weekdaysEl.innerHTML = TACTS_S9.map(t => `<div class="cal-wday">${t.code}</div>`).join('');
+
+                let cellsHtml = '';
+                for (let d = 1; d <= DAYS_PER_MONTH; d++) {
+                    const idx = d - 1;
+                    const cellTact = TACTS_S9[idx % DAYS_PER_WEEK];
+                    const isToday = d === p.dayNum;
+                    const isPassed = d < p.dayNum;
+                    const cellAngle = (MONTHS_S9.indexOf(p.month) * 36) + idx;
+
+                    cellsHtml += `
+                        <div class="cal-day ${isToday ? 'today' : ''} ${isPassed ? 'passed' : ''}"
+                             data-day="${pad(d, 2)}"
+                             data-tact="${cellTact.code} (${cellTact.name})"
+                             data-angle="${pad(cellAngle, 3)}°">
+                            ${pad(d, 2)}
+                        </div>
+                    `;
+                }
+
+                gridEl.innerHTML = cellsHtml;
+
+                const defaultInfo = `УЗЕЛ: ${pad(p.dayNum, 2)}.${p.month.code} // ${p.tact.name.toUpperCase()}`;
+
+                gridEl.querySelectorAll('.cal-day').forEach(cell => {
+                    cell.addEventListener('mouseenter', () => {
+                        infoEl.textContent = `УЗЕЛ ${cell.dataset.day}.${p.month.code} [${cell.dataset.angle}] // ${cell.dataset.tact.toUpperCase()}`;
+                    });
+                    cell.addEventListener('mouseleave', () => {
+                        infoEl.textContent = defaultInfo;
+                    });
+                });
+
+                infoEl.textContent = defaultInfo;
+            }
+
+            function updateChronometer() {
+                const p = getPulsarDateTime(Date.now());
+
+                if (p.totalInstants !== lastInstant) {
+                    lastInstant = p.totalInstants;
+                    const dot = document.getElementById('s9-pulsar-dot');
+                    if (dot) {
+                        dot.classList.add('pulse');
+                        setTimeout(() => dot.classList.remove('pulse'), 180);
+                    }
+                    playPulsarBeep();
+                }
+
+                document.getElementById('s9-orbit-coord').textContent = `ORBIT // ${p.orbitString}`;
+                document.getElementById('s9-sct').textContent = `SXT-${p.sxtNum}`;
+                document.getElementById('s9-qnt').textContent = p.qnt;
+                document.getElementById('s9-ins').textContent = p.ins;
+
+                document.getElementById('s9-sct-title').textContent =
+                    `СЕКСТАНС 0${p.sxtNum} // ДУГА ${p.arcRange}`;
+                document.getElementById('s9-sct-percent').textContent = `${p.sxtProgress}% ДУГИ`;
+                document.getElementById('s9-sct-bar').style.width = `${p.sxtProgress}%`;
+
+                document.getElementById('s9-month-code').textContent = `${p.month.num} // ${p.month.code}`;
+                document.getElementById('s9-month-name').textContent = `${p.month.name} [${p.month.arc}]`;
+                document.getElementById('s9-year-code').textContent = `${p.omegaCode} // ORB`;
+
+                document.getElementById('s9-full-stamp').textContent =
+					`STAMP: ORB // ${p.omegaCode}.${p.month.code}.${pad(p.dayNum, 2)} :: ${p.tact.code} // SXT-${p.sxtNum}.QNT-${p.qnt}.INS-${p.ins}`;
+
+                renderTacts(p.tactIndex);
+                renderCalendar(p);
+            }
+
+            // --- HUD-ГАЙД С ВЫНОСНЫМИ ЛИНИЯМИ НА CANVAS ---
+            const hudOverlay = document.getElementById('s9-hud-overlay');
+            const hudBtn = document.getElementById('s9-guide-btn');
+            const hudCloseBtn = document.getElementById('s9-hud-close');
+            const canvasLayer = document.getElementById('hud-canvas-layer');
+            const ctxHud = canvasLayer.getContext('2d');
+            const calloutsLayer = document.getElementById('hud-callouts-layer');
+
+            const HUD_NOTES = [
+                {
+                    targetId: 's9-orbit-coord',
+                    side: 'left',
+                    slot: 0,
+                    title: '01 // КООРДИНАТА ОРБИТЫ',
+                    desc: 'Угол поворота вокруг пульсара PSR B1919+21. Полный виток = 360°.',
+                    formula: '1 ДЕНЬ = 1° 00\' 00"'
+                },
+                {
+                    targetId: 'target-sct',
+                    side: 'left',
+                    slot: 1,
+                    title: '02 // СЕКСТАНС (SXT-1..6)',
+                    desc: '1/6 часть суток (аналог часа). Делит 1° суток на 6 равных дуг.',
+                    formula: '1 SXT = 10\' ДУГИ = 60 QNT'
+                },
+                {
+                    targetId: 's9-cal-grid',
+                    side: 'left',
+                    slot: 2,
+                    title: '03 // МАТРИЦА МЕНСИСА (6×6)',
+                    desc: '36 дней месяца. В году 10 месяцев (от Униса до Децимара).',
+                    formula: '10 МЕСЯЦЕВ × 36 ДНЕЙ = 360°'
+                },
+                {
+                    targetId: 'target-ins',
+                    side: 'right',
+                    slot: 0,
+                    title: '04 // КВАНТ И ИНСТАНТ',
+                    desc: '1 Инстант = 1 импульс маяка (1.3373с). 60 Инстантов = 1 Квант.',
+                    formula: '1 QNT = 10" | 6 INS = 1" ОРБИТЫ'
+                },
+                {
+                    targetId: 's9-tacts-bar',
+                    side: 'right',
+                    slot: 1,
+                    title: '05 // СЕКСТИДИУМ (6 ТАКТОВ)',
+                    desc: '6-дневная неделя от Примума до Секстума (6° орбиты).',
+                    formula: '6 НЕДЕЛЬ × 6 ДНЕЙ = 36° МЕСЯЦА'
+                },
+                {
+                    targetId: 's9-year-code',
+                    side: 'right',
+                    slot: 2,
+                    title: '06 // ОБРАТНЫЙ ОТСЧЕТ ОМЕГА',
+                    desc: 'Счетчик оставшихся витков (Орбисов) до финальной Точки Омега.',
+                    formula: 'СТАРТ ЭПОХИ: Ω-2974 → Ω-0000'
+                }
+            ];
+            function buildHudCallouts() {
+                const vw = window.innerWidth;
+                const vh = window.innerHeight;
+                canvasLayer.width = vw;
+                canvasLayer.height = vh;
+                ctxHud.clearRect(0, 0, vw, vh);
+                calloutsLayer.innerHTML = '';
+
+                document.querySelectorAll('.hud-target-highlight').forEach(el => el.classList.remove('hud-target-highlight'));
+
+                const wrapper = document.querySelector('.chrono-wrapper');
+                if (!wrapper) return;
+                const wrapRect = wrapper.getBoundingClientRect();
+
+                const isMobile = vw < 1180;
+                const topMargin = 72;
+                const bottomMargin = 56;
+                const usableH = Math.max(360, vh - topMargin - bottomMargin);
+                const slotStep = usableH / 3;
+
+                HUD_NOTES.forEach((note, idx) => {
+                    const target = document.getElementById(note.targetId);
+                    if (!target) return;
+
+                    target.classList.add('hud-target-highlight');
+                    const rect = target.getBoundingClientRect();
+
+                    const box = document.createElement('div');
+                    box.className = 'hud-callout';
+                    box.innerHTML = `
+                        <div class="hud-callout-title">${note.title}</div>
+                        <div>${note.desc}</div>
+                        <div class="hud-callout-formula">${note.formula}</div>
+                    `;
+                    calloutsLayer.appendChild(box);
+
+                    const boxRect = box.getBoundingClientRect();
+                    let startX, startY, elbowX, boxX, boxY;
+
+                    if (isMobile) {
+                        boxX = Math.max(10, Math.min(vw - boxRect.width - 10, (idx % 2 === 0 ? 12 : vw - boxRect.width - 12)));
+                        boxY = 58 + idx * 88;
+                        startX = rect.left + rect.width / 2;
+                        startY = rect.top + rect.height / 2;
+                        elbowX = boxX + boxRect.width / 2;
+                    } else if (note.side === 'left') {
+                        startX = rect.left;
+                        startY = rect.top + rect.height / 2;
+                        boxX = Math.max(16, wrapRect.left - boxRect.width - 54);
+                        boxY = topMargin + note.slot * slotStep + (slotStep - boxRect.height) / 2;
+                        elbowX = boxX + boxRect.width + 24;
+                    } else {
+                        startX = rect.right;
+                        startY = rect.top + rect.height / 2;
+                        boxX = Math.min(vw - boxRect.width - 16, wrapRect.right + 54);
+                        boxY = topMargin + note.slot * slotStep + (slotStep - boxRect.height) / 2;
+                        elbowX = boxX - 24;
+                    }
+
+                    box.style.left = `${boxX}px`;
+                    box.style.top = `${boxY}px`;
+
+                    const endX = isMobile ? (boxX + boxRect.width / 2) : (note.side === 'left' ? boxX + boxRect.width : boxX);
+                    const endY = boxY + boxRect.height / 2;
+
+                    // Неоновая ломаная выносная линия на Canvas
+                    ctxHud.beginPath();
+                    ctxHud.moveTo(startX, startY);
+                    ctxHud.lineTo(elbowX, endY);
+                    ctxHud.lineTo(endX, endY);
+                    ctxHud.strokeStyle = '#00f2ff';
+                    ctxHud.lineWidth = 1.4;
+                    ctxHud.setLineDash([4, 3]);
+                    ctxHud.stroke();
+                    ctxHud.setLineDash([]);
+
+                    // Зелёная точка-якорь на целевом блоке
+                    ctxHud.beginPath();
+                    ctxHud.arc(startX, startY, 4, 0, Math.PI * 2);
+                    ctxHud.fillStyle = '#00ff44';
+                    ctxHud.fill();
+
+                    // Голубая точка стыковки на карточке
+                    ctxHud.beginPath();
+                    ctxHud.arc(endX, endY, 3, 0, Math.PI * 2);
+                    ctxHud.fillStyle = '#00f2ff';
+                    ctxHud.fill();
+                });
+            }
+
+            function toggleHud(forceState) {
+                const nextState = typeof forceState === 'boolean' ? forceState : !hudOverlay.classList.contains('active');
+                hudOverlay.classList.toggle('active', nextState);
+                hudBtn.classList.toggle('active', nextState);
+                if (nextState) {
+                    buildHudCallouts();
+                } else {
+                    ctxHud.clearRect(0, 0, canvasLayer.width, canvasLayer.height);
+                    document.querySelectorAll('.hud-target-highlight').forEach(el => el.classList.remove('hud-target-highlight'));
+                }
+            }
+
+            hudBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleHud();
+            });
+            hudCloseBtn.addEventListener('click', () => toggleHud(false));
+            hudOverlay.addEventListener('click', (e) => {
+                if (e.target === hudOverlay || e.target === calloutsLayer) toggleHud(false);
+            });
+            window.addEventListener('resize', () => {
+                if (hudOverlay.classList.contains('active')) buildHudCallouts();
+            });
+
+            window.Signal9Time = { getNow: getPulsarDateTime };
+
+            updateChronometer();
+            setInterval(updateChronometer, 100);
+        })();
+    </script>
+
+</body>
+</html>
