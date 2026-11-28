@@ -73,11 +73,11 @@ const CHAT_DATABASE = {
 
             if (osFixed && !coreOverheated && !coreFixed) {
                 return [
-                    { q: "> СТАТУС ТОПОЛОГИИ", a: "КАРТА РАЗВЕРНУТА. ОБНАРУЖЕНЫ ОТКЛЮЧЕНИЯ." },
-                    { q: "> ДИАГНОСТИКА ЯДРА", a: "ПОСЛЕ РЕМОНТА ОС НАГРУЗКА НА ЯДРО ВОЗРОСЛА." },
-                    { q: "> ВНИМАНИЕ", a: "ЗАФИКСИРОВАН ПЕРИОД ОХЛАЖДЕНИЯ. НЕОБХОДИМО 64 СЕКУНДЫ." },
-                    { q: "> ПРОГНОЗ", a: "ЕСЛИ НЕ НАЧАТЬ КАЛИБРОВКУ, ЯДРО УЙДЕТ В ПЕРЕГРУЗКУ." },
-                    { q: "> СИСТЕМА", a: "ОЖИДАНИЕ АВАРИЙНОГО СИГНАЛА. КОМАНДА CORE ПОКА НЕДОСТУПНА." }
+					{ q: "> СТАТУС ТОПОЛОГИИ", a: "КАРТА РАЗВЕРНУТА. ЗАФИКСИРОВАНЫ ОТКЛЮЧЕНИЯ СЕКТОРОВ." },
+					{ q: "> ДИАГНОСТИКА ЯДРА", a: "МОДУЛЬ ОС ВОССТАНОВЛЕН. НАГРУЗКА НА ЭНЕРГОЯДРО ПРЕВЫШЕНА." },
+					{ q: "> ПРОТОКОЛ ОХЛАЖДЕНИЯ", a: "ЗАПУЩЕН ЦИКЛ ОХЛАЖДЕНИЯ ЯДРА 47.8576 БЕЛЛ." },
+					{ q: "> ПРОГНОЗ", a: "ФИКСИРУЕТСЯ ПЕРЕГРУЗКА ЯДРА." },
+					{ q: "> СИСТЕМА", a: "РЕЖИМ ОЖИДАНИЯ. КОМАНДА <cmd>core</cmd> ПОСЛЕ ОХЛАЖДЕНИЯ." }
                 ];
             }
 
@@ -376,11 +376,12 @@ const CHAT_DATABASE = {
                 const timerStart = localStorage.getItem('s9_core_timer_start');
 
                 if (osFixed && !coreOverheated && !coreFixed && timerStart) {
-                    const elapsed = Math.floor((Date.now() - parseInt(timerStart, 10)) / 1000);
-                    const remaining = Math.max(0, 64 - elapsed);
-                    
-                    qField.innerText = "> ОХЛАЖДЕНИЕ ЯДРА";
-                    aField.innerHTML = `<span id="cooling-timer">ОСТАЛОСЬ ВРЕМЕНИ: ${remaining} СЕК</span>`;
+					const remainingMs = Math.max(0, 64000 - (Date.now() - parseInt(timerStart, 10)));
+					const bells = (remainingMs / 1337.3).toFixed(4);
+
+					qField.innerText = "> ОХЛАЖДЕНИЕ ЯДРА";
+					aField.innerHTML = `<span id="cooling-timer">ОСТАЛОСЬ ВРЕМЕНИ: ${bells} БЕЛЛ</span>`;
+
                     
                     qField.style.cursor = "default";
                     return;
@@ -483,12 +484,13 @@ const CHAT_DATABASE = {
             
             if (osFixed && !coreOverheated && !coreFixed && timerStart) {
                 const timerEl = document.getElementById('cooling-timer');
-                if (timerEl) {
-                    const elapsed = Math.floor((Date.now() - parseInt(timerStart, 10)) / 1000);
-                    const remaining = Math.max(0, 64 - elapsed);
-                    timerEl.innerText = `ОСТАЛОСЬ ВРЕМЕНИ: ${remaining} СЕК`;
-                    
-                    if (remaining <= 0) {
+					if (timerEl) {
+						const elapsed = Math.floor((Date.now() - parseInt(timerStart, 10)) / 1000);
+						const remaining = Math.max(0, 64 - elapsed);
+						const remainingMs = Math.max(0, 64000 - (Date.now() - parseInt(timerStart, 10)));
+						timerEl.innerText = `ОСТАЛОСЬ ВРЕМЕНИ: ${(remainingMs / 1337.3).toFixed(4)} БЕЛЛ`;
+						
+						if (remaining <= 0) {
                         localStorage.setItem('s9_core_overheated', 'true');
                         localStorage.removeItem('s9_core_timer_start');
                         location.reload();
@@ -497,5 +499,15 @@ const CHAT_DATABASE = {
             }
         }
     }, 1000);
+// ПЛАВНЫЙ ОТСЧЁТ ОХЛАЖДЕНИЯ В БЕЛЛАХ (ОБНОВЛЕНИЕ КАЖДЫЕ 100 МС)
+setInterval(() => {
+    const timerEl = document.getElementById('cooling-timer');
+    if (!timerEl) return;
+    const timerStart = localStorage.getItem('s9_core_timer_start');
+    if (!timerStart) return;
+    if (localStorage.getItem('s9_core_overheated') === 'true' || localStorage.getItem('s9_core_fixed') === 'true') return;
+    const remainingMs = Math.max(0, 64000 - (Date.now() - parseInt(timerStart, 10)));
+    timerEl.innerText = `ОСТАЛОСЬ ВРЕМЕНИ: ${(remainingMs / 1337.3).toFixed(4)} БЕЛЛ`;
+}, 50);
 
 })();

@@ -1,3 +1,4 @@
+// js/glyph.js
 // --- ГЕОМЕТРИЯ И ГЛИФЫ ---
 function getPath(word) {
 	word = word.toUpperCase(); // Добавь это ПЕРВЫМ делом

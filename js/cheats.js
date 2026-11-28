@@ -247,6 +247,21 @@
                 return true;
             }
 
+			// --- ЧИТ: ПОЧИНКА ЭНЕРГОЯДРА ---
+			if (cmd.toLowerCase() === 'fix_core') {
+				localStorage.setItem('s9_os_fixed', 'true');
+				localStorage.setItem('s9_map_visited', 'true');
+				
+				localStorage.setItem('s9_core_fixed', 'true');
+				localStorage.removeItem('s9_core_overheated');
+				localStorage.removeItem('s9_core_timer_start');
+				localStorage.removeItem('s9_read_success_core');
+				
+				print('<span class="ok">[ЧИТ] ЭНЕРГОЯДРО СТАБИЛИЗИРОВАНО. ВЫРАБОТКА 100%. ПЕРЕХОД НА КАРТУ...</span>');
+				setTimeout(() => { window.location.href = 'map.html'; }, 1500);
+				return true;
+			}
+
             // --- ЧИТ ДЛЯ СБРОСА ТЕЛЕМЕТРИИ ---
             if (cmd.toLowerCase() === 'reset_telemetry') {
                 if (typeof window.cheatResetTelemetry === 'function') {

@@ -93,6 +93,8 @@ body.tools-page {
     display: flex;
     align-items: center;
     gap: 6px;
+	cursor: pointer;
+    user-select: none;
 }
 
 .pulsar-dot {
@@ -455,7 +457,7 @@ body.tools-page {
                 <div class="header-right">
                     <span class="sys-cycle-tag">
                         <span class="pulsar-dot" id="s9-pulsar-dot"></span>
-                        <span id="s9-cycle-status">1.3373s</span>
+                        <span id="s9-cycle-status">1b</span>
                     </span>
                     <button class="guide-trigger-btn" id="s9-guide-btn">[ ? ]</button>
                 </div>
@@ -792,7 +794,7 @@ body.tools-page {
                     side: 'right',
                     slot: 0,
                     title: '04 // КВАНТ И ИНСТАНТ',
-                    desc: '1 Инстант = 1 импульс маяка (1.3373с). 60 Инстантов = 1 Квант.',
+                    desc: '1 Инстант = 1 Белл (1.3373с). <br> 60 Инстантов = 1 Квант.',
                     formula: '1 QNT = 10" | 6 INS = 1" ОРБИТЫ'
                 },
                 {
@@ -925,6 +927,14 @@ body.tools-page {
             window.addEventListener('resize', () => {
                 if (hudOverlay.classList.contains('active')) buildHudCallouts();
             });
+			
+			// --- БЕЙДЖ «1b» (БЕЛЛ): КЛИК ПЕРЕКЛЮЧАЕТ 1b ↔ 1.3373s ---
+			const cycleStatus = document.getElementById('s9-cycle-status');
+			if (cycleStatus) {
+				cycleStatus.addEventListener('click', () => {
+					cycleStatus.textContent = cycleStatus.textContent === '1b' ? '1.3373s' : '1b';
+				});
+			}
 
             window.Signal9Time = { getNow: getPulsarDateTime };
 
