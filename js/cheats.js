@@ -266,6 +266,9 @@
             if (cmd.toLowerCase() === 'reset_telemetry') {
                 if (typeof window.cheatResetTelemetry === 'function') {
                     window.cheatResetTelemetry();
+					localStorage.removeItem('s9_telemetry_ref'); // -----------
+					localStorage.removeItem('s9_telemetry_except');
+					localStorage.removeItem('s9_telemetry_except_freq');
                     localStorage.removeItem('s9_read_success_telemetry');
                     print('<span class="ok">[ЧИТ] ТЕЛЕМЕТРИЯ СБРОШЕНА. ГЕНЕРАЦИЯ НОВЫХ ВОЛН...</span>');
                     setTimeout(() => { location.reload(); }, 1500);
@@ -275,16 +278,66 @@
                 return true;
             }
 
+			if (cmd.toLowerCase().startsWith('fix_telemetry')) {
+				const arg = cmd.split(' ')[1];
+
+				if (arg === '-1') {
+					if (typeof window.cheatFixTelemetryExcept === 'function') {
+						window.cheatFixTelemetryExcept();
+						print('<span class="ok">[ЧИТ] ВОЛНЫ СИНХРОНИЗИРОВАНЫ, КРОМЕ RED FREQ.</span>');
+					} else {
+						print('<span class="err">[ЧИТ] МОДУЛЬ ТЕЛЕМЕТРИИ НЕ АКТИВЕН. ПЕРЕЙДИТЕ НА СТРАНИЦУ ТЕЛЕМЕТРИИ.</span>');
+					}
+					return true;
+				}
+
+				if (!arg || cmd.toLowerCase() === 'fix_telemetry') {
+					if (typeof window.cheatFixTelemetry === 'function') {
+						window.cheatFixTelemetry();
+						localStorage.setItem('s9_telemetry_calibrated', 'true');
+						if (window.getTelemetryReference) {
+							localStorage.setItem('s9_telemetry_ref', JSON.stringify(window.getTelemetryReference()));
+						}
+						print('<span class="ok">[ЧИТ] ВОЛНЫ СИНХРОНИЗИРОВАНЫ С ЭТАЛОНОМ. ПЕРЕЗАГРУЗКА...</span>');
+						setTimeout(() => { location.reload(); }, 1500);
+					} else {
+						print('<span class="err">[ЧИТ] МОДУЛЬ ТЕЛЕМЕТРИИ НЕ АКТИВЕН. ПЕРЕЙДИТЕ НА СТРАНИЦУ ТЕЛЕМЕТРИИ.</span>');
+					}
+					return true;
+				}
+			}
+
+			// --- ЧИТ ДЛЯ ТЕЛЕМЕТРИИ минус 1 шаг ---
+			if (cmd.toLowerCase().startsWith('fix_telemetry')) {
+				const arg = cmd.trim().split(' ')[1];
+
+				if (arg === '-1') {
+					if (typeof window.cheatFixTelemetryExcept === 'function') {
+						window.cheatFixTelemetryExcept();
+						print('<span class="ok">[ЧИТ] ВОЛНЫ СИНХРОНИЗИРОВАНЫ, КРОМЕ RED FREQ.</span>');
+					} else {
+						print('<span class="err">[ЧИТ] МОДУЛЬ ТЕЛЕМЕТРИИ НЕ АКТИВЕН. ПЕРЕЙДИТЕ НА СТРАНИЦУ ТЕЛЕМЕТРИИ.</span>');
+					}
+					return true;
+				}
+				// дальше ничего — обычный fix_telemetry обработается своим блоком ниже
+			}
+
             // --- ЧИТ ДЛЯ ТЕЛЕМЕТРИИ ---
-            if (cmd.toLowerCase() === 'fix_telemetry') {
-                if (typeof window.cheatFixTelemetry === 'function') {
-                    window.cheatFixTelemetry();
-                    print('<span class="ok">[ЧИТ] ВОЛНЫ СИНХРОНИЗИРОВАНЫ С ЭТАЛОНОМ.</span>');
-                } else {
-                    print('<span class="err">[ЧИТ] МОДУЛЬ ТЕЛЕМЕТРИИ НЕ АКТИВЕН. ПЕРЕЙДИТЕ НА СТРАНИЦУ ТЕЛЕМЕТРИИ.</span>');
-                }
-                return true;
-            }
+			if (cmd.toLowerCase() === 'fix_telemetry') {
+				if (typeof window.cheatFixTelemetry === 'function') {
+					window.cheatFixTelemetry();
+					localStorage.setItem('s9_telemetry_calibrated', 'true');
+					if (window.getTelemetryReference) {
+						localStorage.setItem('s9_telemetry_ref', JSON.stringify(window.getTelemetryReference()));
+					}
+					print('<span class="ok">[ЧИТ] ВОЛНЫ СИНХРОНИЗИРОВАНЫ С ЭТАЛОНОМ. ПЕРЕЗАГРУЗКА...</span>');
+					setTimeout(() => { location.reload(); }, 1500);
+				} else {
+					print('<span class="err">[ЧИТ] МОДУЛЬ ТЕЛЕМЕТРИИ НЕ АКТИВЕН. ПЕРЕЙДИТЕ НА СТРАНИЦУ ТЕЛЕМЕТРИИ.</span>');
+				}
+				return true;
+			}
             
             // --- ЧИТ ДЛЯ ОС (С УЧЕТОМ EDR) ---
             if (cmd.toLowerCase() === 'fix_os') {

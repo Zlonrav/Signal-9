@@ -56,6 +56,24 @@
                 document.getElementById(`ui-${key}-offset`).innerText = waves[key].offset;
             }
         }
+		
+		// --- ВОССТАНОВЛЕНИЕ СИНХРОНИЗАЦИИ ПОСЛЕ ПЕРЕЗАГРУЗКИ ---
+		if (localStorage.getItem('s9_telemetry_calibrated') === 'true') {
+			const savedRef = JSON.parse(localStorage.getItem('s9_telemetry_ref') || 'null');
+			if (savedRef) {
+				Object.assign(reference, savedRef);
+				for (const key in waves) {
+					waves[key].freq = reference.freq;
+					waves[key].phase = reference.phase;
+					waves[key].amp = reference.amp;
+					waves[key].offset = reference.offset;
+				}
+				isSolved = true;
+				updateUI();
+				addLog('[СИСТЕМА] ВОЛНЫ СИНХРОНИЗИРОВАНЫ С ЭТАЛОНОМ.', 'ok');
+			}
+		}
+
 
         function createAudioNode(w, isRef = false) {
             if (!window.audioCtx) return;
@@ -126,9 +144,10 @@
             }
         }
 
-        function drawGrid() {
-            ctx.strokeStyle = 'rgba(0, 242, 255, 0.05)';
-            ctx.lineWidth = 1;
+		function drawGrid() {
+			ctx.strokeStyle = 'rgba(0, 242, 255, 0.05)';
+			ctx.lineWidth = 1;
+			ctx.font = '12px JetBrains Mono normal';
             for (let x = 0; x <= W; x += 20) {
                 ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
                 if (x % 100 === 0 && x !== 0 && x !== W) { ctx.fillStyle = 'rgba(0, 242, 255, 0.3)'; ctx.fillText(x, x + 2, H - 5); }
@@ -166,7 +185,7 @@
                 ctx.fillStyle = '#00ff44';
                 ctx.font = '16px Michroma';
                 ctx.textAlign = 'center';
-                ctx.fillText('СИГНАЛ СИНХР.', W/2, 30);
+                ctx.fillText('СИНХРОНИЗИРОВАНО', W/2, 30);
                 ctx.textAlign = 'left';
             }
 
@@ -182,16 +201,57 @@
                         break;
                     }
                 }
-                if (allMatch) {
-                    isSolved = true;
-                    addLog(`[УСПЕХ] ВСЕ ВОЛНЫ СИНХРОНИЗИРОВАНЫ.`, "ok");
-                    localStorage.setItem('s9_telemetry_calibrated', 'true');
-                }
+				if (allMatch) {
+					isSolved = true;
+					const successMsg = `<span class="ok">[УСПЕХ] ВСЕ ВОЛНЫ СИНХРОНИЗИРОВАНЫ.</span>`;
+					addLog(successMsg, "ok");
+					if (window.printToConsole) window.printToConsole(successMsg, 'ok');
+					localStorage.setItem('s9_telemetry_calibrated', 'true');
+					localStorage.setItem('s9_telemetry_ref', JSON.stringify(reference));
+					setTimeout(() => { location.reload(); }, 1500);
+				}
             }
 
             globalTime -= 0.03;
             requestAnimationFrame(render);
         }
+		
+		window.getTelemetryReference = function() {
+			return { freq: reference.freq, phase: reference.phase, amp: reference.amp, offset: reference.offset };
+		};
+		
+		// --- ЧИТ: СИНХРОНИЗАЦИЯ ВСЕГО, КРОМЕ RED FREQ ---
+		window.cheatFixTelemetryExcept = function() {
+			const STEP = 10; // размер одного шага расхождения
+			for (const key in waves) {
+				waves[key].freq = reference.freq;
+				waves[key].phase = reference.phase;
+				waves[key].amp = reference.amp;
+				waves[key].offset = reference.offset;
+			}
+			// RED FREQ остаётся на один шаг от эталона
+			waves.red.freq = clamp(reference.freq - STEP, 0, 100);
+			isSolved = false;
+			updateUI();
+			updateAudio();
+		};
+
+
+		// --- ЧИТ: СИНХРОНИЗАЦИЯ ВСЕГО, КРОМЕ RED FREQ ---
+		window.cheatFixTelemetryExcept = function() {
+			const STEP = 10; // размер одного шага расхождения
+			for (const key in waves) {
+				waves[key].freq = reference.freq;
+				waves[key].phase = reference.phase;
+				waves[key].amp = reference.amp;
+				waves[key].offset = reference.offset;
+			}
+			// RED FREQ остаётся на один шаг от эталона
+			waves.red.freq = clamp(reference.freq - STEP, 0, 100);
+			isSolved = false;
+			updateUI();
+			updateAudio();
+		};
 
         window.telemetryCommand = function(cmd) {
             const parts = cmd.split(' ');
@@ -200,7 +260,7 @@
                 addLog(text, type);
                 if (window.printToConsole) window.printToConsole(text, type); 
             };
-            
+
             if (parts[1] === '--read' && parts[2] === 'target') {
                 printMsg(`<span class="warn">[ЭТАЛОН] FREQ: ${reference.freq} | PHASE: ${reference.phase} | AMP: ${reference.amp} | OFFSET: ${reference.offset}</span>`);
                 return;
@@ -265,8 +325,10 @@
             printMsg(`<span class="err">[ОШИБКА] Неизвестная команда.</span>`);
         };
 
-        addLog(`[ФАЗОВАЯ СИНХРОНИЗАЦИЯ]`, "warn");
-        addLog(`Обнаружены 3 волны. Синхронизируйте их с эталоном.`);
+		if (!isSolved) {
+			addLog(`[ФАЗОВАЯ СИНХРОНИЗАЦИЯ]`, "warn");
+			addLog(`Обнаружены 3 волны. Синхронизируйте их с эталоном.`);
+		}
         
         const audioBtn = document.getElementById('audio-toggle');
         if (audioBtn) {

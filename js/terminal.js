@@ -535,17 +535,20 @@
                     printPassport('ЭНЕРГОЯДРО', 'core', 'Выработка и стабилизация энергии. Удержание магнитного поля.', 'chw404v4', 'csw999v1');
                 }
             } 
-            else if (topic === 'telemetry') {
-                if (!isModuleOnline('telemetry')) { print(`[МОДУЛЬ НЕДОСТУПЕН]`, 'err'); return; }
-                if (localStorage.getItem('s9_telemetry_calibrated') !== 'true') {
-                    print(`<span class="topic-header">[ТЕЛЕМЕТРИЯ]</span>`);
-                    print(`[ВНИМАНИЕ] РАССИНХРОНИЗАЦИЯ ВОЛН.`);
-                    print(`> ${printCmd('telemetry --read target')} - Узнать эталон.`);
-                    print(`> ${printCmd('telemetry --set <red|green|blue> <param> <val>')} - Калибровка.`);
-                } else {
-                    printPassport('ТЕЛЕМЕТРИЯ', 'telemetry', 'Синхронизация фазовых волн, частотный анализ.', 'thw303v5', 'tsw202v2');
-                }
-            } 
+			else if (topic === 'telemetry') {
+				if (!isModuleOnline('telemetry')) { print(`[МОДУЛЬ НЕДОСТУПЕН]`, 'err'); return; }
+				if (localStorage.getItem('s9_telemetry_calibrated') !== 'true') {
+					print(`<span class="topic-header">[ТЕЛЕМЕТРИЯ]</span>`);
+					print(`[ВНИМАНИЕ] РАССИНХРОНИЗАЦИЯ ВОЛН.`);
+					print(`> ${printCmd('telemetry --read target')} - Узнать эталон.`);
+					print(`> ${printCmd('telemetry --set')} - Калибровка.`);
+					print(`ВВЕДИТЕ: ${printCmd('telemetry --set &lt;цвет&gt; &lt;параметр&gt; &lt;±число&gt;')}`);
+					print(`ПРИМЕР: ${printCmd('telemetry --set red freq +5')}`);
+					print(`ЦВЕТА: red, green, blue | ПАРАМЕТРЫ: freq, phase, amp, offset`);
+				} else {
+					printPassport('ТЕЛЕМЕТРИЯ', 'telemetry', 'Синхронизация фазовых волн, частотный анализ.', 'thw303v5', 'tsw202v2');
+				}
+			}
             else if (topic === 'gateway' || topic === 'sector00' || topic === 'sectorff') {
                 print(`<span class="topic-header">[${topic.toUpperCase()}]</span>`);
                 print(`[В РАЗРАБОТКЕ]`);
@@ -562,6 +565,7 @@
                 print(`> ${printCmd('reset_os')} - Сбросить ОС и EDR`);
                 print(`> ${printCmd('reset_core')} - Сброс до желтого ядра (охлаждение)`);
                 print(`> ${printCmd('fix_telemetry')} - Синхронизировать волны телеметрии`);
+				print(`> ${printCmd('fix_telemetry -1')} - Синхронизировать все волны, кроме RED FREQ.`);
                 print(`> ${printCmd('reset_telemetry')} - Сбросить телеметрию (новые волны)`);
                 print(`> ${printCmd('clear_memory')} - Полная очистка памяти`);
             } 
