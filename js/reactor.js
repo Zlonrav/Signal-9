@@ -5,8 +5,10 @@
         const logBox = document.getElementById('logBox');
         const valTemp = document.getElementById('valTemp');
         const barTemp = document.getElementById('barTemp');
-        const valStab = document.getElementById('valStab');
-        const barStab = document.getElementById('barStab');
+		const valStab = document.getElementById('valStab');
+		const barStab = document.getElementById('barStab');
+		const valOut = document.getElementById('valOut');
+		const barOut = document.getElementById('barOut');
 
         // Генерация частиц для визуала
         const particlesContainer = document.getElementById('particles');
@@ -26,31 +28,160 @@
             line.className = `log-line ${type}`;
             line.innerText = text;
             logBox.appendChild(line);
-            if (logBox.children.length > 15) logBox.removeChild(logBox.firstChild);
+            if (logBox.children.length > 17) logBox.removeChild(logBox.firstChild);
             logBox.scrollTop = logBox.scrollHeight;
         }
 
         // Проверяем, починено ли ядро
         const isCoreFixed = localStorage.getItem('s9_core_fixed') === 'true';
 
-        if (isCoreFixed) {
-            core.classList.remove('critical');
-            core.style.background = "radial-gradient(circle, #fff 0%, #00ff44 30%, #0066ff 70%, transparent 100%)";
-            core.style.boxShadow = "0 0 50px #00ff44, 0 0 100px #0066ff, inset 0 0 30px #fff";
-            
-            if (valTemp) { valTemp.innerText = "45%"; barTemp.style.width = "45%"; barTemp.className = "progress-fill"; }
-            if (valStab) { valStab.innerText = "100%"; barStab.style.width = "100%"; barStab.className = "progress-fill"; valStab.style.color = "var(--ok)"; }
-            
-            addLog("> SYSTEM STABLE", "ok");
-        } else {
-            core.classList.add('critical');
-            
-            if (valTemp) { valTemp.innerText = "98%"; barTemp.style.width = "98%"; barTemp.className = "progress-fill err"; }
-            if (valStab) { valStab.innerText = "5%"; barStab.style.width = "5%"; barStab.className = "progress-fill err"; valStab.style.color = "var(--err)"; }
-        }
+		// --- ДИНАМИЧЕСКИЕ ПОКАЗАТЕЛИ ЯДРА ---
+		const coreOverheated = localStorage.getItem('s9_core_overheated') === 'true';
+		const coreTimerStart = localStorage.getItem('s9_core_timer_start');
+		const coreState = isCoreFixed ? 'fixed' : (coreOverheated ? 'critical' : (coreTimerStart ? 'cooling' : 'critical'));
+
+		const RANGES = {
+			fixed:    { temp: [44, 46], out: [97, 99], stab: [99, 100] },
+			cooling:  { temp: [82, 88], out: [70, 75], stab: [58, 63] },
+			critical: { temp: [96, 99], out: [62, 68], stab: [3, 8] }
+		};
+		const range = RANGES[coreState];
+		const rnd = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+		// Визуал ядра по состоянию
+		if (coreState === 'fixed') {
+			core.classList.remove('critical');
+			core.style.background = "radial-gradient(circle, #fff 0%, #00ff44 30%, #0066ff 70%, transparent 100%)";
+			core.style.boxShadow = "0 0 50px #00ff44, 0 0 100px #0066ff, inset 0 0 30px #fff";
+		} else if (coreState === 'cooling') {
+			core.classList.remove('critical');
+			core.style.background = "radial-gradient(circle, #fff 0%, #ffaa00 30%, #ff7700 70%, transparent 100%)";
+			core.style.boxShadow = "0 0 50px #ffaa00, 0 0 100px #ff7700, inset 0 0 30px #fff";
+		} else {
+			core.classList.add('critical');
+			core.style.background = "radial-gradient(circle, #fff 0%, #ffaa00 30%, #ff3333 70%, transparent 100%)";
+			core.style.boxShadow = "0 0 50px #ffaa00, 0 0 100px #ff3333, inset 0 0 30px #fff";
+		}
+
+		// Первичный рапорт монитора
+		logBox.innerHTML = '';
+		if (coreState === 'fixed') {
+			addLog('> CORE MONITOR: ONLINE', 'ok');
+			addLog('> OUTPUT: 98% — NOMINAL', 'ok');
+			addLog('> STABILITY: 100% — LOCKED', 'ok');
+			addLog('> MAGNETS: ALIGNED', 'ok');
+			addLog('> TELEMETRY MODULE: POWERED', 'ok');
+			addLog('> SYSTEM STABLE', 'ok');
+		} else if (coreState === 'cooling') {
+			addLog('> CORE MONITOR: ONLINE');
+			addLog('> COOLING CYCLE ACTIVE', 'warn');
+			const coolingLine = document.createElement('div');
+			coolingLine.className = 'log-line';
+			logBox.appendChild(coolingLine);
+			const updateCooling = () => {
+				const start = localStorage.getItem('s9_core_timer_start');
+				if (!start || localStorage.getItem('s9_core_fixed') === 'true') return;
+				const remainingMs = Math.max(0, 64000 - (Date.now() - parseInt(start, 10)));
+				coolingLine.innerText = `> COOLING: ${(remainingMs / 1337.3).toFixed(4)} БЕЛЛ`;
+			};
+			updateCooling();
+			setInterval(updateCooling, 50);
+		} else {
+			addLog('> CORE MONITOR: ONLINE');
+			addLog('> TEMP: 98% — CRITICAL', 'err');
+			addLog('> STABILITY: 5% — FAILING', 'err');
+			addLog('> MAGNETS: DEGRADED', 'warn');
+			addLog('> MANUAL STABILIZATION REQUIRED', 'warn');
+		}
+
+		// Живые показатели — новая случайная величина каждую секунду
+		function updateMeters() {
+			const cls = coreState === 'fixed' ? '' : (coreState === 'cooling' ? 'warn' : 'err');
+			const color = coreState === 'fixed' ? 'var(--ok)' : (coreState === 'cooling' ? 'var(--warn)' : 'var(--err)');
+
+			if (valTemp) {
+				valTemp.innerText = rnd(...range.temp) + '%';
+				barTemp.style.width = valTemp.innerText;
+				barTemp.className = cls ? `progress-fill ${cls}` : 'progress-fill';
+			}
+			if (valOut) {
+				valOut.innerText = rnd(...range.out) + '%';
+				barOut.style.width = valOut.innerText;
+				barOut.className = cls ? `progress-fill ${cls}` : 'progress-fill';
+			}
+			if (valStab) {
+				valStab.innerText = rnd(...range.stab) + '%';
+				barStab.style.width = valStab.innerText;
+				barStab.className = cls ? `progress-fill ${cls}` : 'progress-fill';
+				valStab.style.color = color;
+			}
+		}
+		updateMeters();
+		setInterval(updateMeters, 1000);
+
+		// Живой журнал монитора — свежая строка телеметрии каждые 3 секунды
+		const LOG_FEED = {
+			fixed: [
+				() => `> TEMP: ${rnd(44, 46)}% — NOMINAL`,
+				() => `> OUTPUT: ${rnd(97, 99)}% — STABLE`,
+				() => `> MAGNET FIELD: ALIGNED`,
+				() => `> TELEMETRY LINK: ACTIVE`
+			],
+			cooling: [
+				() => `> TEMP: ${rnd(82, 88)}% — DROPPING`,
+				() => `> OUTPUT: ${rnd(70, 75)}% — RESTRICTED`,
+				() => `> COOLANT FLOW: ACTIVE`
+			],
+			critical: [
+				() => `> TEMP: ${rnd(96, 99)}% — RISING`,
+				() => `> STABILITY: ${rnd(3, 8)}% — FAILING`,
+				() => `> MAGNETS: DEGRADED`,
+				() => `> REACTOR OUTPUT: ${rnd(62, 68)}%`
+			]
+		};
+
+		setInterval(() => {
+			if (!logBox) return;
+			const templates = LOG_FEED[coreState];
+			addLog(templates[Math.floor(Math.random() * templates.length)](), coreState === 'fixed' ? 'ok' : coreState);
+			// Строка отсчёта охлаждения всегда остаётся последней
+			const coolingEl = Array.from(logBox.children).find(el => el.innerText.startsWith('> COOLING:'));
+			if (coolingEl) logBox.appendChild(coolingEl);
+		}, 3000);
+
 
         let targetX, targetY, targetZ;
         let sensors, expected;
+
+		const isOverheated = localStorage.getItem('s9_core_overheated') === 'true';
+		const timerStart = localStorage.getItem('s9_core_timer_start');
+
+		if (isCoreFixed) {
+			// ...зелёный рапорт выше...
+		} else if (isOverheated) {
+			logBox.innerHTML = '';
+			addLog('> CORE MONITOR: ONLINE');
+			addLog('> TEMP: 98% — CRITICAL', 'err');
+			addLog('> STABILITY: 5% — FAILING', 'err');
+			addLog('> MAGNETS: DEGRADED', 'warn');
+			addLog('> MANUAL STABILIZATION REQUIRED', 'warn');
+		} else if (timerStart) {
+			logBox.innerHTML = '';
+			addLog('> CORE MONITOR: ONLINE');
+			addLog('> COOLING CYCLE ACTIVE', 'warn');
+			const coolingLine = document.createElement('div');
+			coolingLine.className = 'log-line';
+			logBox.appendChild(coolingLine);
+			const updateCooling = () => {
+				const start = localStorage.getItem('s9_core_timer_start');
+				if (!start || localStorage.getItem('s9_core_fixed') === 'true') return;
+				const remainingMs = Math.max(0, 64000 - (Date.now() - parseInt(start, 10)));
+				coolingLine.innerText = `> COOLING: ${(remainingMs / 1337.3).toFixed(4)} БЕЛЛ`;
+			};
+			updateCooling();
+			setInterval(updateCooling, 50);
+		}
+
 
         if (!isCoreFixed) {
             targetX = Math.floor(Math.random() * 11) - 5;
